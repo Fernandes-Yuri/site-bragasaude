@@ -16,22 +16,38 @@ import {
   fetchPatientVitals,
 } from "./services/api";
 import type { CaregiverDashboardState, GroceryItem } from "./types";
-import { LoginScreen } from "./components/LoginScreen";
-import { DesktopGateModal } from "./components/DesktopGateModal";
 import { EmeraldHeaderBanner } from "./components/EmeraldHeaderBanner";
 import { PatientHeaderCard } from "./components/PatientHeaderCard";
 import { TodayVitalsCard } from "./components/TodayVitalsCard";
-import { HistoryMetricsSection } from "./components/HistoryMetricsSection";
 import { QuickActionsChips } from "./components/QuickActionsChips";
 import { SharedGroceryListCard } from "./components/SharedGroceryListCard";
 import { QuickMessagesCard } from "./components/QuickMessagesCard";
-import {
-  MedicationReminderDialog,
-  AppointmentDialog,
-  CareNoteDialog,
-} from "./components/CaregiverDialogs";
-import { FamilyConnectModal } from "./components/FamilyConnectModal";
-import { PhoneLinkDialog } from "./components/PhoneLinkDialog";
+
+// Code-Splitting: componentes pesados carregados sob demanda
+const LoginScreen = React.lazy(() =>
+  import("./components/LoginScreen").then((m) => ({ default: m.LoginScreen }))
+);
+const DesktopGateModal = React.lazy(() =>
+  import("./components/DesktopGateModal").then((m) => ({ default: m.DesktopGateModal }))
+);
+const HistoryMetricsSection = React.lazy(() =>
+  import("./components/HistoryMetricsSection").then((m) => ({ default: m.HistoryMetricsSection }))
+);
+const FamilyConnectModal = React.lazy(() =>
+  import("./components/FamilyConnectModal").then((m) => ({ default: m.FamilyConnectModal }))
+);
+const PhoneLinkDialog = React.lazy(() =>
+  import("./components/PhoneLinkDialog").then((m) => ({ default: m.PhoneLinkDialog }))
+);
+const MedicationReminderDialog = React.lazy(() =>
+  import("./components/CaregiverDialogs").then((m) => ({ default: m.MedicationReminderDialog }))
+);
+const AppointmentDialog = React.lazy(() =>
+  import("./components/CaregiverDialogs").then((m) => ({ default: m.AppointmentDialog }))
+);
+const CareNoteDialog = React.lazy(() =>
+  import("./components/CaregiverDialogs").then((m) => ({ default: m.CareNoteDialog }))
+);
 
 export const App: React.FC = () => {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
@@ -189,10 +205,17 @@ export const App: React.FC = () => {
   // 2. Tela de Login se não estiver autenticado
   if (!currentUser) {
     return (
-      <>
+      <React.Suspense
+        fallback={
+          <div className="min-h-screen bg-[#FAFCFB] flex flex-col items-center justify-center p-6 text-center">
+            <div className="w-12 h-12 rounded-full border-3 border-[#E0F2F1] border-t-[#00897B] animate-spin mb-4" />
+            <p className="text-sm font-semibold text-[#1E293B]">Carregando portal seguro...</p>
+          </div>
+        }
+      >
         <DesktopGateModal />
         <LoginScreen onSuccess={() => showToast("Login efetuado com sucesso!")} />
-      </>
+      </React.Suspense>
     );
   }
 
@@ -200,7 +223,9 @@ export const App: React.FC = () => {
   return (
     <div className="min-h-screen bg-[#FAFCFB] text-[#1E293B] flex flex-col justify-between max-w-md mx-auto shadow-2xl border-x border-[#E5EBE8] select-none font-sans">
       {/* Bloqueio para Desktop com tela exclusiva e QR Code */}
-      <DesktopGateModal />
+      <React.Suspense fallback={null}>
+        <DesktopGateModal />
+      </React.Suspense>
 
       {/* Cabeçalho Curvo Esmeralda Oficial com Logout e WhatsApp */}
       <EmeraldHeaderBanner
@@ -281,8 +306,17 @@ export const App: React.FC = () => {
           onFamilyPost={() => showToast("Publicação compartilhada com a família")}
         />
 
-        {/* Histórico e Tendências (7d / 30d) com dados reais */}
-        <HistoryMetricsSection history7d={historyRecords} />
+        {/* Histórico e Tendências (7d / 30d) com dados reais (Lazy Loaded) */}
+        <React.Suspense
+          fallback={
+            <div className="bg-white rounded-3xl p-5 border border-[#E5EBE8] shadow-xs my-2 animate-pulse">
+              <div className="h-4 w-36 bg-slate-200 rounded-md mb-3" />
+              <div className="h-40 bg-slate-100 rounded-2xl" />
+            </div>
+          }
+        >
+          <HistoryMetricsSection history7d={historyRecords} />
+        </React.Suspense>
 
         {/* Lista de Compras Compartilhada da Semana */}
         <SharedGroceryListCard
@@ -328,61 +362,73 @@ export const App: React.FC = () => {
         </div>
       )}
 
-      {/* Diálogos Modais */}
-      <MedicationReminderDialog
-        isOpen={showMedicationDialog}
-        onClose={() => setShowMedicationDialog(false)}
-        onSend={(text) => {
-          sendCaregiverMessage(dashboard.patientUserId, text, "MEDICATION", dashboard.caregiverName);
-          showToast("Lembrete de medicação enviado para o familiar");
-        }}
-      />
+      {/* Diálogos Modais (Lazy Loaded Sob Demanda) */}
+      <React.Suspense fallback={null}>
+        {showMedicationDialog && (
+          <MedicationReminderDialog
+            isOpen={showMedicationDialog}
+            onClose={() => setShowMedicationDialog(false)}
+            onSend={(text) => {
+              sendCaregiverMessage(dashboard.patientUserId, text, "MEDICATION", dashboard.caregiverName);
+              showToast("Lembrete de medicação enviado para o familiar");
+            }}
+          />
+        )}
 
-      <AppointmentDialog
-        isOpen={showAppointmentDialog}
-        onClose={() => setShowAppointmentDialog(false)}
-        onSend={(spec, date) => {
-          sendCaregiverMessage(dashboard.patientUserId, `Consulta agendada: ${spec} em ${date}`, "APPOINTMENT", dashboard.caregiverName);
-          showToast("Consulta médica salva e notificada");
-        }}
-      />
+        {showAppointmentDialog && (
+          <AppointmentDialog
+            isOpen={showAppointmentDialog}
+            onClose={() => setShowAppointmentDialog(false)}
+            onSend={(spec, date) => {
+              sendCaregiverMessage(dashboard.patientUserId, `Consulta agendada: ${spec} em ${date}`, "APPOINTMENT", dashboard.caregiverName);
+              showToast("Consulta médica salva e notificada");
+            }}
+          />
+        )}
 
-      <CareNoteDialog
-        isOpen={showCareNoteDialog}
-        onClose={() => setShowCareNoteDialog(false)}
-        onSend={(text) => {
-          sendCaregiverMessage(dashboard.patientUserId, text, "LOVE", dashboard.caregiverName);
-          showToast("Bilhete de carinho enviado com sucesso");
-        }}
-      />
+        {showCareNoteDialog && (
+          <CareNoteDialog
+            isOpen={showCareNoteDialog}
+            onClose={() => setShowCareNoteDialog(false)}
+            onSend={(text) => {
+              sendCaregiverMessage(dashboard.patientUserId, text, "LOVE", dashboard.caregiverName);
+              showToast("Bilhete de carinho enviado com sucesso");
+            }}
+          />
+        )}
 
-      <FamilyConnectModal
-        isOpen={showConnectModal}
-        onClose={() => setShowConnectModal(false)}
-        onSuccessPair={(patientName, relation) => {
-          setHasRealBinding(true);
-          setDashboard((prev) => ({
-            ...prev,
-            patientName,
-            caregiverRelation: relation,
-            lastMeasurementLabel: "Novo familiar conectado",
-          }));
-          showToast(`Conectado com sucesso a ${patientName}!`);
-        }}
-      />
+        {showConnectModal && (
+          <FamilyConnectModal
+            isOpen={showConnectModal}
+            onClose={() => setShowConnectModal(false)}
+            onSuccessPair={(patientName, relation) => {
+              setHasRealBinding(true);
+              setDashboard((prev) => ({
+                ...prev,
+                patientName,
+                caregiverRelation: relation,
+                lastMeasurementLabel: "Novo familiar conectado",
+              }));
+              showToast(`Conectado com sucesso a ${patientName}!`);
+            }}
+          />
+        )}
 
-      <PhoneLinkDialog
-        isOpen={showPhoneLinkDialog}
-        onClose={() => setShowPhoneLinkDialog(false)}
-        initialPhone={userPhone || ""}
-        onSuccess={(phone) => {
-          setUserPhone(phone);
-          if (currentUser) {
-            localStorage.setItem(`braga_phone_${currentUser.uid}`, phone);
-          }
-          showToast("WhatsApp vinculado com sucesso!");
-        }}
-      />
+        {showPhoneLinkDialog && (
+          <PhoneLinkDialog
+            isOpen={showPhoneLinkDialog}
+            onClose={() => setShowPhoneLinkDialog(false)}
+            initialPhone={userPhone || ""}
+            onSuccess={(phone) => {
+              setUserPhone(phone);
+              if (currentUser) {
+                localStorage.setItem(`braga_phone_${currentUser.uid}`, phone);
+              }
+              showToast("WhatsApp vinculado com sucesso!");
+            }}
+          />
+        )}
+      </React.Suspense>
     </div>
   );
 };

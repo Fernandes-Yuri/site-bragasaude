@@ -9,6 +9,22 @@ export default defineConfig({
   build: {
     outDir: '../onboarding_site/public/app',
     emptyOutDir: true,
+    rollupOptions: {
+      output: {
+        manualChunks(id: string) {
+          if (id.includes('node_modules/recharts')) {
+            return 'vendor-charts';
+          }
+          if (id.includes('node_modules/html5-qrcode')) {
+            return 'vendor-qrcode';
+          }
+          if (id.includes('node_modules/firebase')) {
+            return 'vendor-firebase';
+          }
+        },
+      },
+    },
+    chunkSizeWarningLimit: 600,
   },
   plugins: [
     react(),
