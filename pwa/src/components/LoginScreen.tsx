@@ -1,5 +1,5 @@
-﻿import React, { useState } from "react";
-import { Heart, Lock, Mail, User, ArrowRight, ShieldCheck, AlertCircle } from "lucide-react";
+import React, { useState } from "react";
+import { Heart, Lock, Mail, User, ArrowRight, ShieldAlert, ShieldCheck, AlertCircle, Clock } from "lucide-react";
 import {
   auth,
   googleProvider,
@@ -7,7 +7,8 @@ import {
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
 } from "../services/firebase";
-import { TurnstileWidget } from "./TurnstileWidget";
+import { GoogleRecaptchaWidget } from "./GoogleRecaptchaWidget";
+import { API_BASE_URL } from "../services/api";
 
 interface LoginScreenProps {
   onSuccess: () => void;
@@ -19,9 +20,10 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onSuccess }) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isIpBlocked, setIsIpBlocked] = useState(false);
 
   const handleGoogleLogin = async () => {
     setIsLoading(true);
@@ -43,8 +45,13 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onSuccess }) => {
     e.preventDefault();
     setError(null);
 
-    if (!turnstileToken) {
-      setError("Por favor, conclua a verificação de segurança (Captcha).");
+    if (isIpBlocked) {
+      setError("Endereço IP bloqueado por 24 horas pela Gateway devido a excesso de tentativas.");
+      return;
+    }
+
+    if (!captchaToken) {
+      setError("Por favor, conclua a verificação de segurança Google reCAPTCHA.");
       return;
     }
 
@@ -65,6 +72,29 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onSuccess }) => {
 
     setIsLoading(true);
     try {
+      // 1. Validação rigorosa na Gateway sob política Zero-Trust
+      try {
+        const checkRes = await fetch(`${API_BASE_URL}/api/auth/check-account`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ identifier: email.trim() }),
+        });
+
+        if (checkRes.status === 403) {
+          setIsIpBlocked(true);
+          setError("ACESSO BLOQUEADO POR 24 HORAS: Este endereço IP violou as políticas de segurança da Gateway e foi bloqueado por 24 horas.");
+          return;
+        }
+
+        if (checkRes.status === 429) {
+          setError("Limite de tentativas excedido na Gateway. Aguarde para evitar o bloqueio de 24h.");
+          return;
+        }
+      } catch (gatewayErr) {
+        console.warn("Gateway check bypass:", gatewayErr);
+      }
+
+      // 2. Autenticação oficial Firebase
       if (mode === "login") {
         await signInWithEmailAndPassword(auth, email.trim(), password);
       } else {
@@ -77,6 +107,8 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onSuccess }) => {
         setError("E-mail ou senha incorretos.");
       } else if (err.code === "auth/email-already-in-use") {
         setError("Este e-mail já possui cadastro. Faça login com suas credenciais.");
+      } else if (err.code === "auth/too-many-requests") {
+        setError("Muitas tentativas malsucedidas consecutivas. Seu acesso está sendo monitorado pela Gateway.");
       } else {
         setError(err.message || "Falha na autenticação. Verifique os dados.");
       }
@@ -106,12 +138,27 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onSuccess }) => {
 
       {/* Card do Formulário */}
       <div className="bg-white rounded-3xl p-6 border border-[#E5EBE8] shadow-sm my-6">
-        {error && (
+        {isIpBlocked ? (
+          <div className="mb-4 p-4 rounded-2xl bg-[#FFF5F2] border-2 border-[#D9532F] flex flex-col gap-2 text-xs text-[#D9532F] shadow-sm">
+            <div className="flex items-center gap-2 font-bold text-sm">
+              <ShieldAlert className="w-5 h-5 shrink-0 text-[#D9532F]" />
+              <span>ACESSO BLOQUEADO POR 24 HORAS</span>
+            </div>
+            <p className="leading-relaxed text-[#B91C1C]">
+              Detectamos violações repetidas das diretrizes de segurança da Gateway.
+              Por proteção dos dados clínicos, este endereço IP foi suspenso por 24 horas pela Gateway.
+            </p>
+            <div className="flex items-center gap-1.5 text-[11px] font-semibold text-[#64748B] mt-1 bg-white/60 p-2 rounded-xl border border-[#D9532F]/20">
+              <Clock className="w-3.5 h-3.5 text-[#D9532F]" />
+              <span>Desbloqueio automático após 24 horas</span>
+            </div>
+          </div>
+        ) : error ? (
           <div className="mb-4 p-3 rounded-2xl bg-[#FFF5F2] border border-[#D9532F]/30 flex items-start gap-2.5 text-xs text-[#D9532F]">
             <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
             <span>{error}</span>
           </div>
-        )}
+        ) : null}
 
         {/* 1. Botão Oficial Google Sign-In */}
         <button
@@ -221,8 +268,8 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onSuccess }) => {
             </div>
           )}
 
-          {/* Widget Cloudflare Turnstile Captcha */}
-          <TurnstileWidget onToken={(tok) => setTurnstileToken(tok)} />
+          {/* Widget Oficial Google reCAPTCHA / Firebase Captcha */}
+          <GoogleRecaptchaWidget onToken={(tok) => setCaptchaToken(tok)} />
 
           <button
             type="submit"
