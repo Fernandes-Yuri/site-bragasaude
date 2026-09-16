@@ -48,6 +48,9 @@ const AppointmentDialog = React.lazy(() =>
 const CareNoteDialog = React.lazy(() =>
   import("./components/CaregiverDialogs").then((m) => ({ default: m.CareNoteDialog }))
 );
+const InstallPromptBanner = React.lazy(() =>
+  import("./components/InstallPromptBanner").then((m) => ({ default: m.InstallPromptBanner }))
+);
 
 export const App: React.FC = () => {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
@@ -215,6 +218,7 @@ export const App: React.FC = () => {
       >
         <DesktopGateModal />
         <LoginScreen onSuccess={() => showToast("Login efetuado com sucesso!")} />
+        <InstallPromptBanner />
       </React.Suspense>
     );
   }
@@ -341,6 +345,13 @@ export const App: React.FC = () => {
             <span>Contato de Emergência / SAMU 192</span>
           </button>
         </div>
+
+        {/* Disclaimer Clínico Institucional */}
+        <div className="pt-2 pb-6 text-center">
+          <p className="text-[10px] text-[#94A3B8] leading-tight max-w-xs mx-auto">
+            O Braga Saúde é uma plataforma de suporte ao autocuidado e acompanhamento familiar preventivo, não substituindo consultas, diagnósticos ou prescrições médicas.
+          </p>
+        </div>
       </main>
 
       {/* Barra Inferior Fixa com Safe Area iOS */}
@@ -428,6 +439,8 @@ export const App: React.FC = () => {
             }}
           />
         )}
+
+        <InstallPromptBanner />
       </React.Suspense>
     </div>
   );

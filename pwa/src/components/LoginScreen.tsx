@@ -24,6 +24,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onSuccess }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isIpBlocked, setIsIpBlocked] = useState(false);
+  const [lgpdAccepted, setLgpdAccepted] = useState(false);
 
   const handleGoogleLogin = async () => {
     setIsLoading(true);
@@ -66,6 +67,10 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onSuccess }) => {
       }
       if (password.length < 6) {
         setError("A senha deve ter no mínimo 6 caracteres.");
+        return;
+      }
+      if (!lgpdAccepted) {
+        setError("É necessário concordar com os termos de tratamento de dados de saúde (LGPD) para criar a conta.");
         return;
       }
     }
@@ -268,6 +273,23 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onSuccess }) => {
             </div>
           )}
 
+          {/* Checkbox de Consentimento LGPD (Art. 11 - Dados de Saúde) */}
+          {mode === "signup" && (
+            <div className="pt-1 pb-1">
+              <label className="flex items-start gap-2.5 cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  checked={lgpdAccepted}
+                  onChange={(e) => setLgpdAccepted(e.target.checked)}
+                  className="mt-0.5 w-4 h-4 rounded text-[#00897B] focus:ring-0 cursor-pointer accent-[#00897B] shrink-0"
+                />
+                <span className="text-[11px] text-[#64748B] leading-tight">
+                  Concordo com os <strong className="text-[#1E293B]">Termos de Uso</strong> e autorizo o tratamento de dados de saúde e rotina familiar nos termos da <strong className="text-[#00897B]">LGPD (Art. 11)</strong>.
+                </span>
+              </label>
+            </div>
+          )}
+
           {/* Widget Oficial Google reCAPTCHA / Firebase Captcha */}
           <GoogleRecaptchaWidget onToken={(tok) => setCaptchaToken(tok)} />
 
@@ -297,10 +319,15 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onSuccess }) => {
         </div>
       </div>
 
-      {/* Rodapé Seguro */}
-      <div className="pb-safe flex items-center justify-center gap-1.5 text-xs text-[#64748B]">
-        <ShieldCheck className="w-4 h-4 text-[#00897B]" />
-        <span>Ambiente Seguro e Criptografado (LGPD)</span>
+      {/* Rodapé Seguro e Disclaimer Clínico */}
+      <div className="pb-safe flex flex-col items-center gap-2 text-center">
+        <div className="flex items-center justify-center gap-1.5 text-xs text-[#64748B]">
+          <ShieldCheck className="w-4 h-4 text-[#00897B]" />
+          <span>Ambiente Seguro e Criptografado (LGPD)</span>
+        </div>
+        <p className="text-[10px] text-[#94A3B8] leading-tight max-w-xs px-2">
+          O Braga Saúde é uma ferramenta de suporte ao autocuidado e acompanhamento familiar, não substituindo diagnósticos, prescrições ou condutas médicas.
+        </p>
       </div>
     </div>
   );
