@@ -33,7 +33,3 @@ onboarding-site/
 ├── public/              # Assets estáticos
 └── next.config.js
 ```
-
-## 📚 Documentação Relacionada
-
-- `41_GUIA_MIGRACAO_AWS_CONCLUIDA.md` — Infraestrutura AWS
