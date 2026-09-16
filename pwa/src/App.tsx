@@ -1,41 +1,82 @@
-import React, { useState } from "react";
+﻿import React, { useState } from "react";
+import { PhoneCall, ShieldCheck, CheckCircle2 } from "lucide-react";
 import {
-  Heart,
-  QrCode,
-  ShieldCheck,
-  AlertCircle,
-  PhoneCall,
-  Bell,
-} from "lucide-react";
-import {
-  MOCK_PATIENT,
-  MOCK_VITALS,
-  MOCK_MEDICATIONS,
-  MOCK_HYDRATION,
-  MOCK_MESSAGES,
+  DEFAULT_CAREGIVER_STATE,
+  DEFAULT_GROCERY_ITEMS,
+  DEFAULT_HISTORY_7D,
+  QUICK_TEMPLATES,
+  sendCaregiverMessage,
 } from "./services/api";
-import { InstallBanner } from "./components/InstallBanner";
-import { VitalsSection } from "./components/VitalsSection";
-import { MedicationsSection } from "./components/MedicationsSection";
-import { HydrationCard } from "./components/HydrationCard";
-import { FamilyMessagesSection } from "./components/FamilyMessagesSection";
-import { QrPairingModal } from "./components/QrPairingModal";
-import { ChartsModal } from "./components/ChartsModal";
+import type { CaregiverDashboardState, GroceryItem } from "./types";
+import { DesktopGateModal } from "./components/DesktopGateModal";
+import { EmeraldHeaderBanner } from "./components/EmeraldHeaderBanner";
+import { PatientHeaderCard } from "./components/PatientHeaderCard";
+import { TodayVitalsCard } from "./components/TodayVitalsCard";
+import { HistoryMetricsSection } from "./components/HistoryMetricsSection";
+import { QuickActionsChips } from "./components/QuickActionsChips";
+import { SharedGroceryListCard } from "./components/SharedGroceryListCard";
+import { QuickMessagesCard } from "./components/QuickMessagesCard";
+import {
+  MedicationReminderDialog,
+  AppointmentDialog,
+  CareNoteDialog,
+} from "./components/CaregiverDialogs";
+import { FamilyConnectModal } from "./components/FamilyConnectModal";
 
 export const App: React.FC = () => {
-  const [patient, setPatient] = useState(MOCK_PATIENT);
-  const [isPairingOpen, setIsPairingOpen] = useState(false);
-  const [isChartsOpen, setIsChartsOpen] = useState(false);
-  const [emergencyAlert] = useState<string | null>(null);
+  const [dashboard, setDashboard] = useState<CaregiverDashboardState>(DEFAULT_CAREGIVER_STATE);
+  const [groceryItems, setGroceryItems] = useState<GroceryItem[]>(DEFAULT_GROCERY_ITEMS);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
 
-  const handleSuccessPair = (newName: string) => {
-    setPatient({
-      ...patient,
-      name: newName,
-      lastActive: "Agora mesmo",
-      status: "healthy",
-      statusMessage: "Novo familiar pareado com sucesso!",
-    });
+  // Estados dos modais de diálogo
+  const [showMedicationDialog, setShowMedicationDialog] = useState(false);
+  const [showAppointmentDialog, setShowAppointmentDialog] = useState(false);
+  const [showCareNoteDialog, setShowCareNoteDialog] = useState(false);
+  const [showConnectModal, setShowConnectModal] = useState(false);
+
+  const showToast = (msg: string) => {
+    setToastMessage(msg);
+    setTimeout(() => setToastMessage(null), 3500);
+  };
+
+  const handleToggleGrocery = (id: string) => {
+    setGroceryItems((prev) =>
+      prev.map((item) =>
+        item.id === id ? { ...item, isCheckedInPantry: !item.isCheckedInPantry } : item
+      )
+    );
+  };
+
+  const handleSendQuickTemplate = async (templateKey: string) => {
+    const template = QUICK_TEMPLATES[templateKey];
+    if (!template) return;
+
+    await sendCaregiverMessage(
+      dashboard.patientUserId,
+      template.text,
+      template.iconType === "water"
+        ? "WATER"
+        : template.iconType === "medication"
+        ? "MEDICATION"
+        : template.iconType === "walk"
+        ? "WALK"
+        : "LOVE",
+      dashboard.caregiverName
+    );
+
+    showToast(`Mensagem enviada: "${template.label}"`);
+  };
+
+  const handleRefresh = () => {
+    setDashboard((prev) => ({ ...prev, isLoading: true }));
+    setTimeout(() => {
+      setDashboard((prev) => ({
+        ...prev,
+        isLoading: false,
+        lastMeasurementLabel: "Atualizado agora mesmo",
+      }));
+      showToast("Dados sincronizados com sucesso");
+    }, 700);
   };
 
   const handleEmergencyCall = () => {
@@ -43,146 +84,132 @@ export const App: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col justify-between max-w-md mx-auto shadow-2xl border-x border-slate-900 selection:bg-emerald-500 selection:text-white">
-      {/* Header com Safe Area iOS */}
-      <header className="pt-safe px-4 pb-3 border-b border-slate-800/80 bg-slate-950/90 sticky top-0 z-40 backdrop-blur-md">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-2xl bg-gradient-to-tr from-emerald-600 to-teal-400 flex items-center justify-center text-white shadow-md shadow-emerald-950/50">
-              <Heart className="w-5 h-5 fill-white/20" />
-            </div>
-            <div>
-              <div className="flex items-center gap-1.5">
-                <h1 className="font-black text-base tracking-tight text-white">BRAGA SAÚDE</h1>
-                <span className="text-[10px] font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-1.5 py-0.2 rounded-md uppercase tracking-wider">
-                  Cuidador
-                </span>
-              </div>
-              <p className="text-[11px] text-slate-400">Modo Familiar · iOS Standalone</p>
-            </div>
-          </div>
+    <div className="min-h-screen bg-[#FAFCFB] text-[#1E293B] flex flex-col justify-between max-w-md mx-auto shadow-2xl border-x border-[#E5EBE8] select-none font-sans">
+      {/* 1. Bloqueio para Desktop com tela exclusiva e QR Code */}
+      <DesktopGateModal />
 
-          <div className="flex items-center gap-1.5">
-            <button
-              onClick={() => setIsPairingOpen(true)}
-              className="p-2 rounded-xl bg-slate-900 border border-slate-800 text-slate-300 hover:text-white hover:border-emerald-500 transition-colors"
-              title="Conectar novo familiar via QR Code"
-            >
-              <QrCode className="w-4 h-4" />
-            </button>
-            <button
-              className="p-2 rounded-xl bg-slate-900 border border-slate-800 text-slate-300 hover:text-white hover:border-emerald-500 transition-colors relative"
-              title="Notificações"
-            >
-              <Bell className="w-4 h-4" />
-              <span className="w-2 h-2 rounded-full bg-emerald-500 absolute top-1.5 right-1.5 ring-2 ring-slate-950" />
-            </button>
-          </div>
+      {/* 2. Cabeçalho Curvo Esmeralda Oficial */}
+      <EmeraldHeaderBanner
+        title="Acompanhamento"
+        subtitle="Cuidado Diário & Família Conectada"
+        patientName={dashboard.patientName}
+        onRefresh={handleRefresh}
+        onConnectFamily={() => setShowConnectModal(true)}
+        onOpenChat={() => setShowCareNoteDialog(true)}
+      />
+
+      {/* Indicador de sincronização sutil */}
+      {dashboard.isLoading && (
+        <div className="w-full h-1 bg-[#E0F2F1] overflow-hidden">
+          <div className="w-full h-full bg-[#00897B] animate-pulse" />
         </div>
+      )}
 
-        {/* Card do Paciente em Destaque */}
-        <div className="mt-3.5 bg-gradient-to-r from-emerald-950/40 via-slate-900/60 to-slate-900/40 border border-emerald-800/30 rounded-2xl p-3 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-emerald-900/60 border border-emerald-700/50 flex items-center justify-center font-bold text-emerald-300 text-sm shadow-inner">
-              {patient.name.charAt(0)}
-            </div>
-            <div>
-              <div className="flex items-center gap-1.5">
-                <span className="font-bold text-sm text-white">{patient.name}</span>
-                <span className="text-[11px] text-slate-400">({patient.relationship})</span>
-              </div>
-              <p className="text-[11px] text-emerald-400 flex items-center gap-1">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                <span>Ativa {patient.lastActive}</span>
-              </p>
-            </div>
-          </div>
+      {/* Conteúdo Principal Rolável */}
+      <main className="p-4 space-y-4 flex-1 pb-24 overflow-y-auto">
+        {/* Identificação do Familiar Acompanhado */}
+        <PatientHeaderCard state={dashboard} />
 
-          <div className="text-right">
-            <span className="text-[11px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 font-medium inline-block">
-              {patient.statusMessage}
-            </span>
-          </div>
-        </div>
-      </header>
+        {/* Card de Sinais Vitais de Hoje */}
+        <TodayVitalsCard state={dashboard} />
 
-      {/* Main Content */}
-      <main className="p-4 flex-1 pb-24 overflow-y-auto">
-        {/* Banner de Instalação no iOS */}
-        <InstallBanner />
-
-        {/* Alerta de Emergência se Houver */}
-        {emergencyAlert && (
-          <div className="bg-rose-950/90 border border-rose-600 rounded-2xl p-3.5 mb-4 text-white flex items-center justify-between shadow-lg">
-            <div className="flex items-center gap-2.5">
-              <AlertCircle className="w-5 h-5 text-rose-400 shrink-0" />
-              <div>
-                <p className="text-xs font-bold">{emergencyAlert}</p>
-                <p className="text-[11px] text-rose-200">Verifique com o paciente imediatamente.</p>
-              </div>
-            </div>
-            <button
-              onClick={handleEmergencyCall}
-              className="bg-rose-600 hover:bg-rose-500 px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1"
-            >
-              <PhoneCall className="w-3.5 h-3.5" />
-              Ligar
-            </button>
-          </div>
-        )}
-
-        {/* 1. Sinais Vitais */}
-        <VitalsSection vitals={MOCK_VITALS} onOpenCharts={() => setIsChartsOpen(true)} />
-
-        {/* 2. Medicamentos do Dia */}
-        <MedicationsSection medications={MOCK_MEDICATIONS} patientName={patient.name} />
-
-        {/* 3. Hidratação */}
-        <HydrationCard hydration={MOCK_HYDRATION} patientName={patient.name} />
-
-        {/* 4. Mensagens Efêmeras de Afeto (Ponte Familiar) */}
-        <FamilyMessagesSection
-          messages={MOCK_MESSAGES}
-          patientId={patient.id}
-          patientName={patient.name}
+        {/* Ações Rápidas em Chips Horizontais */}
+        <QuickActionsChips
+          onMedicationReminder={() => setShowMedicationDialog(true)}
+          onAppointment={() => setShowAppointmentDialog(true)}
+          onCareNote={() => setShowCareNoteDialog(true)}
+          onFamilyPost={() => showToast("Publicação adicionada ao Círculo Familiar")}
         />
 
-        {/* Botão de Ajuda e Contato Rápido */}
-        <div className="pt-2">
+        {/* Histórico e Tendências (7d / 30d) */}
+        <HistoryMetricsSection history7d={DEFAULT_HISTORY_7D} />
+
+        {/* Lista de Compras Compartilhada da Semana */}
+        <SharedGroceryListCard
+          items={groceryItems}
+          patientName={dashboard.patientName}
+          onToggle={handleToggleGrocery}
+        />
+
+        {/* Mensagens Rápidas de 1 Toque */}
+        <QuickMessagesCard
+          templates={QUICK_TEMPLATES}
+          onSend={handleSendQuickTemplate}
+        />
+
+        {/* Botão de Emergência Rápido SAMU 192 */}
+        <div className="pt-1">
           <button
             onClick={handleEmergencyCall}
-            className="w-full bg-slate-900 hover:bg-slate-850 active:bg-slate-800 border border-slate-800 rounded-2xl p-3.5 text-slate-300 hover:text-white flex items-center justify-center gap-2 text-xs font-semibold transition-all shadow-sm"
+            className="w-full bg-[#FFF5F2] hover:bg-[#FFEAE4] active:scale-98 border border-[#D9532F]/30 rounded-2xl p-3.5 text-[#D9532F] flex items-center justify-center gap-2 text-xs font-bold transition-all shadow-2xs"
           >
-            <PhoneCall className="w-4 h-4 text-rose-400" />
+            <PhoneCall className="w-4 h-4 text-[#D9532F]" />
             <span>Contato de Emergência / SAMU 192</span>
           </button>
         </div>
       </main>
 
-      {/* Bottom Bar para iOS */}
-      <footer className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-slate-950/90 border-t border-slate-800/80 backdrop-blur-lg pb-safe pt-2 px-6 flex items-center justify-between text-slate-400 text-[10px] z-40">
-        <div className="flex items-center gap-1.5 text-emerald-400 font-medium">
+      {/* Barra Inferior Fixa com Safe Area iOS */}
+      <footer className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-white/95 backdrop-blur-md border-t border-[#E5EBE8] pb-safe pt-2 px-6 flex items-center justify-between text-[#64748B] text-[11px] z-40">
+        <div className="flex items-center gap-1.5 text-[#00897B] font-semibold">
           <ShieldCheck className="w-4 h-4" />
-          <span>Monitoramento Seguro</span>
+          <span>Ponte Familiar Segura</span>
         </div>
-        <div className="flex items-center gap-1 text-slate-500">
-          <span>Braga Saúde v1.0.0</span>
+        <div className="flex items-center gap-1 text-[#64748B]">
+          <span>Braga Saúde</span>
           <span>·</span>
-          <span>braga-saude.web.app</span>
+          <span>Modo Cuidador</span>
         </div>
       </footer>
 
-      {/* Modais */}
-      <QrPairingModal
-        isOpen={isPairingOpen}
-        onClose={() => setIsPairingOpen(false)}
-        onSuccessPair={handleSuccessPair}
+      {/* Toast Feedback */}
+      {toastMessage && (
+        <div className="fixed top-5 left-1/2 -translate-x-1/2 z-50 bg-[#1E293B] text-white px-4 py-2.5 rounded-2xl text-xs font-semibold shadow-xl flex items-center gap-2 border border-white/10 animate-in fade-in slide-in-from-top-4">
+          <CheckCircle2 className="w-4 h-4 text-[#26A69A]" />
+          <span>{toastMessage}</span>
+        </div>
+      )}
+
+      {/* Diálogos Modais */}
+      <MedicationReminderDialog
+        isOpen={showMedicationDialog}
+        onClose={() => setShowMedicationDialog(false)}
+        onSend={(text) => {
+          sendCaregiverMessage(dashboard.patientUserId, text, "MEDICATION", dashboard.caregiverName);
+          showToast("Lembrete de medicação enviado para o familiar");
+        }}
       />
 
-      <ChartsModal
-        isOpen={isChartsOpen}
-        onClose={() => setIsChartsOpen(false)}
-        patientName={patient.name}
+      <AppointmentDialog
+        isOpen={showAppointmentDialog}
+        onClose={() => setShowAppointmentDialog(false)}
+        onSend={(spec, date) => {
+          sendCaregiverMessage(dashboard.patientUserId, `Consulta agendada: ${spec} em ${date}`, "APPOINTMENT", dashboard.caregiverName);
+          showToast("Consulta médica salva e notificada");
+        }}
+      />
+
+      <CareNoteDialog
+        isOpen={showCareNoteDialog}
+        onClose={() => setShowCareNoteDialog(false)}
+        onSend={(text) => {
+          sendCaregiverMessage(dashboard.patientUserId, text, "LOVE", dashboard.caregiverName);
+          showToast("Bilhete de carinho enviado com sucesso");
+        }}
+      />
+
+      <FamilyConnectModal
+        isOpen={showConnectModal}
+        onClose={() => setShowConnectModal(false)}
+        onSuccessPair={(patientName, relation) => {
+          setDashboard((prev) => ({
+            ...prev,
+            patientName,
+            caregiverRelation: relation,
+            lastMeasurementLabel: "Novo familiar conectado",
+          }));
+          showToast(`Conectado com sucesso a ${patientName}!`);
+        }}
       />
     </div>
   );

@@ -1,57 +1,72 @@
-﻿export type CaregiverMode = "VIEWER_ONLY" | "HYBRID";
+/**
+ * Modelos de dados e contratos oficiais do ecossistema Braga Saúde
+ * Equivalente direto a CaregiverDashboardState.kt, FamilyBindingEntity.kt e GroceryListItemEntity.kt
+ */
 
-export interface CaregiverUser {
-  id: string;
-  name: string;
-  phone: string;
-  email?: string;
-  mode: CaregiverMode;
+export interface CaregiverDashboardState {
+  patientUserId: string;
+  patientName: string;
+  caregiverRelation: string;
+  caregiverName: string;
+  systolic: number | null;
+  diastolic: number | null;
+  glucose: number | null;
+  hasDiabetes: boolean;
+  hydrationMl: number;
+  hydrationTargetMl: number;
+  steps: number;
+  stepGoal: number;
+  lastMeasurementLabel: string | null;
+  isLoading: boolean;
 }
 
-export interface Patient {
+export interface FamilyBinding {
   id: string;
-  name: string;
-  relationship: string;
-  age: number;
-  avatarUrl?: string;
-  lastActive: string;
-  status: "healthy" | "attention" | "critical";
-  statusMessage: string;
+  patientUserId: string;
+  caregiverUserId: string;
+  caregiverName: string;
+  caregiverRelation: string;
+  connectionCode: string;
+  status: "PENDING" | "ACTIVE" | "REVOKED" | "EXPIRED";
+  createdAt: number;
+  expiresAt: number;
 }
 
-export interface VitalRecord {
+export interface GroceryItem {
   id: string;
-  type: "pressure" | "glucose" | "heart_rate" | "weight";
-  systolic?: number;
-  diastolic?: number;
-  value?: number;
-  unit: string;
-  timestamp: string;
-  severity: "normal" | "warning" | "alert";
-  note?: string;
+  remoteId?: string;
+  foodName: string;
+  purchaseUnitText: string;
+  category: string;
+  estimatedPriceBrl: number;
+  isCheckedInPantry: boolean;
 }
 
-export interface MedicationSchedule {
-  id: string;
-  name: string;
-  dosage: string;
-  time: string;
-  isTaken: boolean;
-  takenAt?: string;
-  instructions?: string;
-}
-
-export interface HydrationRecord {
-  currentMl: number;
-  targetMl: number;
-  lastIntakeAt: string;
+export interface MessageTemplate {
+  key: string;
+  label: string;
+  text: string;
+  iconType: "water" | "medication" | "walk" | "love" | "general";
 }
 
 export interface FamilyMessage {
   id: string;
+  patientId: string;
+  senderId: string;
   senderName: string;
   messageText: string;
-  iconType: "LOVE" | "MEDICATION" | "WATER" | "HEART" | "EMERGENCY";
+  iconType: "LOVE" | "MEDICATION" | "WATER" | "WALK" | "APPOINTMENT";
   sentAt: string;
   expiresAt: string;
 }
+
+export interface VitalHistoryRecord {
+  id: string;
+  measuredAt: string;
+  systolic?: number;
+  diastolic?: number;
+  glucose?: number;
+  hydrationMl?: number;
+  steps?: number;
+}
+
