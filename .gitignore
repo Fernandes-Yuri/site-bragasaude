@@ -1,4 +1,4 @@
-﻿node_modules/
+node_modules/
 .next/
 .env
 .eslintcache
@@ -6,3 +6,7 @@ out/
 .env.local
 .DS_Store
 npm-debug.log*
+pwa/node_modules/
+pwa/dist/
+.firebase/
+onboarding_site/.firebase/

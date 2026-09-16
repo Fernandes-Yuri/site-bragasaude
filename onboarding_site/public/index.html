@@ -1,6 +1,16 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
+  <script>
+    (function() {
+      var h = window.location.hostname;
+      if (h === 'braga-saude.web.app' || h === 'braga-saude.firebaseapp.com') {
+        if (window.location.pathname === '/' || window.location.pathname === '') {
+          window.location.replace('/app/');
+        }
+      }
+    })();
+  </script>
   <!-- Google tag (gtag.js) -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-F5DSWH0G8H"></script>
   <script>
@@ -346,6 +356,7 @@
           <li><a href="#demonstracao" data-nav="landing">O App</a></li>
           <li><a href="#como-instalar" data-nav="landing">Como Instalar</a></li>
           <li><a href="#recursos" data-nav="landing">Recursos</a></li>
+          <li><a href="/app/" style="color: #00A884; font-weight: 700;">📱 App Cuidador (iOS)</a></li>
           <li><a href="#duvidas" data-nav="landing">Dúvidas</a></li>
           <li><a href="#termos" data-legal="termos">Termos de Uso</a></li>
           <li><a href="#privacidade" data-legal="privacidade">Privacidade</a></li>
