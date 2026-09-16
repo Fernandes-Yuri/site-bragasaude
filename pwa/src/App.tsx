@@ -14,6 +14,7 @@ import {
   sendCaregiverMessage,
   fetchFamilyBindings,
   fetchPatientVitals,
+  syncCaregiverPhone,
 } from "./services/api";
 import type { CaregiverDashboardState, GroceryItem } from "./types";
 import { EmeraldHeaderBanner } from "./components/EmeraldHeaderBanner";
@@ -54,6 +55,7 @@ const InstallPromptBanner = React.lazy(() =>
 
 export const App: React.FC = () => {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [idToken, setIdToken] = useState<string | undefined>(undefined);
   const [isAuthLoading, setIsAuthLoading] = useState(true);
 
   const [dashboard, setDashboard] = useState<CaregiverDashboardState>(DEFAULT_CAREGIVER_STATE);
@@ -95,8 +97,9 @@ export const App: React.FC = () => {
 
         // Buscar vínculos reais do usuário
         try {
-          const idToken = await user.getIdToken();
-          const bindings = await fetchFamilyBindings(user.uid, idToken);
+          const token = await user.getIdToken();
+          setIdToken(token);
+          const bindings = await fetchFamilyBindings(user.uid, token);
           if (bindings.length > 0) {
             const active = bindings[0];
             setHasRealBinding(true);
@@ -108,7 +111,7 @@ export const App: React.FC = () => {
             }));
 
             // Buscar sinais vitais reais do paciente
-            const vitals = await fetchPatientVitals(active.patientUserId, idToken);
+            const vitals = await fetchPatientVitals(active.patientUserId, token);
             if (vitals.length > 0) {
               setHistoryRecords(vitals);
               const latest = vitals[0];
@@ -124,8 +127,10 @@ export const App: React.FC = () => {
             }
           }
         } catch (err) {
-          console.warn("Falha ao sincronizar dados iniciais:", err);
+          console.warn("Erro ao sincronizar dados iniciais:", err);
         }
+      } else {
+        setIdToken(undefined);
       }
     });
 
@@ -140,12 +145,31 @@ export const App: React.FC = () => {
     );
   };
 
+  const handleSendMessage = async (
+    text: string,
+    iconType: "LOVE" | "MEDICATION" | "WATER" | "WALK" | "APPOINTMENT"
+  ) => {
+    if (!currentUser) return;
+    try {
+      const tok = await currentUser.getIdToken();
+      await sendCaregiverMessage(
+        dashboard.patientUserId,
+        text,
+        iconType,
+        dashboard.caregiverName,
+        currentUser.uid,
+        tok
+      );
+    } catch (err) {
+      console.warn("Falha ao enviar mensagem:", err);
+    }
+  };
+
   const handleSendQuickTemplate = async (templateKey: string) => {
     const template = QUICK_TEMPLATES[templateKey];
     if (!template) return;
 
-    await sendCaregiverMessage(
-      dashboard.patientUserId,
+    await handleSendMessage(
       template.text,
       template.iconType === "water"
         ? "WATER"
@@ -153,8 +177,7 @@ export const App: React.FC = () => {
         ? "MEDICATION"
         : template.iconType === "walk"
         ? "WALK"
-        : "LOVE",
-      dashboard.caregiverName
+        : "LOVE"
     );
 
     showToast(`Mensagem enviada: "${template.label}"`);
@@ -379,8 +402,8 @@ export const App: React.FC = () => {
           <MedicationReminderDialog
             isOpen={showMedicationDialog}
             onClose={() => setShowMedicationDialog(false)}
-            onSend={(text) => {
-              sendCaregiverMessage(dashboard.patientUserId, text, "MEDICATION", dashboard.caregiverName);
+            onSend={async (text) => {
+              await handleSendMessage(text, "MEDICATION");
               showToast("Lembrete de medicação enviado para o familiar");
             }}
           />
@@ -390,8 +413,8 @@ export const App: React.FC = () => {
           <AppointmentDialog
             isOpen={showAppointmentDialog}
             onClose={() => setShowAppointmentDialog(false)}
-            onSend={(spec, date) => {
-              sendCaregiverMessage(dashboard.patientUserId, `Consulta agendada: ${spec} em ${date}`, "APPOINTMENT", dashboard.caregiverName);
+            onSend={async (spec, date) => {
+              await handleSendMessage(`Consulta agendada: ${spec} em ${date}`, "APPOINTMENT");
               showToast("Consulta médica salva e notificada");
             }}
           />
@@ -401,8 +424,8 @@ export const App: React.FC = () => {
           <CareNoteDialog
             isOpen={showCareNoteDialog}
             onClose={() => setShowCareNoteDialog(false)}
-            onSend={(text) => {
-              sendCaregiverMessage(dashboard.patientUserId, text, "LOVE", dashboard.caregiverName);
+            onSend={async (text) => {
+              await handleSendMessage(text, "LOVE");
               showToast("Bilhete de carinho enviado com sucesso");
             }}
           />
@@ -412,14 +435,24 @@ export const App: React.FC = () => {
           <FamilyConnectModal
             isOpen={showConnectModal}
             onClose={() => setShowConnectModal(false)}
-            onSuccessPair={(patientName, relation) => {
+            defaultCaregiverName={dashboard.caregiverName}
+            idToken={idToken}
+            onSuccessPair={(patientName, relation, patientUserId) => {
               setHasRealBinding(true);
               setDashboard((prev) => ({
                 ...prev,
                 patientName,
+                patientUserId,
                 caregiverRelation: relation,
                 lastMeasurementLabel: "Novo familiar conectado",
               }));
+              if (currentUser && patientUserId) {
+                currentUser.getIdToken().then((tok) => {
+                  fetchPatientVitals(patientUserId, tok).then((vitals) => {
+                    if (vitals.length > 0) setHistoryRecords(vitals);
+                  });
+                });
+              }
               showToast(`Conectado com sucesso a ${patientName}!`);
             }}
           />
@@ -430,10 +463,12 @@ export const App: React.FC = () => {
             isOpen={showPhoneLinkDialog}
             onClose={() => setShowPhoneLinkDialog(false)}
             initialPhone={userPhone || ""}
-            onSuccess={(phone) => {
+            onSuccess={async (phone) => {
               setUserPhone(phone);
               if (currentUser) {
                 localStorage.setItem(`braga_phone_${currentUser.uid}`, phone);
+                const tok = await currentUser.getIdToken();
+                await syncCaregiverPhone(currentUser.uid, dashboard.caregiverName, phone, tok);
               }
               showToast("WhatsApp vinculado com sucesso!");
             }}

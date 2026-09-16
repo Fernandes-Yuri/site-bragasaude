@@ -6,20 +6,30 @@ import { acceptFamilyBinding } from "../services/api";
 interface FamilyConnectModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSuccessPair: (patientName: string, relation: string) => void;
+  onSuccessPair: (patientName: string, relation: string, patientUserId: string) => void;
+  defaultCaregiverName?: string;
+  idToken?: string;
 }
 
 export const FamilyConnectModal: React.FC<FamilyConnectModalProps> = ({
   isOpen,
   onClose,
   onSuccessPair,
+  defaultCaregiverName = "Cuidador",
+  idToken,
 }) => {
   const [mode, setMode] = useState<"code" | "camera">("code");
   const [code, setCode] = useState("");
   const [relation, setRelation] = useState("Filho");
-  const [caregiverName] = useState("Yuri Fernandes");
+  const [caregiverName, setCaregiverName] = useState(defaultCaregiverName);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (defaultCaregiverName) {
+      setCaregiverName(defaultCaregiverName);
+    }
+  }, [defaultCaregiverName]);
 
   useEffect(() => {
     if (!isOpen || mode !== "camera") return;
@@ -65,13 +75,17 @@ export const FamilyConnectModal: React.FC<FamilyConnectModalProps> = ({
     setError(null);
 
     try {
-      const binding = await acceptFamilyBinding(clean, caregiverName, relation);
+      const binding = await acceptFamilyBinding(clean, caregiverName, relation, idToken);
       if (binding) {
-        onSuccessPair(binding.patientUserId.replace("patient-", "Familiar "), relation);
+        onSuccessPair(
+          binding.caregiverName ? `Familiar de ${binding.caregiverName}` : "Familiar Conectado",
+          relation,
+          binding.patientUserId
+        );
         onClose();
       }
-    } catch {
-      setError("Código de conexão não encontrado ou expirado. Gere um novo no app do familiar.");
+    } catch (err: any) {
+      setError(err?.message || "Código de conexão não encontrado ou expirado. Gere um novo no app do familiar.");
     } finally {
       setIsLoading(false);
     }

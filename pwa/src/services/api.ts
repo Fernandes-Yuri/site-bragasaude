@@ -126,13 +126,14 @@ export async function findFamilyBindingByCode(code: string): Promise<FamilyBindi
 }
 
 /**
- * Aceita o convite e vincula o cuidador ao paciente
+ * Aceita o convite e vincula o cuidador ao paciente no PostgreSQL
  * Endpoint oficial: POST /api/family/accept
  */
 export async function acceptFamilyBinding(
   code: string,
   caregiverName: string,
-  caregiverRelation: string
+  caregiverRelation: string,
+  idToken?: string
 ): Promise<FamilyBinding | null> {
   const payload = {
     code: code.trim().toUpperCase(),
@@ -140,50 +141,58 @@ export async function acceptFamilyBinding(
     caregiverRelation: caregiverRelation.trim(),
   };
 
+  const headers: Record<string, string> = { "Content-Type": "application/json" };
+  if (idToken) headers["Authorization"] = `Bearer ${idToken}`;
+
   try {
     const res = await fetch(`${API_BASE_URL}/api/family/accept`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers,
       body: JSON.stringify(payload),
     });
     if (res.ok) {
-      return await res.json();
+      const b = await res.json();
+      return {
+        id: String(b.id),
+        patientUserId: b.patient_id || b.patientUserId || "",
+        caregiverUserId: b.caregiver_id || b.caregiverUserId || "",
+        caregiverName: b.caregiver_name || b.caregiverName || "",
+        caregiverRelation: b.caregiver_relation || b.caregiverRelation || "",
+        connectionCode: b.connection_code || b.connectionCode || "",
+        status: b.status,
+        createdAt: b.created_at ? new Date(b.created_at).getTime() : Date.now(),
+        expiresAt: b.expires_at ? new Date(b.expires_at).getTime() : Date.now() + 7 * 86400000,
+      };
+    } else {
+      const errData = await res.json().catch(() => ({}));
+      throw new Error(errData.detail || "Código de conexão indisponível ou expirado");
     }
   } catch (err) {
     console.warn("Falha ao aceitar vínculo no servidor:", err);
+    throw err;
   }
-
-  // Fallback seguro em caso de indisponibilidade de rede
-  return {
-    id: `bind-${Date.now()}`,
-    patientUserId: `patient-${cleanCodeString(code)}`,
-    caregiverUserId: "caregiver-pwa",
-    caregiverName,
-    caregiverRelation,
-    connectionCode: code.toUpperCase(),
-    status: "ACTIVE",
-    createdAt: Date.now(),
-    expiresAt: Date.now() + 7 * 86400000,
-  };
 }
 
 /**
- * Envia mensagem / lembrete para a tela do paciente
+ * Envia mensagem / lembrete para a tela do paciente com assinatura real do cuidador
  * Endpoint oficial: POST /api/sync/family-message (com TTL de 24 horas)
  */
 export async function sendCaregiverMessage(
   patientId: string,
   text: string,
   iconType: "LOVE" | "MEDICATION" | "WATER" | "WALK" | "APPOINTMENT",
-  senderName: string
+  senderName: string,
+  senderId?: string,
+  idToken?: string
 ): Promise<FamilyMessage> {
   const now = new Date();
   const expires = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+  const realSenderId = senderId || "caregiver-pwa";
 
   const payload = {
     id: crypto.randomUUID ? crypto.randomUUID() : `msg-${Date.now()}`,
     patientId,
-    senderId: "caregiver-pwa",
+    senderId: realSenderId,
     senderName,
     messageText: text,
     iconType,
@@ -191,12 +200,19 @@ export async function sendCaregiverMessage(
     expiresAt: expires.toISOString(),
   };
 
+  const headers: Record<string, string> = { "Content-Type": "application/json" };
+  if (idToken) headers["Authorization"] = `Bearer ${idToken}`;
+
   try {
-    await fetch(`${API_BASE_URL}/api/sync/family-message`, {
+    const res = await fetch(`${API_BASE_URL}/api/sync/family-message`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers,
       body: JSON.stringify(payload),
     });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      console.warn("Falha ao sincronizar mensagem com o paciente:", err);
+    }
   } catch (e) {
     console.warn("Mensagem salva localmente:", e);
   }
@@ -280,12 +296,55 @@ export async function fetchFamilyBindings(
 
     const res = await fetch(`${API_BASE_URL}/api/family/bindings/${userId}`, { headers });
     if (res.ok) {
-      return await res.json();
+      const data = await res.json();
+      if (Array.isArray(data)) {
+        return data.map((b: any) => ({
+          id: String(b.id),
+          patientUserId: b.patient_id || b.patientUserId || "",
+          caregiverUserId: b.caregiver_id || b.caregiverUserId || "",
+          caregiverName: b.caregiver_name || b.caregiverName || "",
+          caregiverRelation: b.caregiver_relation || b.caregiverRelation || "",
+          connectionCode: b.connection_code || b.connectionCode || "",
+          status: b.status,
+          createdAt: b.created_at ? new Date(b.created_at).getTime() : Date.now(),
+          expiresAt: b.expires_at ? new Date(b.expires_at).getTime() : Date.now() + 7 * 86400000,
+        }));
+      }
     }
   } catch (err) {
     console.warn("Falha ao buscar vínculos familiares reais:", err);
   }
   return [];
+}
+
+/**
+ * Sincroniza o telefone e perfil do cuidador no PostgreSQL
+ * Endpoint oficial: POST /api/sync/profile
+ */
+export async function syncCaregiverPhone(
+  userId: string,
+  fullName: string,
+  phone: string,
+  idToken?: string
+): Promise<boolean> {
+  const headers: Record<string, string> = { "Content-Type": "application/json" };
+  if (idToken) headers["Authorization"] = `Bearer ${idToken}`;
+
+  try {
+    const res = await fetch(`${API_BASE_URL}/api/sync/profile`, {
+      method: "POST",
+      headers,
+      body: JSON.stringify({
+        id: userId,
+        fullName: fullName.trim(),
+        phone: phone.trim(),
+      }),
+    });
+    return res.ok;
+  } catch (err) {
+    console.warn("Falha ao sincronizar telefone do cuidador:", err);
+    return false;
+  }
 }
 
 /**
@@ -319,9 +378,5 @@ export async function fetchPatientVitals(
     console.warn("Falha ao buscar sinais vitais reais:", err);
   }
   return [];
-}
-
-function cleanCodeString(str: string) {
-  return str.replace(/[^A-Z0-9]/gi, "").substring(0, 8);
 }
 
