@@ -1,0 +1,87 @@
+/* ==========================================================================
+   Braga Saúde — Componente: Download Buttons (Hero inline)
+   Botões de download integrados na coluna de texto do hero.
+   ========================================================================== */
+
+.hero-download-group {
+  margin-bottom: 28px;
+}
+
+.hero-download-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.hero-download-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 24px;
+  border-radius: 14px;
+  font-size: 0.95rem;
+  font-weight: 700;
+  text-decoration: none;
+  cursor: pointer;
+  border: none;
+  transition: all 0.25s ease;
+  font-family: inherit;
+}
+
+.hero-download-android {
+  background: linear-gradient(135deg, #34A853 0%, #2d8e47 100%);
+  color: #ffffff;
+}
+
+.hero-download-android:hover {
+  background: linear-gradient(135deg, #2d8e47 0%, #236b39 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(52, 168, 83, 0.3);
+}
+
+.hero-download-ios {
+  background: linear-gradient(135deg, #007AFF 0%, #0056b3 100%);
+  color: #ffffff;
+}
+
+.hero-download-ios:hover {
+  background: linear-gradient(135deg, #0056b3 0%, #003d82 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0, 122, 255, 0.3);
+}
+
+.hero-download-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  line-height: 1.5;
+  padding: 10px 14px;
+  background: rgba(234, 179, 8, 0.08);
+  border: 1px solid rgba(234, 179, 8, 0.2);
+  border-radius: 10px;
+}
+
+.hero-download-note svg {
+  flex-shrink: 0;
+  color: #D97706;
+  margin-top: 2px;
+}
+
+.hero-download-note-text strong {
+  color: #92400E;
+}
+
+/* ── Mobile ── */
+@media (max-width: 600px) {
+  .hero-download-row {
+    flex-direction: column;
+  }
+
+  .hero-download-btn {
+    width: 100%;
+    justify-content: center;
+  }
+}

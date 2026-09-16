@@ -1,0 +1,74 @@
+/* ==========================================================================
+   Braga Saúde — Base: Design Tokens, Reset & Tipografia
+   ========================================================================== */
+
+/* ── 1. Design Tokens & Variáveis Globais ── */
+:root {
+  --primary:         #00A884;
+  --primary-dark:    #007A60;
+  --primary-darker:  #005240;
+  --primary-light:   #E8FAF5;
+  --primary-mid:     #B0EFE0;
+  --primary-glow:    rgba(0, 168, 132, 0.28);
+  
+  --accent-blue:     #2563EB;
+  --accent-blue-lt:  #EFF6FF;
+  --accent-amber:    #D97706;
+  --accent-amber-lt: #FEF3C7;
+  --accent-rose:     #E11D48;
+  --accent-rose-lt:  #FFE4E6;
+  
+  --dark-bg:         #07140E;
+  --dark-surface:    #0F241A;
+  --dark-border:     #1B3D2D;
+  
+  --text-main:       #0F2419;
+  --text-muted:      #4A685B;
+  --text-light:      #819E92;
+  
+  --bg-page:         #F6FAF8;
+  --bg-card:         #FFFFFF;
+  --border-light:    #D9EFE8;
+  --border-subtle:   #EAF5F1;
+  
+  --radius-sm:       8px;
+  --radius-md:       14px;
+  --radius-lg:       22px;
+  --radius-xl:       32px;
+  
+  --shadow-sm:       0 2px 8px rgba(0, 40, 25, 0.04);
+  --shadow-md:       0 8px 24px rgba(0, 168, 132, 0.08);
+  --shadow-lg:       0 16px 40px rgba(0, 40, 25, 0.10);
+  --shadow-glow:     0 0 35px rgba(0, 168, 132, 0.30);
+}
+
+/* ── 2. Reset & Tipografia Base ── */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  background: var(--bg-page);
+  color: var(--text-main);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+
+h1, h2, h3, h4, .font-heading {
+  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+/* ── 3. Layout & Estrutura ── */
+.container {
+  max-width: 1160px;
+  margin: 0 auto;
+  padding: 0 24px;
+}

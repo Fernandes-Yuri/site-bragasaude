@@ -1,0 +1,326 @@
+/* ==========================================================================
+   Braga Saúde — Responsividade (Media Queries)
+   Landing page principal: breakpoints para desktop, tablet, mobile e telas
+   pequenas, do maior para o menor.
+   ========================================================================== */
+
+/* ── Tablet grande / Notebook pequeno (≤ 1024px) ── */
+@media (max-width: 1024px) {
+  .container {
+    padding: 0 20px;
+  }
+
+  .features-grid,
+  .steps-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .footer-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 32px;
+  }
+}
+
+/* ── Tablet (≤ 960px) ── */
+@media (max-width: 960px) {
+  .hero-grid {
+    grid-template-columns: 1fr;
+    text-align: center;
+  }
+  .hero-desc {
+    margin: 0 auto 30px;
+  }
+  .hero-actions {
+    justify-content: center;
+  }
+  .hero-trust-badges {
+    justify-content: center;
+  }
+}
+
+/* ── Onde o menu horizontal começa a apertar (≤ 860px) ──
+   Antes o menu só virava hambúrguer em telas de celular (600px), o que
+   deixava os links de navegação espremidos em tablets. Agora o corte
+   acontece mais cedo, então o cabeçalho nunca quebra linha nem sobrepõe
+   o botão do WhatsApp. */
+@media (max-width: 860px) {
+  .hamburger {
+    display: flex;
+  }
+
+  .nav-links {
+    display: none;
+    position: fixed;
+    top: 60px;
+    left: 0;
+    right: 0;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0;
+    background: #FFFFFF;
+    border-bottom: 1px solid var(--border-light);
+    box-shadow: var(--shadow-lg);
+    padding: 12px 0;
+    z-index: 999;
+    max-height: calc(100vh - 60px);
+    overflow-y: auto;
+  }
+
+  .nav-links.open {
+    display: flex;
+  }
+
+  .nav-links li {
+    border-bottom: 1px solid var(--border-subtle);
+  }
+
+  .nav-links a {
+    display: block;
+    padding: 14px 24px;
+    font-size: 1rem;
+  }
+
+  .brand-sub {
+    display: none;
+  }
+}
+
+/* ── Celular grande (≤ 640px) ── */
+@media (max-width: 640px) {
+  .hero-section {
+    padding: 40px 0 60px;
+  }
+
+  .features-section,
+  .steps-section {
+    padding: 60px 0;
+  }
+
+  .features-grid,
+  .steps-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .footer-grid {
+    grid-template-columns: 1fr;
+    gap: 28px;
+  }
+
+  .legal-card {
+    padding: 24px 20px;
+  }
+
+  .section-header {
+    margin: 0 auto 34px;
+  }
+}
+
+/* ── Celular padrão (≤ 600px), onde antes o arquivo original já cuidava
+   do essencial. Mantemos essas regras e completamos o que faltava. ── */
+@media (max-width: 600px) {
+  .nav-cta-group .btn-whatsapp {
+    display: none;
+  }
+
+  .phone-frame {
+    width: 290px;
+    height: 580px;
+  }
+
+  .phone-tabs-selector {
+    max-width: 320px;
+    margin-bottom: 16px;
+  }
+
+  .phone-tab-btn {
+    padding: 6px 10px;
+    font-size: 0.72rem;
+  }
+
+  .legal-tabs {
+    gap: 8px;
+    overflow-x: auto;
+    padding-bottom: 10px;
+  }
+
+  .legal-tab-btn {
+    padding: 8px 16px;
+    font-size: 0.88rem;
+    white-space: nowrap;
+  }
+
+  .hero-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .hero-actions .btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .cinema-card {
+    border-radius: var(--radius-lg);
+  }
+
+  .cinema-headline {
+    font-size: 1.1rem;
+  }
+
+  .cinema-synopsis-text {
+    font-size: 0.85rem;
+  }
+
+  .cinema-play-btn {
+    width: 60px;
+    height: 60px;
+  }
+
+  .cinema-play-btn svg {
+    width: 22px;
+    height: 22px;
+  }
+
+  .cinema-footer {
+    flex-direction: column;
+    gap: 8px;
+    padding: 14px 20px;
+    text-align: center;
+  }
+
+  .modal-overlay {
+    padding: 12px;
+    align-items: flex-end;
+  }
+
+  .modal-box {
+    max-width: 100%;
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+
+  .modal-header {
+    padding: 16px;
+  }
+
+  .modal-body {
+    padding: 16px;
+  }
+
+  .modal-action-row .btn {
+    width: 100%;
+  }
+
+  .legal-view-container {
+    padding-top: 20px;
+  }
+
+  .legal-back-row .btn {
+    font-size: 0.82rem;
+    padding: 8px 14px;
+  }
+}
+
+/* ── Celular pequeno (≤ 400px) — telas como iPhone SE.
+   O simulador de celular e os cards precisam encolher mais para não
+   estourar a largura da tela nem forçar rolagem horizontal. ── */
+@media (max-width: 400px) {
+  .container {
+    padding: 0 16px;
+  }
+
+  .phone-frame {
+    width: 100%;
+    max-width: 260px;
+    height: 520px;
+  }
+
+  .phone-tabs-selector {
+    max-width: 280px;
+    gap: 2px;
+    padding: 3px;
+  }
+
+  .phone-tab-btn {
+    padding: 5px 8px;
+    font-size: 0.65rem;
+    gap: 4px;
+  }
+
+  .hero-tag {
+    font-size: 0.72rem;
+    padding: 5px 12px;
+  }
+
+  .section-tag {
+    font-size: 0.7rem;
+  }
+
+  .btn {
+    padding: 10px 16px;
+    font-size: 0.84rem;
+  }
+
+  .feature-card,
+  .step-card {
+    padding: 26px 20px;
+  }
+
+  .cinema-headline {
+    font-size: 0.95rem;
+  }
+
+  .cinema-synopsis-text {
+    font-size: 0.78rem;
+  }
+
+  .cinema-play-btn {
+    width: 52px;
+    height: 52px;
+    margin-bottom: 16px;
+  }
+
+  .cinema-play-btn svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  .cinema-story-pill {
+    font-size: 0.7rem;
+    padding: 4px 10px;
+  }
+
+  .modal-header-title {
+    font-size: 0.95rem;
+  }
+
+  .modal-scene-p {
+    font-size: 0.78rem;
+  }
+
+  .legal-card h2 {
+    font-size: 1rem;
+  }
+
+  .legal-card h3 {
+    font-size: 0.88rem;
+  }
+
+  .legal-card p,
+  .legal-card li {
+    font-size: 0.82rem;
+  }
+}
+
+/* ── Scroll reveal animations ── */
+.reveal {
+  opacity: 0;
+  transform: translateY(28px);
+  transition: opacity 0.65s ease, transform 0.65s ease;
+}
+
+.reveal.visible {
+  opacity: 1;
+  transform: translateY(0);
+}

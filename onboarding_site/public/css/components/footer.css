@@ -1,0 +1,95 @@
+/* ==========================================================================
+   Braga Saúde — Componente: Rodapé Oficial
+   ========================================================================== */
+
+footer {
+  background: #0B1E16;
+  color: #A0C0B2;
+  padding: 60px 0 36px;
+  border-top: 1px solid #183327;
+}
+
+.footer-grid {
+  display: grid;
+  grid-template-columns: 1.4fr 0.8fr 0.8fr 1fr;
+  gap: 40px;
+  margin-bottom: 40px;
+}
+
+.footer-brand {
+  color: #FFFFFF;
+  font-size: 1.2rem;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.footer-brand svg {
+  stroke: #00A884;
+}
+
+.footer-text {
+  font-size: 0.88rem;
+  line-height: 1.65;
+  color: #81A394;
+}
+
+.footer-col h4 {
+  color: #FFFFFF;
+  font-size: 0.95rem;
+  font-weight: 700;
+  margin-bottom: 18px;
+}
+
+.footer-links {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.footer-links a {
+  color: #81A394;
+  text-decoration: none;
+  font-size: 0.88rem;
+  transition: color 0.2s;
+  cursor: pointer;
+}
+
+.footer-links a:hover {
+  color: #00A884;
+}
+
+.footer-help-note {
+  font-size: 0.8rem;
+  color: #638576;
+  margin-top: 6px;
+}
+
+.disclaimer-box {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  padding: 14px 20px;
+  margin: 24px 0;
+  font-size: 0.8rem;
+  color: #81A394;
+  text-align: center;
+  line-height: 1.6;
+}
+
+.footer-bottom {
+  padding-top: 28px;
+  border-top: 1px solid #183327;
+  text-align: center;
+  font-size: 0.82rem;
+  color: #638576;
+}
+
+.footer-bottom-sub {
+  margin-top: 4px;
+  font-size: 0.75rem;
+}
+

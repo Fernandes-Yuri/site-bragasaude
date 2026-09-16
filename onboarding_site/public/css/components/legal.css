@@ -1,0 +1,104 @@
+/* ==========================================================================
+   Braga Saúde — Componente: Seção Legal (Termos e Privacidade)
+   ========================================================================== */
+
+.legal-view-container {
+  display: none;
+  padding: 40px 0 90px;
+}
+
+.legal-view-container.active {
+  display: block;
+}
+
+.legal-back-row {
+  margin-bottom: 24px;
+}
+
+.legal-update-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: #FFFFFF;
+  border: 1px solid var(--primary-mid);
+  padding: 8px 18px;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  color: var(--primary-dark);
+  margin-bottom: 24px;
+  font-weight: 600;
+}
+
+.legal-tabs {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 30px;
+  border-bottom: 1px solid var(--border-light);
+  padding-bottom: 14px;
+}
+
+.legal-tab-btn {
+  background: none;
+  border: none;
+  padding: 10px 22px;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  border-radius: 999px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.legal-tab-btn.active {
+  background: var(--primary-light);
+  color: var(--primary-dark);
+  border: 1px solid var(--primary-mid);
+}
+
+.legal-card {
+  background: #FFFFFF;
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-lg);
+  padding: 36px 40px;
+  margin-bottom: 24px;
+  box-shadow: var(--shadow-sm);
+}
+
+.legal-card h2 {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: var(--text-main);
+  margin-bottom: 6px;
+}
+
+.legal-card h3 {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--primary-dark);
+  margin-bottom: 16px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.legal-card p, .legal-card li {
+  font-size: 0.95rem;
+  color: var(--text-muted);
+  line-height: 1.75;
+  margin-bottom: 12px;
+}
+
+.legal-card ul {
+  padding-left: 24px;
+  margin-bottom: 16px;
+}
+
+.legal-highlight {
+  background: var(--primary-light);
+  border-left: 4px solid var(--primary);
+  border-radius: 0 12px 12px 0;
+  padding: 14px 20px;
+  margin: 16px 0;
+  font-size: 0.9rem;
+  color: var(--primary-darker);
+}
+
