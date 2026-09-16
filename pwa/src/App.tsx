@@ -1,13 +1,22 @@
-﻿import React, { useState } from "react";
-import { PhoneCall, ShieldCheck, CheckCircle2 } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import { PhoneCall, ShieldCheck, CheckCircle2, MessageSquare, UserPlus } from "lucide-react";
+import {
+  auth,
+  signOut,
+  onAuthStateChanged,
+  type User,
+} from "./services/firebase";
 import {
   DEFAULT_CAREGIVER_STATE,
   DEFAULT_GROCERY_ITEMS,
   DEFAULT_HISTORY_7D,
   QUICK_TEMPLATES,
   sendCaregiverMessage,
+  fetchFamilyBindings,
+  fetchPatientVitals,
 } from "./services/api";
 import type { CaregiverDashboardState, GroceryItem } from "./types";
+import { LoginScreen } from "./components/LoginScreen";
 import { DesktopGateModal } from "./components/DesktopGateModal";
 import { EmeraldHeaderBanner } from "./components/EmeraldHeaderBanner";
 import { PatientHeaderCard } from "./components/PatientHeaderCard";
@@ -22,10 +31,18 @@ import {
   CareNoteDialog,
 } from "./components/CaregiverDialogs";
 import { FamilyConnectModal } from "./components/FamilyConnectModal";
+import { PhoneLinkDialog } from "./components/PhoneLinkDialog";
 
 export const App: React.FC = () => {
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [isAuthLoading, setIsAuthLoading] = useState(true);
+
   const [dashboard, setDashboard] = useState<CaregiverDashboardState>(DEFAULT_CAREGIVER_STATE);
   const [groceryItems, setGroceryItems] = useState<GroceryItem[]>(DEFAULT_GROCERY_ITEMS);
+  const [historyRecords, setHistoryRecords] = useState(DEFAULT_HISTORY_7D);
+  const [hasRealBinding, setHasRealBinding] = useState(false);
+  const [userPhone, setUserPhone] = useState<string | null>(null);
+
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   // Estados dos modais de diálogo
@@ -33,11 +50,68 @@ export const App: React.FC = () => {
   const [showAppointmentDialog, setShowAppointmentDialog] = useState(false);
   const [showCareNoteDialog, setShowCareNoteDialog] = useState(false);
   const [showConnectModal, setShowConnectModal] = useState(false);
+  const [showPhoneLinkDialog, setShowPhoneLinkDialog] = useState(false);
 
   const showToast = (msg: string) => {
     setToastMessage(msg);
     setTimeout(() => setToastMessage(null), 3500);
   };
+
+  // Monitorar autenticação do Firebase em tempo real
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      setCurrentUser(user);
+      setIsAuthLoading(false);
+
+      if (user) {
+        const displayName = user.displayName || user.email?.split("@")[0] || "Cuidador";
+        setDashboard((prev) => ({
+          ...prev,
+          caregiverName: displayName,
+        }));
+
+        // Buscar telefone salvo localmente ou no backend
+        const savedPhone = localStorage.getItem(`braga_phone_${user.uid}`);
+        if (savedPhone) setUserPhone(savedPhone);
+
+        // Buscar vínculos reais do usuário
+        try {
+          const idToken = await user.getIdToken();
+          const bindings = await fetchFamilyBindings(user.uid, idToken);
+          if (bindings.length > 0) {
+            const active = bindings[0];
+            setHasRealBinding(true);
+            setDashboard((prev) => ({
+              ...prev,
+              patientUserId: active.patientUserId,
+              patientName: active.caregiverName ? `Familiar de ${displayName}` : "Familiar Conectado",
+              caregiverRelation: active.caregiverRelation || "Cuidador",
+            }));
+
+            // Buscar sinais vitais reais do paciente
+            const vitals = await fetchPatientVitals(active.patientUserId, idToken);
+            if (vitals.length > 0) {
+              setHistoryRecords(vitals);
+              const latest = vitals[0];
+              setDashboard((prev) => ({
+                ...prev,
+                systolic: latest.systolic ?? prev.systolic,
+                diastolic: latest.diastolic ?? prev.diastolic,
+                glucose: latest.glucose ?? prev.glucose,
+                hydrationMl: latest.hydrationMl ?? prev.hydrationMl,
+                steps: latest.steps ?? prev.steps,
+                lastMeasurementLabel: "Medição real recebida",
+              }));
+            }
+          }
+        } catch (err) {
+          console.warn("Falha ao sincronizar dados iniciais:", err);
+        }
+      }
+    });
+
+    return () => unsubscribe();
+  }, []);
 
   const handleToggleGrocery = (id: string) => {
     setGroceryItems((prev) =>
@@ -67,35 +141,77 @@ export const App: React.FC = () => {
     showToast(`Mensagem enviada: "${template.label}"`);
   };
 
-  const handleRefresh = () => {
+  const handleRefresh = async () => {
     setDashboard((prev) => ({ ...prev, isLoading: true }));
-    setTimeout(() => {
-      setDashboard((prev) => ({
-        ...prev,
-        isLoading: false,
-        lastMeasurementLabel: "Atualizado agora mesmo",
-      }));
-      showToast("Dados sincronizados com sucesso");
-    }, 700);
+    try {
+      if (currentUser) {
+        const idToken = await currentUser.getIdToken(true);
+        const bindings = await fetchFamilyBindings(currentUser.uid, idToken);
+        if (bindings.length > 0) {
+          const vitals = await fetchPatientVitals(bindings[0].patientUserId, idToken);
+          if (vitals.length > 0) setHistoryRecords(vitals);
+        }
+      }
+    } catch (e) {
+      console.warn(e);
+    } finally {
+      setTimeout(() => {
+        setDashboard((prev) => ({
+          ...prev,
+          isLoading: false,
+          lastMeasurementLabel: "Sincronizado agora",
+        }));
+        showToast("Dados atualizados com sucesso");
+      }, 500);
+    }
   };
 
   const handleEmergencyCall = () => {
     window.location.href = "tel:192";
   };
 
+  const handleLogout = async () => {
+    await signOut(auth);
+    setHasRealBinding(false);
+    showToast("Sessão encerrada com sucesso.");
+  };
+
+  // 1. Tela de Carregamento de Sessão
+  if (isAuthLoading) {
+    return (
+      <div className="min-h-screen bg-[#FAFCFB] flex flex-col items-center justify-center p-6 text-center">
+        <div className="w-12 h-12 rounded-full border-3 border-[#E0F2F1] border-t-[#00897B] animate-spin mb-4" />
+        <p className="text-sm font-semibold text-[#1E293B]">Carregando sessão segura...</p>
+      </div>
+    );
+  }
+
+  // 2. Tela de Login se não estiver autenticado
+  if (!currentUser) {
+    return (
+      <>
+        <DesktopGateModal />
+        <LoginScreen onSuccess={() => showToast("Login efetuado com sucesso!")} />
+      </>
+    );
+  }
+
+  // 3. Dashboard do Cuidador Autenticado
   return (
     <div className="min-h-screen bg-[#FAFCFB] text-[#1E293B] flex flex-col justify-between max-w-md mx-auto shadow-2xl border-x border-[#E5EBE8] select-none font-sans">
-      {/* 1. Bloqueio para Desktop com tela exclusiva e QR Code */}
+      {/* Bloqueio para Desktop com tela exclusiva e QR Code */}
       <DesktopGateModal />
 
-      {/* 2. Cabeçalho Curvo Esmeralda Oficial */}
+      {/* Cabeçalho Curvo Esmeralda Oficial com Logout e WhatsApp */}
       <EmeraldHeaderBanner
         title="Acompanhamento"
-        subtitle="Cuidado Diário & Família Conectada"
+        subtitle={`Cuidador: ${dashboard.caregiverName}`}
         patientName={dashboard.patientName}
         onRefresh={handleRefresh}
         onConnectFamily={() => setShowConnectModal(true)}
         onOpenChat={() => setShowCareNoteDialog(true)}
+        onLinkWhatsApp={() => setShowPhoneLinkDialog(true)}
+        onLogout={handleLogout}
       />
 
       {/* Indicador de sincronização sutil */}
@@ -107,6 +223,50 @@ export const App: React.FC = () => {
 
       {/* Conteúdo Principal Rolável */}
       <main className="p-4 space-y-4 flex-1 pb-24 overflow-y-auto">
+        {/* Banner de Lembrete para Vincular WhatsApp se ainda não tiver número */}
+        {!userPhone && (
+          <div className="bg-[#FFF8E1] border border-[#FFE082] rounded-2xl p-3.5 flex items-center justify-between shadow-2xs">
+            <div className="flex items-center gap-2.5 min-w-0 pr-2">
+              <MessageSquare className="w-5 h-5 text-[#F57F17] shrink-0" />
+              <div className="min-w-0">
+                <p className="text-xs font-bold text-[#1E293B]">Vincule seu WhatsApp</p>
+                <p className="text-[11px] text-[#64748B] truncate">
+                  Receba avisos de saúde e emergência direto no WhatsApp.
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={() => setShowPhoneLinkDialog(true)}
+              className="px-3 py-1.5 rounded-xl bg-[#00897B] text-white text-xs font-bold shrink-0 active:scale-95 transition-all"
+            >
+              Vincular
+            </button>
+          </div>
+        )}
+
+        {/* Banner de Orientação se ainda não tiver familiar conectado */}
+        {!hasRealBinding && (
+          <div className="bg-[#E0F2F1]/50 border border-[#B2DFDB] rounded-2xl p-4 flex items-center justify-between shadow-2xs">
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-xl bg-[#00897B] text-white flex items-center justify-center shrink-0">
+                <UserPlus className="w-5 h-5" />
+              </div>
+              <div>
+                <p className="text-xs font-bold text-[#1E293B]">Conectar Novo Familiar</p>
+                <p className="text-[11px] text-[#64748B]">
+                  Use o código de 8 dígitos gerado no celular do paciente.
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={() => setShowConnectModal(true)}
+              className="px-3.5 py-2 rounded-xl bg-[#00897B] text-white text-xs font-bold shrink-0 hover:bg-[#00695C] transition-colors"
+            >
+              Conectar
+            </button>
+          </div>
+        )}
+
         {/* Identificação do Familiar Acompanhado */}
         <PatientHeaderCard state={dashboard} />
 
@@ -118,11 +278,11 @@ export const App: React.FC = () => {
           onMedicationReminder={() => setShowMedicationDialog(true)}
           onAppointment={() => setShowAppointmentDialog(true)}
           onCareNote={() => setShowCareNoteDialog(true)}
-          onFamilyPost={() => showToast("Publicação adicionada ao Círculo Familiar")}
+          onFamilyPost={() => showToast("Publicação compartilhada com a família")}
         />
 
-        {/* Histórico e Tendências (7d / 30d) */}
-        <HistoryMetricsSection history7d={DEFAULT_HISTORY_7D} />
+        {/* Histórico e Tendências (7d / 30d) com dados reais */}
+        <HistoryMetricsSection history7d={historyRecords} />
 
         {/* Lista de Compras Compartilhada da Semana */}
         <SharedGroceryListCard
@@ -153,12 +313,10 @@ export const App: React.FC = () => {
       <footer className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-white/95 backdrop-blur-md border-t border-[#E5EBE8] pb-safe pt-2 px-6 flex items-center justify-between text-[#64748B] text-[11px] z-40">
         <div className="flex items-center gap-1.5 text-[#00897B] font-semibold">
           <ShieldCheck className="w-4 h-4" />
-          <span>Ponte Familiar Segura</span>
+          <span>Sessão Protegida</span>
         </div>
         <div className="flex items-center gap-1 text-[#64748B]">
-          <span>Braga Saúde</span>
-          <span>·</span>
-          <span>Modo Cuidador</span>
+          <span>{userPhone || currentUser.email}</span>
         </div>
       </footer>
 
@@ -202,6 +360,7 @@ export const App: React.FC = () => {
         isOpen={showConnectModal}
         onClose={() => setShowConnectModal(false)}
         onSuccessPair={(patientName, relation) => {
+          setHasRealBinding(true);
           setDashboard((prev) => ({
             ...prev,
             patientName,
@@ -209,6 +368,19 @@ export const App: React.FC = () => {
             lastMeasurementLabel: "Novo familiar conectado",
           }));
           showToast(`Conectado com sucesso a ${patientName}!`);
+        }}
+      />
+
+      <PhoneLinkDialog
+        isOpen={showPhoneLinkDialog}
+        onClose={() => setShowPhoneLinkDialog(false)}
+        initialPhone={userPhone || ""}
+        onSuccess={(phone) => {
+          setUserPhone(phone);
+          if (currentUser) {
+            localStorage.setItem(`braga_phone_${currentUser.uid}`, phone);
+          }
+          showToast("WhatsApp vinculado com sucesso!");
         }}
       />
     </div>

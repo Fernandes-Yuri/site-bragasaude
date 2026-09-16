@@ -1,5 +1,5 @@
 import React from "react";
-import { MessageCircle, UserPlus, RefreshCw } from "lucide-react";
+import { MessageCircle, UserPlus, RefreshCw, LogOut, MessageSquare } from "lucide-react";
 
 interface EmeraldHeaderBannerProps {
   title?: string;
@@ -9,6 +9,8 @@ interface EmeraldHeaderBannerProps {
   onRefresh?: () => void;
   onConnectFamily?: () => void;
   onOpenChat?: () => void;
+  onLinkWhatsApp?: () => void;
+  onLogout?: () => void;
 }
 
 export const EmeraldHeaderBanner: React.FC<EmeraldHeaderBannerProps> = ({
@@ -19,6 +21,8 @@ export const EmeraldHeaderBanner: React.FC<EmeraldHeaderBannerProps> = ({
   onRefresh,
   onConnectFamily,
   onOpenChat,
+  onLinkWhatsApp,
+  onLogout,
 }) => {
   const initials =
     avatarInitials ||
@@ -29,17 +33,27 @@ export const EmeraldHeaderBanner: React.FC<EmeraldHeaderBannerProps> = ({
       {/* Barra de título e botões de ação */}
       <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-white/20 border border-white/30 flex items-center justify-center text-sm font-bold text-white shadow-inner">
+          <div className="w-10 h-10 rounded-full bg-white/20 border border-white/30 flex items-center justify-center text-sm font-bold text-white shadow-inner shrink-0">
             {initials}
           </div>
-          <div>
-            <h1 className="text-xl font-bold tracking-tight text-white">{title}</h1>
-            <p className="text-xs text-emerald-100/90 font-medium">{subtitle}</p>
+          <div className="min-w-0">
+            <h1 className="text-xl font-bold tracking-tight text-white truncate">{title}</h1>
+            <p className="text-xs text-emerald-100/90 font-medium truncate">{subtitle}</p>
           </div>
         </div>
 
         {/* Ações superiores */}
-        <div className="flex items-center gap-1.5">
+        <div className="flex items-center gap-1.5 shrink-0">
+          {onLinkWhatsApp && (
+            <button
+              onClick={onLinkWhatsApp}
+              className="w-9 h-9 rounded-full bg-white/15 hover:bg-white/25 active:scale-95 transition-all flex items-center justify-center text-white"
+              title="Vincular WhatsApp"
+            >
+              <MessageSquare className="w-4 h-4" />
+            </button>
+          )}
+
           {onOpenChat && (
             <button
               onClick={onOpenChat}
@@ -67,6 +81,16 @@ export const EmeraldHeaderBanner: React.FC<EmeraldHeaderBannerProps> = ({
               title="Atualizar dados"
             >
               <RefreshCw className="w-4 h-4" />
+            </button>
+          )}
+
+          {onLogout && (
+            <button
+              onClick={onLogout}
+              className="w-9 h-9 rounded-full bg-white/15 hover:bg-rose-500/40 active:scale-95 transition-all flex items-center justify-center text-white"
+              title="Sair da Conta"
+            >
+              <LogOut className="w-4 h-4" />
             </button>
           )}
         </div>
