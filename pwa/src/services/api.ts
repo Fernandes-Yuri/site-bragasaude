@@ -65,23 +65,6 @@ export const EMPTY_GROCERY_ITEMS: GroceryItem[] = [];
 export const EMPTY_HISTORY_7D: VitalHistoryRecord[] = [];
 
 /**
- * Busca convite de conexão familiar pelo código de 8 caracteres
- * Endpoint oficial: GET /api/family/find-by-code/{code}
- */
-export async function findFamilyBindingByCode(code: string): Promise<FamilyBinding | null> {
-  const cleanCode = code.trim().toUpperCase();
-  try {
-    const res = await fetch(`${API_BASE_URL}/api/family/find-by-code/${cleanCode}`);
-    if (res.ok) {
-      return await res.json();
-    }
-  } catch (err) {
-    console.warn("Consulta à API offline/falhou:", err);
-  }
-  return null;
-}
-
-/**
  * Aceita o convite e vincula o cuidador ao paciente no PostgreSQL
  * Endpoint oficial: POST /api/family/accept
  */
