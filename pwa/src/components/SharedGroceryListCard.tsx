@@ -1,4 +1,4 @@
-﻿import React from "react";
+import React from "react";
 import { ShoppingCart, Check } from "lucide-react";
 import type { GroceryItem } from "../types";
 
@@ -46,56 +46,62 @@ export const SharedGroceryListCard: React.FC<SharedGroceryListCardProps> = ({
 
       {/* Lista de Itens */}
       <div className="space-y-1.5">
-        {items.map((item) => {
-          const isChecked = item.isCheckedInPantry;
-          return (
-            <div
-              key={item.id}
-              onClick={() => onToggle(item.id)}
-              className={`flex items-center gap-3 p-2.5 rounded-xl cursor-pointer transition-all ${
-                isChecked
-                  ? "bg-[#F8FAFC] opacity-65"
-                  : "hover:bg-[#F4FBF9] bg-transparent"
-              }`}
-            >
-              {/* Checkbox Circular */}
+        {items.length === 0 ? (
+          <p className="text-xs text-[#64748B] text-center py-4 bg-[#F8FAFC] rounded-xl border border-dashed border-[#CBD5E1]">
+            Nenhum item na lista de compras desta semana.
+          </p>
+        ) : (
+          items.map((item) => {
+            const isChecked = item.isCheckedInPantry;
+            return (
               <div
-                className={`w-5 h-5 rounded-md border flex items-center justify-center transition-all ${
+                key={item.id}
+                onClick={() => onToggle(item.id)}
+                className={`flex items-center gap-3 p-2.5 rounded-xl cursor-pointer transition-all ${
                   isChecked
-                    ? "bg-[#00897B] border-[#00897B] text-white"
-                    : "border-[#94A3B8] bg-white"
+                    ? "bg-[#F8FAFC] opacity-65"
+                    : "hover:bg-[#F4FBF9] bg-transparent"
                 }`}
               >
-                {isChecked && <Check className="w-3.5 h-3.5 stroke-[3]" />}
-              </div>
-
-              {/* Detalhes do Alimento */}
-              <div className="flex-1 min-w-0">
-                <p
-                  className={`text-sm leading-tight truncate ${
+                {/* Checkbox Circular */}
+                <div
+                  className={`w-5 h-5 rounded-md border flex items-center justify-center transition-all ${
                     isChecked
-                      ? "line-through text-[#64748B]"
-                      : "font-semibold text-[#1E293B]"
+                      ? "bg-[#00897B] border-[#00897B] text-white"
+                      : "border-[#94A3B8] bg-white"
                   }`}
                 >
-                  {item.foodName}
-                </p>
-                <p className="text-[11px] text-[#64748B] truncate">
-                  {item.purchaseUnitText} • {item.category}
-                </p>
-              </div>
+                  {isChecked && <Check className="w-3.5 h-3.5 stroke-[3]" />}
+                </div>
 
-              {/* Preço Estimado em R$ */}
-              <span
-                className={`text-xs font-semibold shrink-0 ${
-                  isChecked ? "text-[#94A3B8]" : "text-[#1E293B]"
-                }`}
-              >
-                R$ {item.estimatedPriceBrl.toFixed(2).replace(".", ",")}
-              </span>
-            </div>
-          );
-        })}
+                {/* Detalhes do Alimento */}
+                <div className="flex-1 min-w-0">
+                  <p
+                    className={`text-sm leading-tight truncate ${
+                      isChecked
+                        ? "line-through text-[#64748B]"
+                        : "font-semibold text-[#1E293B]"
+                    }`}
+                  >
+                    {item.foodName}
+                  </p>
+                  <p className="text-[11px] text-[#64748B] truncate">
+                    {item.purchaseUnitText} • {item.category}
+                  </p>
+                </div>
+
+                {/* Preço Estimado em R$ */}
+                <span
+                  className={`text-xs font-semibold shrink-0 ${
+                    isChecked ? "text-[#94A3B8]" : "text-[#1E293B]"
+                  }`}
+                >
+                  R$ {item.estimatedPriceBrl.toFixed(2).replace(".", ",")}
+                </span>
+              </div>
+            );
+          })
+        )}
       </div>
     </div>
   );

@@ -1,4 +1,4 @@
-﻿import React, { useState } from "react";
+import React, { useState } from "react";
 import {
   LineChart,
   Line,
@@ -19,21 +19,22 @@ export const HistoryMetricsSection: React.FC<HistoryMetricsSectionProps> = ({ hi
   const [metricTab, setMetricTab] = useState<"pressure" | "glucose">("pressure");
 
   const chartData = history7d.map((item) => ({
-    date: item.measuredAt.slice(5), // MM-DD
+    date: item.measuredAt ? item.measuredAt.slice(5) : "",
     sistolica: item.systolic,
     diastolica: item.diastolic,
     glicose: item.glucose,
   }));
 
-  const avgSystolic = Math.round(
-    history7d.reduce((acc, curr) => acc + (curr.systolic || 0), 0) / history7d.length
-  );
-  const avgDiastolic = Math.round(
-    history7d.reduce((acc, curr) => acc + (curr.diastolic || 0), 0) / history7d.length
-  );
-  const avgGlucose = Math.round(
-    history7d.reduce((acc, curr) => acc + (curr.glucose || 0), 0) / history7d.length
-  );
+  const hasHistory = history7d.length > 0;
+  const avgSystolic = hasHistory
+    ? Math.round(history7d.reduce((acc, curr) => acc + (curr.systolic || 0), 0) / history7d.length)
+    : 0;
+  const avgDiastolic = hasHistory
+    ? Math.round(history7d.reduce((acc, curr) => acc + (curr.diastolic || 0), 0) / history7d.length)
+    : 0;
+  const avgGlucose = hasHistory
+    ? Math.round(history7d.reduce((acc, curr) => acc + (curr.glucose || 0), 0) / history7d.length)
+    : 0;
 
   return (
     <div className="w-full bg-white rounded-2xl p-5 border border-[#E5EBE8] shadow-sm">
@@ -80,7 +81,7 @@ export const HistoryMetricsSection: React.FC<HistoryMetricsSectionProps> = ({ hi
         >
           <span className="text-[11px] text-[#64748B] block font-medium">Média Pressão</span>
           <span className="text-lg font-bold text-[#1E293B]">
-            {avgSystolic}/{avgDiastolic}{" "}
+            {hasHistory ? `${avgSystolic}/${avgDiastolic}` : "--/--"}{" "}
             <span className="text-[10px] text-[#64748B] font-normal">mmHg</span>
           </span>
         </div>
@@ -95,7 +96,7 @@ export const HistoryMetricsSection: React.FC<HistoryMetricsSectionProps> = ({ hi
         >
           <span className="text-[11px] text-[#64748B] block font-medium">Média Glicose</span>
           <span className="text-lg font-bold text-[#1E293B]">
-            {avgGlucose}{" "}
+            {hasHistory ? `${avgGlucose}` : "--"}{" "}
             <span className="text-[10px] text-[#64748B] font-normal">mg/dL</span>
           </span>
         </div>

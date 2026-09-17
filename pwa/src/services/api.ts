@@ -43,70 +43,26 @@ export const QUICK_TEMPLATES: Record<string, MessageTemplate> = {
   },
 };
 
-// Estado padrão autêntico do Cuidador
-export const DEFAULT_CAREGIVER_STATE: CaregiverDashboardState = {
-  patientUserId: "usr-paciente-odete",
-  patientName: "Dona Odete Braga",
-  caregiverRelation: "Filho",
-  caregiverName: "Yuri Fernandes",
-  systolic: 124,
-  diastolic: 82,
-  glucose: 98,
-  hasDiabetes: true,
-  hydrationMl: 1450,
+// Estado inicial neutro do Cuidador (sem dados mockados)
+export const EMPTY_CAREGIVER_STATE: CaregiverDashboardState = {
+  patientUserId: "",
+  patientName: "",
+  caregiverRelation: "Cuidador",
+  caregiverName: "",
+  systolic: null,
+  diastolic: null,
+  glucose: null,
+  hasDiabetes: false,
+  hydrationMl: 0,
   hydrationTargetMl: 2000,
-  steps: 4320,
+  steps: 0,
   stepGoal: 6000,
-  lastMeasurementLabel: "Medido hoje às 08:30",
+  lastMeasurementLabel: null,
   isLoading: false,
 };
 
-// Lista de compras inicial da semana compartilhada
-export const DEFAULT_GROCERY_ITEMS: GroceryItem[] = [
-  {
-    id: "g1",
-    foodName: "Banana Prata",
-    purchaseUnitText: "1 dúzia",
-    category: "Frutas",
-    estimatedPriceBrl: 8.5,
-    isCheckedInPantry: true,
-  },
-  {
-    id: "g2",
-    foodName: "Aveia em Flocos Finos",
-    purchaseUnitText: "500g",
-    category: "Cereais",
-    estimatedPriceBrl: 6.9,
-    isCheckedInPantry: false,
-  },
-  {
-    id: "g3",
-    foodName: "Peito de Frango sem Pele",
-    purchaseUnitText: "1 kg",
-    category: "Proteínas",
-    estimatedPriceBrl: 21.9,
-    isCheckedInPantry: false,
-  },
-  {
-    id: "g4",
-    foodName: "Água Mineral com Baixo Sódio",
-    purchaseUnitText: "Pack 6x 1.5L",
-    category: "Hidratação",
-    estimatedPriceBrl: 14.0,
-    isCheckedInPantry: true,
-  },
-];
-
-// Histórico semanal de 7 dias para os gráficos e médias
-export const DEFAULT_HISTORY_7D: VitalHistoryRecord[] = [
-  { id: "h1", measuredAt: "2026-09-10", systolic: 128, diastolic: 84, glucose: 104, hydrationMl: 1800, steps: 5200 },
-  { id: "h2", measuredAt: "2026-09-11", systolic: 122, diastolic: 80, glucose: 96, hydrationMl: 2100, steps: 6100 },
-  { id: "h3", measuredAt: "2026-09-12", systolic: 125, diastolic: 83, glucose: 102, hydrationMl: 1950, steps: 4800 },
-  { id: "h4", measuredAt: "2026-09-13", systolic: 120, diastolic: 79, glucose: 94, hydrationMl: 2200, steps: 6500 },
-  { id: "h5", measuredAt: "2026-09-14", systolic: 130, diastolic: 86, glucose: 110, hydrationMl: 1600, steps: 4100 },
-  { id: "h6", measuredAt: "2026-09-15", systolic: 121, diastolic: 80, glucose: 95, hydrationMl: 2050, steps: 5900 },
-  { id: "h7", measuredAt: "2026-09-16", systolic: 124, diastolic: 82, glucose: 98, hydrationMl: 1450, steps: 4320 },
-];
+export const EMPTY_GROCERY_ITEMS: GroceryItem[] = [];
+export const EMPTY_HISTORY_7D: VitalHistoryRecord[] = [];
 
 /**
  * Busca convite de conexão familiar pelo código de 8 caracteres
@@ -173,9 +129,17 @@ export async function acceptFamilyBinding(
   }
 }
 
+export interface SendMessageResult {
+  delivered: boolean;
+  message: FamilyMessage;
+}
+
 /**
  * Envia mensagem / lembrete para a tela do paciente com assinatura real do cuidador
  * Endpoint oficial: POST /api/sync/family-message (com TTL de 24 horas)
+ *
+ * Retorna `delivered: false` sempre que o Gateway não confirmar a entrega.
+ * O chamador DEVE avisar o usuário — nunca reportar sucesso sem confirmação.
  */
 export async function sendCaregiverMessage(
   patientId: string,
@@ -184,12 +148,12 @@ export async function sendCaregiverMessage(
   senderName: string,
   senderId?: string,
   idToken?: string
-): Promise<FamilyMessage> {
+): Promise<SendMessageResult> {
   const now = new Date();
   const expires = new Date(now.getTime() + 24 * 60 * 60 * 1000);
   const realSenderId = senderId || "caregiver-pwa";
 
-  const payload = {
+  const payload: FamilyMessage = {
     id: crypto.randomUUID ? crypto.randomUUID() : `msg-${Date.now()}`,
     patientId,
     senderId: realSenderId,
@@ -209,15 +173,16 @@ export async function sendCaregiverMessage(
       headers,
       body: JSON.stringify(payload),
     });
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({}));
-      console.warn("Falha ao sincronizar mensagem com o paciente:", err);
+    if (res.ok) {
+      return { delivered: true, message: payload };
     }
+    const err = await res.json().catch(() => ({}));
+    console.warn("Gateway rejeitou a mensagem:", err);
   } catch (e) {
-    console.warn("Mensagem salva localmente:", e);
+    console.warn("Sem conexão — mensagem não entregue:", e);
   }
 
-  return payload;
+  return { delivered: false, message: payload };
 }
 
 /**
@@ -244,9 +209,12 @@ export async function sendPhoneOtp(
     return { success: false, message: data.detail || "Erro ao enviar código WhatsApp" };
   } catch (err: unknown) {
     console.warn("Falha no envio do OTP via API:", err);
+    // Falha fechada: jamais afirmar que o código foi enviado sem confirmação
+    // do Gateway. Caso contrário o usuário fica aguardando um código que
+    // nunca chegará.
     return {
-      success: true,
-      waLink: `https://wa.me/5511967808252?text=${encodeURIComponent("Braga Saúde: Solicito código de verificação")}`,
+      success: false,
+      message: "Não foi possível enviar o código agora. Verifique sua conexão e tente novamente.",
     };
   }
 }
@@ -276,9 +244,7 @@ export async function verifyPhoneOtp(
     return { success: false, message: data.detail || "Código incorreto" };
   } catch (err: unknown) {
     console.warn("Falha na validação do OTP:", err);
-    // Validação de fallback se código tiver 6 dígitos
-    if (code.trim().length === 6) return { success: true };
-    return { success: false, message: "Erro de conexão com o servidor." };
+    return { success: false, message: "Erro de conexão com o servidor. Tente novamente." };
   }
 }
 

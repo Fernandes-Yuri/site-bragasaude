@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { PhoneCall, ShieldCheck, CheckCircle2, MessageSquare, UserPlus } from "lucide-react";
+import { PhoneCall, ShieldCheck, CheckCircle2, AlertCircle, MessageSquare, UserPlus } from "lucide-react";
 import {
   auth,
   signOut,
@@ -7,16 +7,16 @@ import {
   type User,
 } from "./services/firebase";
 import {
-  DEFAULT_CAREGIVER_STATE,
-  DEFAULT_GROCERY_ITEMS,
-  DEFAULT_HISTORY_7D,
+  EMPTY_CAREGIVER_STATE,
+  EMPTY_GROCERY_ITEMS,
+  EMPTY_HISTORY_7D,
   QUICK_TEMPLATES,
   sendCaregiverMessage,
   fetchFamilyBindings,
   fetchPatientVitals,
   syncCaregiverPhone,
 } from "./services/api";
-import type { CaregiverDashboardState, GroceryItem } from "./types";
+import type { CaregiverDashboardState, GroceryItem, VitalHistoryRecord } from "./types";
 import { EmeraldHeaderBanner } from "./components/EmeraldHeaderBanner";
 import { PatientHeaderCard } from "./components/PatientHeaderCard";
 import { TodayVitalsCard } from "./components/TodayVitalsCard";
@@ -58,13 +58,14 @@ export const App: React.FC = () => {
   const [idToken, setIdToken] = useState<string | undefined>(undefined);
   const [isAuthLoading, setIsAuthLoading] = useState(true);
 
-  const [dashboard, setDashboard] = useState<CaregiverDashboardState>(DEFAULT_CAREGIVER_STATE);
-  const [groceryItems, setGroceryItems] = useState<GroceryItem[]>(DEFAULT_GROCERY_ITEMS);
-  const [historyRecords, setHistoryRecords] = useState(DEFAULT_HISTORY_7D);
+  const [dashboard, setDashboard] = useState<CaregiverDashboardState>(EMPTY_CAREGIVER_STATE);
+  const [groceryItems, setGroceryItems] = useState<GroceryItem[]>(EMPTY_GROCERY_ITEMS);
+  const [historyRecords, setHistoryRecords] = useState<VitalHistoryRecord[]>(EMPTY_HISTORY_7D);
   const [hasRealBinding, setHasRealBinding] = useState(false);
   const [userPhone, setUserPhone] = useState<string | null>(null);
 
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [toastType, setToastType] = useState<"success" | "error">("success");
 
   // Estados dos modais de diálogo
   const [showMedicationDialog, setShowMedicationDialog] = useState(false);
@@ -73,8 +74,9 @@ export const App: React.FC = () => {
   const [showConnectModal, setShowConnectModal] = useState(false);
   const [showPhoneLinkDialog, setShowPhoneLinkDialog] = useState(false);
 
-  const showToast = (msg: string) => {
+  const showToast = (msg: string, type: "success" | "error" = "success") => {
     setToastMessage(msg);
+    setToastType(type);
     setTimeout(() => setToastMessage(null), 3500);
   };
 
@@ -148,11 +150,15 @@ export const App: React.FC = () => {
   const handleSendMessage = async (
     text: string,
     iconType: "LOVE" | "MEDICATION" | "WATER" | "WALK" | "APPOINTMENT"
-  ) => {
-    if (!currentUser) return;
+  ): Promise<boolean> => {
+    if (!currentUser) return false;
+    if (!dashboard.patientUserId) {
+      showToast("Conecte um familiar antes de enviar mensagens.", "error");
+      return false;
+    }
     try {
       const tok = await currentUser.getIdToken();
-      await sendCaregiverMessage(
+      const result = await sendCaregiverMessage(
         dashboard.patientUserId,
         text,
         iconType,
@@ -160,8 +166,14 @@ export const App: React.FC = () => {
         currentUser.uid,
         tok
       );
+      if (!result.delivered) {
+        showToast("Mensagem não entregue — verifique sua conexão.", "error");
+      }
+      return result.delivered;
     } catch (err) {
       console.warn("Falha ao enviar mensagem:", err);
+      showToast("Mensagem não entregue — verifique sua conexão.", "error");
+      return false;
     }
   };
 
@@ -169,7 +181,7 @@ export const App: React.FC = () => {
     const template = QUICK_TEMPLATES[templateKey];
     if (!template) return;
 
-    await handleSendMessage(
+    const delivered = await handleSendMessage(
       template.text,
       template.iconType === "water"
         ? "WATER"
@@ -180,7 +192,12 @@ export const App: React.FC = () => {
         : "LOVE"
     );
 
-    showToast(`Mensagem enviada: "${template.label}"`);
+    showToast(
+      delivered
+        ? `Mensagem enviada: "${template.label}"`
+        : `Mensagem não entregue: "${template.label}"`,
+      delivered ? "success" : "error"
+    );
   };
 
   const handleRefresh = async () => {
@@ -390,8 +407,18 @@ export const App: React.FC = () => {
 
       {/* Toast Feedback */}
       {toastMessage && (
-        <div className="fixed top-5 left-1/2 -translate-x-1/2 z-50 bg-[#1E293B] text-white px-4 py-2.5 rounded-2xl text-xs font-semibold shadow-xl flex items-center gap-2 border border-white/10 animate-in fade-in slide-in-from-top-4">
-          <CheckCircle2 className="w-4 h-4 text-[#26A69A]" />
+        <div
+          className={`fixed top-5 left-1/2 -translate-x-1/2 z-50 text-white px-4 py-2.5 rounded-2xl text-xs font-semibold shadow-xl flex items-center gap-2 border animate-in fade-in slide-in-from-top-4 ${
+            toastType === "error"
+              ? "bg-[#7F1D1D] border-[#D9532F]/50"
+              : "bg-[#1E293B] border-white/10"
+          }`}
+        >
+          {toastType === "error" ? (
+            <AlertCircle className="w-4 h-4 text-[#FCA5A5]" />
+          ) : (
+            <CheckCircle2 className="w-4 h-4 text-[#26A69A]" />
+          )}
           <span>{toastMessage}</span>
         </div>
       )}
@@ -403,8 +430,13 @@ export const App: React.FC = () => {
             isOpen={showMedicationDialog}
             onClose={() => setShowMedicationDialog(false)}
             onSend={async (text) => {
-              await handleSendMessage(text, "MEDICATION");
-              showToast("Lembrete de medicação enviado para o familiar");
+              const ok = await handleSendMessage(text, "MEDICATION");
+              showToast(
+                ok
+                  ? "Lembrete de medicação enviado para o familiar"
+                  : "Lembrete não entregue — verifique sua conexão.",
+                ok ? "success" : "error"
+              );
             }}
           />
         )}
@@ -414,8 +446,16 @@ export const App: React.FC = () => {
             isOpen={showAppointmentDialog}
             onClose={() => setShowAppointmentDialog(false)}
             onSend={async (spec, date) => {
-              await handleSendMessage(`Consulta agendada: ${spec} em ${date}`, "APPOINTMENT");
-              showToast("Consulta médica salva e notificada");
+              const ok = await handleSendMessage(
+                `Consulta agendada: ${spec} em ${date}`,
+                "APPOINTMENT"
+              );
+              showToast(
+                ok
+                  ? "Consulta médica salva e notificada"
+                  : "Consulta não entregue — verifique sua conexão.",
+                ok ? "success" : "error"
+              );
             }}
           />
         )}
@@ -425,8 +465,13 @@ export const App: React.FC = () => {
             isOpen={showCareNoteDialog}
             onClose={() => setShowCareNoteDialog(false)}
             onSend={async (text) => {
-              await handleSendMessage(text, "LOVE");
-              showToast("Bilhete de carinho enviado com sucesso");
+              const ok = await handleSendMessage(text, "LOVE");
+              showToast(
+                ok
+                  ? "Bilhete de carinho enviado com sucesso"
+                  : "Bilhete não entregue — verifique sua conexão.",
+                ok ? "success" : "error"
+              );
             }}
           />
         )}
