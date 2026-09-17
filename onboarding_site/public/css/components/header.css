@@ -80,6 +80,8 @@ header {
   align-items: center;
   gap: 20px;
   list-style: none;
+  margin: 0;
+  padding: 0;
 }
 
 .nav-links a {
@@ -89,11 +91,21 @@ header {
   font-weight: 600;
   transition: color 0.2s;
   cursor: pointer;
+  white-space: nowrap;
 }
 
 .nav-links a:hover,
 .nav-links a.active {
   color: var(--primary);
+}
+
+.nav-link-app {
+  color: #00A884 !important;
+  font-weight: 700 !important;
+}
+
+.nav-mobile-only {
+  display: none;
 }
 
 .nav-cta-group {

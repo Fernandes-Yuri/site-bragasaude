@@ -38,12 +38,21 @@
   }
 }
 
-/* ── Onde o menu horizontal começa a apertar (≤ 860px) ──
-   Antes o menu só virava hambúrguer em telas de celular (600px), o que
-   deixava os links de navegação espremidos em tablets. Agora o corte
-   acontece mais cedo, então o cabeçalho nunca quebra linha nem sobrepõe
-   o botão do WhatsApp. */
-@media (max-width: 860px) {
+/* ── Ajuste para telas intermediárias / notebooks compactos (≤ 1180px) ── */
+@media (max-width: 1180px) {
+  .nav-links {
+    gap: 14px;
+  }
+  .nav-links a {
+    font-size: 0.82rem;
+  }
+  .brand-sub {
+    display: none;
+  }
+}
+
+/* ── Menu Hambúrguer (≤ 1024px) ── */
+@media (max-width: 1024px) {
   .hamburger {
     display: flex;
   }
@@ -78,6 +87,11 @@
     display: block;
     padding: 14px 24px;
     font-size: 1rem;
+    white-space: normal;
+  }
+
+  .nav-mobile-only {
+    display: block;
   }
 
   .brand-sub {
