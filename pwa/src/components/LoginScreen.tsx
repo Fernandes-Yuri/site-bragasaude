@@ -82,7 +82,10 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onSuccess }) => {
         const checkRes = await fetch(`${API_BASE_URL}/api/auth/check-account`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ identifier: email.trim() }),
+          body: JSON.stringify({
+            identifier: email.trim(),
+            recaptchaToken: captchaToken,
+          }),
         });
 
         if (checkRes.status === 403) {
