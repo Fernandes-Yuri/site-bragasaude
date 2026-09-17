@@ -18,22 +18,34 @@ export const HistoryMetricsSection: React.FC<HistoryMetricsSectionProps> = ({ hi
   const [period, setPeriod] = useState<"7d" | "30d">("7d");
   const [metricTab, setMetricTab] = useState<"pressure" | "glucose">("pressure");
 
-  const chartData = history7d.map((item) => ({
-    date: item.measuredAt ? item.measuredAt.slice(5) : "",
+  // Filtra realmente pela janela selecionada. Antes o seletor 7d/30d era
+  // decorativo: mostrava o mesmo conjunto de dados sob rotulos diferentes,
+  // enganando o cuidador sobre a janela clinica exibida.
+  const cutoff = period === "7d"
+    ? Date.now() - 7 * 24 * 60 * 60 * 1000
+    : Date.now() - 30 * 24 * 60 * 60 * 1000;
+
+  const filtered = history7d.filter((item) => {
+    const ts = Date.parse(item.measuredAt);
+    return !Number.isNaN(ts) && ts >= cutoff;
+  });
+
+  const chartData = filtered.map((item) => ({
+    date: item.measuredAt ? item.measuredAt.slice(5, 10) : "",
     sistolica: item.systolic,
     diastolica: item.diastolic,
     glicose: item.glucose,
   }));
 
-  const hasHistory = history7d.length > 0;
+  const hasHistory = filtered.length > 0;
   const avgSystolic = hasHistory
-    ? Math.round(history7d.reduce((acc, curr) => acc + (curr.systolic || 0), 0) / history7d.length)
+    ? Math.round(filtered.reduce((acc, curr) => acc + (curr.systolic || 0), 0) / filtered.length)
     : 0;
   const avgDiastolic = hasHistory
-    ? Math.round(history7d.reduce((acc, curr) => acc + (curr.diastolic || 0), 0) / history7d.length)
+    ? Math.round(filtered.reduce((acc, curr) => acc + (curr.diastolic || 0), 0) / filtered.length)
     : 0;
   const avgGlucose = hasHistory
-    ? Math.round(history7d.reduce((acc, curr) => acc + (curr.glucose || 0), 0) / history7d.length)
+    ? Math.round(filtered.reduce((acc, curr) => acc + (curr.glucose || 0), 0) / filtered.length)
     : 0;
 
   return (

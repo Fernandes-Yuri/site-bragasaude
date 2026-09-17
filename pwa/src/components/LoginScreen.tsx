@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useCallback } from "react";
 import { Heart, Lock, Mail, User, ArrowRight, ShieldAlert, ShieldCheck, AlertCircle, Clock } from "lucide-react";
 import {
   auth,
@@ -25,6 +25,12 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onSuccess }) => {
   const [error, setError] = useState<string | null>(null);
   const [isIpBlocked, setIsIpBlocked] = useState(false);
   const [lgpdAccepted, setLgpdAccepted] = useState(false);
+
+  // useCallback: sem identidade estavel, cada tecla digitada recria o
+  // RecaptchaVerifier (dep [onToken]), destruindo o widget resolvido.
+  const handleCaptchaToken = useCallback((tok: string | null) => {
+    setCaptchaToken(tok);
+  }, []);
 
   const handleGoogleLogin = async () => {
     setIsLoading(true);
@@ -294,7 +300,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onSuccess }) => {
           )}
 
           {/* Widget Oficial Google reCAPTCHA / Firebase Captcha */}
-          <GoogleRecaptchaWidget onToken={(tok) => setCaptchaToken(tok)} />
+          <GoogleRecaptchaWidget onToken={handleCaptchaToken} />
 
           <button
             type="submit"

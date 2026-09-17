@@ -14,6 +14,14 @@ import type { FamilyMessage } from "../types";
 
 const MAX_ATTEMPTS = 5;
 
+/**
+ * Getter de token injetavel. Tokens do Firebase expiram em ~1h, e a fila
+ * pode sobreviver a quedas longas, entao NAO persistimos o token: buscamos
+ * uma versao fresca a cada entrega. Sem isso o POST sai sem Authorization
+ * e a mensagem queima todas as tentativas.
+ */
+export type TokenGetter = () => Promise<string | undefined>;
+
 export async function queueMessage(
   message: FamilyMessage,
   idToken?: string
@@ -79,8 +87,13 @@ async function bumpAttempts(id: string): Promise<void> {
 /**
  * Processa a fila de mensagens pendentes.
  * Chamado quando a conexao retorna (evento online) ou no pull-to-refresh.
+ *
+ * `getToken` e obrigatorio: sem um token fresco o Gateway rejeita a entrega
+ * e as mensagens queimam todas as tentativas.
  */
-export async function flushMessageQueue(): Promise<number> {
+export async function flushMessageQueue(
+  getToken: TokenGetter
+): Promise<number> {
   let deliveredCount = 0;
 
   try {
@@ -90,7 +103,8 @@ export async function flushMessageQueue(): Promise<number> {
       .toArray();
 
     for (const entry of pending) {
-      const ok = await tryDeliver(entry.message);
+      const idToken = await getToken().catch(() => undefined);
+      const ok = await tryDeliver(entry.message, idToken);
       if (ok) deliveredCount++;
     }
   } catch (err) {

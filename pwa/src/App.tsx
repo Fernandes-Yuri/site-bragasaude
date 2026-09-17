@@ -145,8 +145,11 @@ export const App: React.FC = () => {
 
   // Processar fila de mensagens quando a conexao retornar
   useEffect(() => {
+    const getToken = async () =>
+      currentUser ? currentUser.getIdToken() : undefined;
+
     const handleOnline = async () => {
-      const delivered = await flushMessageQueue();
+      const delivered = await flushMessageQueue(getToken);
       if (delivered > 0) {
         showToast(`${delivered} mensagem(ns) pendente(s) entregue(s) com sucesso`);
       }
@@ -155,10 +158,10 @@ export const App: React.FC = () => {
     window.addEventListener("online", handleOnline);
 
     // Processa pendencias existentes ao abrir (caso tenha voltado antes)
-    flushMessageQueue();
+    flushMessageQueue(getToken);
 
     return () => window.removeEventListener("online", handleOnline);
-  }, []);
+  }, [currentUser]);
 
   const handleToggleGrocery = (id: string) => {
     setGroceryItems((prev) => {
@@ -233,6 +236,7 @@ export const App: React.FC = () => {
 
   const handleRefresh = async () => {
     setDashboard((prev) => ({ ...prev, isLoading: true }));
+    let succeeded = false;
     try {
       if (currentUser) {
         const idToken = await currentUser.getIdToken(true);
@@ -241,6 +245,7 @@ export const App: React.FC = () => {
           const vitals = await fetchPatientVitals(bindings[0].patientUserId, idToken);
           if (vitals.length > 0) setHistoryRecords(vitals);
         }
+        succeeded = true;
       }
     } catch (e) {
       console.warn(e);
@@ -249,9 +254,14 @@ export const App: React.FC = () => {
         setDashboard((prev) => ({
           ...prev,
           isLoading: false,
-          lastMeasurementLabel: "Sincronizado agora",
+          lastMeasurementLabel: succeeded ? "Sincronizado agora" : null,
         }));
-        showToast("Dados atualizados com sucesso");
+        showToast(
+          succeeded
+            ? "Dados atualizados com sucesso"
+            : "Falha na sincronização — verifique sua conexão.",
+          succeeded ? "success" : "error"
+        );
       }, 500);
     }
   };
@@ -262,7 +272,14 @@ export const App: React.FC = () => {
 
   const handleLogout = async () => {
     await signOut(auth);
+    // Zera todos os dados pessoais: em aparelho compartilhado, o proximo
+    // usuario nao pode ver sinais vitais, lista de compras ou telefone
+    // de quem saiu.
     setHasRealBinding(false);
+    setDashboard(EMPTY_CAREGIVER_STATE);
+    setGroceryItems(EMPTY_GROCERY_ITEMS);
+    setHistoryRecords(EMPTY_HISTORY_7D);
+    setUserPhone(null);
     showToast("Sessão encerrada com sucesso.");
   };
 
