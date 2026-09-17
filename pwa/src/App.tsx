@@ -11,11 +11,12 @@ import {
   EMPTY_GROCERY_ITEMS,
   EMPTY_HISTORY_7D,
   QUICK_TEMPLATES,
-  sendCaregiverMessage,
   fetchFamilyBindings,
   fetchPatientVitals,
   syncCaregiverPhone,
 } from "./services/api";
+import { loadGroceryItems, toggleGroceryItemPantry } from "./services/grocery";
+import { queueMessage, flushMessageQueue } from "./services/messageQueue";
 import type { CaregiverDashboardState, GroceryItem, VitalHistoryRecord } from "./types";
 import { EmeraldHeaderBanner } from "./components/EmeraldHeaderBanner";
 import { PatientHeaderCard } from "./components/PatientHeaderCard";
@@ -139,12 +140,40 @@ export const App: React.FC = () => {
     return () => unsubscribe();
   }, []);
 
+  // Carregar lista de compras persistida localmente (offline-first)
+  useEffect(() => {
+    loadGroceryItems().then((items) => {
+      if (items.length > 0) setGroceryItems(items);
+    });
+  }, []);
+
+  // Processar fila de mensagens quando a conexao retornar
+  useEffect(() => {
+    const handleOnline = async () => {
+      const delivered = await flushMessageQueue();
+      if (delivered > 0) {
+        showToast(`${delivered} mensagem(ns) pendente(s) entregue(s) com sucesso`);
+      }
+    };
+
+    window.addEventListener("online", handleOnline);
+
+    // Processa pendencias existentes ao abrir (caso tenha voltado antes)
+    flushMessageQueue();
+
+    return () => window.removeEventListener("online", handleOnline);
+  }, []);
+
   const handleToggleGrocery = (id: string) => {
-    setGroceryItems((prev) =>
-      prev.map((item) =>
+    setGroceryItems((prev) => {
+      const updated = prev.map((item) =>
         item.id === id ? { ...item, isCheckedInPantry: !item.isCheckedInPantry } : item
-      )
-    );
+      );
+      // Persiste a alteracao localmente (offline-first)
+      const item = updated.find((i) => i.id === id);
+      if (item) toggleGroceryItemPantry(id, item.isCheckedInPantry);
+      return updated;
+    });
   };
 
   const handleSendMessage = async (
@@ -158,16 +187,22 @@ export const App: React.FC = () => {
     }
     try {
       const tok = await currentUser.getIdToken();
-      const result = await sendCaregiverMessage(
-        dashboard.patientUserId,
-        text,
-        iconType,
-        dashboard.caregiverName,
-        currentUser.uid,
+      const now = new Date();
+      const result = await queueMessage(
+        {
+          id: crypto.randomUUID ? crypto.randomUUID() : `msg-${Date.now()}`,
+          patientId: dashboard.patientUserId,
+          senderId: currentUser.uid,
+          senderName: dashboard.caregiverName,
+          messageText: text,
+          iconType,
+          sentAt: now.toISOString(),
+          expiresAt: new Date(now.getTime() + 24 * 60 * 60 * 1000).toISOString(),
+        },
         tok
       );
       if (!result.delivered) {
-        showToast("Mensagem não entregue — verifique sua conexão.", "error");
+        showToast("Sem conexão — mensagem salva e será enviada depois.", "error");
       }
       return result.delivered;
     } catch (err) {
