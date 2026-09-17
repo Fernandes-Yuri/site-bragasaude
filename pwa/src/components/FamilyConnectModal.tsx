@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { X, QrCode, Camera, Users, CheckCircle2, AlertCircle } from "lucide-react";
 import { Html5QrcodeScanner } from "html5-qrcode";
 import { acceptFamilyBinding } from "../services/api";
@@ -8,7 +8,9 @@ interface FamilyConnectModalProps {
   onClose: () => void;
   onSuccessPair: (patientName: string, relation: string, patientUserId: string) => void;
   defaultCaregiverName?: string;
-  idToken?: string;
+  // Getter assincrono: tokens do Firebase expiram em ~1h, entao e preciso
+  // buscar uma versao fresca no momento do envio, nao uma copia do login.
+  getIdToken?: () => Promise<string | undefined>;
 }
 
 export const FamilyConnectModal: React.FC<FamilyConnectModalProps> = ({
@@ -16,7 +18,7 @@ export const FamilyConnectModal: React.FC<FamilyConnectModalProps> = ({
   onClose,
   onSuccessPair,
   defaultCaregiverName = "Cuidador",
-  idToken,
+  getIdToken,
 }) => {
   const [mode, setMode] = useState<"code" | "camera">("code");
   const [code, setCode] = useState("");
@@ -30,6 +32,40 @@ export const FamilyConnectModal: React.FC<FamilyConnectModalProps> = ({
       setCaregiverName(defaultCaregiverName);
     }
   }, [defaultCaregiverName]);
+
+  // useCallback garante identidade estavel; o scanner sempre le a versao atual
+  // de caregiverName/relation sem stale closure.
+  const handleConnectWithCode = useCallback(
+    async (targetCode: string) => {
+      const clean = targetCode.trim().toUpperCase();
+      if (clean.length !== 8) {
+        setError("O código de conexão tem 8 caracteres. Confira no app do paciente.");
+        return;
+      }
+
+      setIsLoading(true);
+      setError(null);
+
+      try {
+        // Busca o token fresco no momento do envio (evita token vencido)
+        const idToken = getIdToken ? await getIdToken() : undefined;
+        const binding = await acceptFamilyBinding(clean, caregiverName, relation, idToken);
+        if (binding) {
+          onSuccessPair(
+            binding.caregiverName ? `Familiar de ${binding.caregiverName}` : "Familiar Conectado",
+            relation,
+            binding.patientUserId
+          );
+          onClose();
+        }
+      } catch (err: any) {
+        setError(err?.message || "Código de conexão não encontrado ou expirado. Gere um novo no app do familiar.");
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [caregiverName, relation, getIdToken, onSuccessPair, onClose]
+  );
 
   useEffect(() => {
     if (!isOpen || mode !== "camera") return;
@@ -60,36 +96,9 @@ export const FamilyConnectModal: React.FC<FamilyConnectModalProps> = ({
         scanner.clear().catch(() => {});
       }
     };
-  }, [isOpen, mode]);
+  }, [isOpen, mode, handleConnectWithCode]);
 
   if (!isOpen) return null;
-
-  const handleConnectWithCode = async (targetCode: string) => {
-    const clean = targetCode.trim().toUpperCase();
-    if (clean.length < 6) {
-      setError("Digite o código de conexão completo gerado pelo paciente.");
-      return;
-    }
-
-    setIsLoading(true);
-    setError(null);
-
-    try {
-      const binding = await acceptFamilyBinding(clean, caregiverName, relation, idToken);
-      if (binding) {
-        onSuccessPair(
-          binding.caregiverName ? `Familiar de ${binding.caregiverName}` : "Familiar Conectado",
-          relation,
-          binding.patientUserId
-        );
-        onClose();
-      }
-    } catch (err: any) {
-      setError(err?.message || "Código de conexão não encontrado ou expirado. Gere um novo no app do familiar.");
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   const handleManualSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -192,7 +201,7 @@ export const FamilyConnectModal: React.FC<FamilyConnectModalProps> = ({
               </button>
               <button
                 type="submit"
-                disabled={code.length < 6 || isLoading}
+                disabled={code.length !== 8 || isLoading}
                 className="px-5 py-2.5 rounded-xl bg-[#00897B] hover:bg-[#00695C] disabled:opacity-50 text-white font-semibold text-xs flex items-center gap-1.5 transition-all"
               >
                 <CheckCircle2 className="w-3.5 h-3.5" />

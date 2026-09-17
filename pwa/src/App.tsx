@@ -56,7 +56,6 @@ const InstallPromptBanner = React.lazy(() =>
 
 export const App: React.FC = () => {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
-  const [idToken, setIdToken] = useState<string | undefined>(undefined);
   const [isAuthLoading, setIsAuthLoading] = useState(true);
 
   const [dashboard, setDashboard] = useState<CaregiverDashboardState>(EMPTY_CAREGIVER_STATE);
@@ -101,7 +100,6 @@ export const App: React.FC = () => {
         // Buscar vínculos reais do usuário
         try {
           const token = await user.getIdToken();
-          setIdToken(token);
           const bindings = await fetchFamilyBindings(user.uid, token);
           if (bindings.length > 0) {
             const active = bindings[0];
@@ -132,8 +130,6 @@ export const App: React.FC = () => {
         } catch (err) {
           console.warn("Erro ao sincronizar dados iniciais:", err);
         }
-      } else {
-        setIdToken(undefined);
       }
     });
 
@@ -516,7 +512,7 @@ export const App: React.FC = () => {
             isOpen={showConnectModal}
             onClose={() => setShowConnectModal(false)}
             defaultCaregiverName={dashboard.caregiverName}
-            idToken={idToken}
+            getIdToken={async () => (currentUser ? currentUser.getIdToken() : undefined)}
             onSuccessPair={(patientName, relation, patientUserId) => {
               setHasRealBinding(true);
               setDashboard((prev) => ({
