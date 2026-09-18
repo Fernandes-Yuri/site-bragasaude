@@ -10,6 +10,42 @@ import type {
 export const API_BASE_URL = "https://api.bragasaude.online";
 
 /**
+ * Confirma (pelo botao da tela) o rascunho de agendamento por voz (D51).
+ * O gateway valida que o draftId pertence ao par cuidador/paciente.
+ */
+export async function confirmVoiceDraft(
+  patientId: string,
+  draftId: string,
+  idToken?: string
+): Promise<{ ok: boolean; fala?: string }> {
+  try {
+    const headers: Record<string, string> = { "Content-Type": "application/json" };
+    if (idToken) headers["Authorization"] = `Bearer ${idToken}`;
+
+    const res = await fetch(`${API_BASE_URL}/api/consultation/confirm-voice-draft`, {
+      method: "POST",
+      headers,
+      body: JSON.stringify({ patientId, draftId }),
+    });
+
+    if (res.ok) {
+      const data = await res.json();
+      return {
+        ok: true,
+        fala: `Confirmado! Consulta com ${data.title} marcada. Já está na agenda.`,
+      };
+    }
+
+    // 409 = rascunho expirado ou nao pertence a este usuario
+    const data = await res.json().catch(() => ({}));
+    return { ok: false, fala: data?.detail || "O agendamento expirou. Vamos refazer?" };
+  } catch (err) {
+    console.warn("Falha ao confirmar rascunho:", err);
+    return { ok: false, fala: "Não consegui confirmar agora. Tente novamente." };
+  }
+}
+
+/**
  * Sintetiza voz pelo Piper TTS do gateway — a MESMA voz do app Android
  * (padrão "faber", pt_BR-faber-medium.onnx). Retorna um Blob de áudio WAV.
  *
@@ -60,7 +96,7 @@ export async function askVoiceCopilot(
   userId: string,
   idToken?: string,
   scope?: { actingAs?: "patient" | "caregiver"; patientId?: string; patientName?: string }
-): Promise<{ fala: string; acao: string } | null> {
+): Promise<{ fala: string; acao: string; parametros?: Record<string, unknown> } | null> {
   try {
     const headers: Record<string, string> = { "Content-Type": "application/json" };
     if (idToken) headers["Authorization"] = `Bearer ${idToken}`;
@@ -105,7 +141,14 @@ export async function askVoiceCopilot(
     try {
       const parsed = JSON.parse(content);
       if (parsed?.fala) {
-        return { fala: String(parsed.fala), acao: String(parsed.acao || "CONVERSA") };
+        return {
+          fala: String(parsed.fala),
+          acao: String(parsed.acao || "CONVERSA"),
+          parametros:
+            parsed.parametros && typeof parsed.parametros === "object"
+              ? parsed.parametros
+              : undefined,
+        };
       }
       // Se veio texto puro, usa direto
       return { fala: String(content), acao: "CONVERSA" };

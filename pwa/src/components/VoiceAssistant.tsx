@@ -1,6 +1,6 @@
 import React, { useState, useRef, useCallback } from "react";
-import { X, Sparkles } from "lucide-react";
-import { askVoiceCopilot, synthesizePiperVoice } from "../services/api";
+import { X, Sparkles, Check, Calendar } from "lucide-react";
+import { askVoiceCopilot, synthesizePiperVoice, confirmVoiceDraft } from "../services/api";
 
 interface VoiceAssistantProps {
   userId: string;
@@ -12,6 +12,21 @@ interface VoiceAssistantProps {
 }
 
 type AssistantState = "idle" | "listening" | "thinking" | "speaking";
+
+/** Converte ISO -> "24/09/2026 às 14h00" (fuso de Brasilia). */
+function formatarDataPt(iso: string): string {
+  try {
+    const d = new Date(iso);
+    if (isNaN(d.getTime())) return iso;
+    const dia = String(d.getDate()).padStart(2, "0");
+    const mes = String(d.getMonth() + 1).padStart(2, "0");
+    const hora = String(d.getHours()).padStart(2, "0");
+    const min = String(d.getMinutes()).padStart(2, "0");
+    return `${dia}/${mes}/${d.getFullYear()} às ${hora}h${min}`;
+  } catch {
+    return iso;
+  }
+}
 
 /**
  * Copiloto de voz do cuidador: botão flutuante que ouve a pergunta
@@ -30,6 +45,12 @@ export const VoiceAssistant: React.FC<VoiceAssistantProps> = ({
   const [panelOpen, setPanelOpen] = useState(false);
   const [lastReply, setLastReply] = useState<string>("");
   const [transcript, setTranscript] = useState<string>("");
+  const [pendingDraft, setPendingDraft] = useState<{
+    id: string;
+    title: string;
+    scheduledDate: string;
+  } | null>(null);
+  const [isConfirming, setIsConfirming] = useState(false);
   const recognitionRef = useRef<any>(null);
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -131,9 +152,40 @@ export const VoiceAssistant: React.FC<VoiceAssistantProps> = ({
 
       setLastReply(reply.fala);
       speak(reply.fala);
+
+      // D51: rascunho de agendamento — mostra o botao Confirmar
+      if (reply.acao === "AGENDAR_RASCUNHO" && reply.parametros?.id) {
+        setPendingDraft({
+          id: String(reply.parametros.id),
+          title: String(reply.parametros.title || "Consulta"),
+          scheduledDate: String(reply.parametros.scheduledDate || ""),
+        });
+      } else {
+        setPendingDraft(null);
+      }
     },
     [userId, idToken, speak, onToast]
   );
+
+  const handleConfirmDraft = useCallback(async () => {
+    if (!pendingDraft || !patientId) return;
+    setIsConfirming(true);
+    try {
+      const res = await confirmVoiceDraft(patientId, pendingDraft.id, idToken);
+      if (res.ok) {
+        const fala = res.fala || "Consulta confirmada! Já está na agenda.";
+        setLastReply(fala);
+        setPendingDraft(null);
+        speak(fala);
+      } else {
+        const fala = res.fala || "Não consegui confirmar. Tente novamente.";
+        setLastReply(fala);
+        speak(fala);
+      }
+    } finally {
+      setIsConfirming(false);
+    }
+  }, [pendingDraft, patientId, idToken, speak]);
 
   const startListening = () => {
     const SpeechRecognition =
@@ -301,6 +353,48 @@ export const VoiceAssistant: React.FC<VoiceAssistantProps> = ({
                     Parar de falar
                   </button>
                 )}
+              </div>
+            )}
+
+            {/* D51: rascunho de agendamento — botão Confirmar na tela */}
+            {pendingDraft && (
+              <div className="bg-white rounded-2xl border border-[#00897B]/30 px-3.5 py-3 space-y-2.5">
+                <div className="flex items-center gap-2">
+                  <Calendar className="w-4 h-4 text-[#00897B] shrink-0" />
+                  <p className="text-[10px] font-bold text-[#00897B] uppercase tracking-wide">
+                    Aguardando sua confirmação
+                  </p>
+                </div>
+                <div className="space-y-1">
+                  <p className="text-[13px] font-bold text-[#1E293B]">
+                    {pendingDraft.title}
+                  </p>
+                  <p className="text-[12px] text-[#64748B]">
+                    {formatarDataPt(pendingDraft.scheduledDate)}
+                  </p>
+                </div>
+                <div className="flex gap-2">
+                  <button
+                    onClick={handleConfirmDraft}
+                    disabled={isConfirming}
+                    className="flex-1 flex items-center justify-center gap-1.5 bg-[#00897B] text-white text-xs font-bold py-2 rounded-xl active:scale-95 transition-all disabled:opacity-60"
+                  >
+                    <Check className="w-3.5 h-3.5" />
+                    {isConfirming ? "Confirmando..." : "Confirmar"}
+                  </button>
+                  <button
+                    onClick={() => {
+                      setPendingDraft(null);
+                      setLastReply(
+                        "Tudo bem. Pode me dizer a correção, por exemplo: 'na verdade é sexta às 15h'."
+                      );
+                    }}
+                    disabled={isConfirming}
+                    className="px-3 bg-[#F1F5F9] text-[#64748B] text-xs font-bold py-2 rounded-xl active:scale-95 transition-all"
+                  >
+                    Corrigir
+                  </button>
+                </div>
               </div>
             )}
 
