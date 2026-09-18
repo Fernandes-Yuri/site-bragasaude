@@ -26,6 +26,7 @@ import { SharedGroceryListCard } from "./components/SharedGroceryListCard";
 import { QuickMessagesCard } from "./components/QuickMessagesCard";
 import { ProfileScreen } from "./components/ProfileScreen";
 import { FamilyChatScreen } from "./components/FamilyChatScreen";
+import { VoiceAssistant } from "./components/VoiceAssistant";
 
 // Code-Splitting: componentes pesados carregados sob demanda
 const LoginScreen = React.lazy(() =>
@@ -474,6 +475,18 @@ export const App: React.FC = () => {
           </p>
         </div>
       </main>
+      )}
+
+      {/* Copiloto de voz — disponível na aba Início (escopo: cuidador) */}
+      {activeTab === "home" && (
+        <VoiceAssistant
+          userId={currentUser.uid}
+          idToken={idToken}
+          patientName={dashboard.patientName}
+          actingAs="caregiver"
+          patientId={dashboard.patientUserId}
+          onToast={showToast}
+        />
       )}
 
       {/* Navegação Inferior por Abas (safe area iOS) */}

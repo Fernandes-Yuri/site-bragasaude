@@ -9,6 +9,77 @@ import type {
 
 export const API_BASE_URL = "https://api.bragasaude.online";
 
+/**
+ * Copiloto de voz do cuidador.
+ * Endpoint oficial: POST /v1/chat/completions (compatível com OpenAI)
+ *
+ * A resposta chega em choices[0].message.content como uma string JSON no
+ * formato { fala, acao, parametros } — "fala" é o texto que o assistente
+ * deve dizer em voz alta.
+ */
+export async function askVoiceCopilot(
+  userText: string,
+  userId: string,
+  idToken?: string,
+  scope?: { actingAs?: "patient" | "caregiver"; patientId?: string; patientName?: string }
+): Promise<{ fala: string; acao: string } | null> {
+  try {
+    const headers: Record<string, string> = { "Content-Type": "application/json" };
+    if (idToken) headers["Authorization"] = `Bearer ${idToken}`;
+
+    const isCaregiver = scope?.actingAs === "caregiver" && scope.patientId;
+    const systemPrompt = isCaregiver
+      ? `Você é o Braga, assistente de saúde de um CUIDADOR familiar que acompanha ${scope.patientName || "o paciente"}. Responda em português do Brasil, de forma curta, acolhedora e prática, do ponto de vista de quem cuida: ajude a interpretar os sinais vitais, hidratação e medicação de ${scope.patientName || "o paciente"}, e a organizar o cuidado. O contexto atual é o MODO CUIDADOR (não confunda com as preferências pessoais do próprio cuidador). Nunca substitui orientação médica — em emergências, oriente a ligar para o SAMU (192).`
+      : "Você é o Braga, assistente de saúde do autocuidado. Responda em português do Brasil, de forma curta, acolhedora e prática. Ajude com sinais vitais, hidratação e medicação. Nunca substitui orientação médica — em emergências, oriente a ligar para o SAMU (192).";
+
+    const body: Record<string, any> = {
+      model: "qwen-2.5-72b",
+      messages: [
+        { role: "system", content: systemPrompt },
+        { role: "user", content: userText },
+      ],
+      temperature: 0.3,
+      max_tokens: 220,
+      userId,
+    };
+    // Escopo de papel: o gateway valida o family_binding e separa a memória
+    if (isCaregiver) {
+      body.acting_as = "caregiver";
+      body.patient_id = scope.patientId;
+    }
+
+    const res = await fetch(`${API_BASE_URL}/v1/chat/completions`, {
+      method: "POST",
+      headers,
+      body: JSON.stringify(body),
+    });
+
+    if (!res.ok) {
+      console.warn("Copiloto rejeitou a requisição:", res.status);
+      return null;
+    }
+
+    const data = await res.json();
+    const content = data?.choices?.[0]?.message?.content;
+    if (!content) return null;
+
+    // O conteúdo vem como string JSON {fala, acao, parametros}
+    try {
+      const parsed = JSON.parse(content);
+      if (parsed?.fala) {
+        return { fala: String(parsed.fala), acao: String(parsed.acao || "CONVERSA") };
+      }
+      // Se veio texto puro, usa direto
+      return { fala: String(content), acao: "CONVERSA" };
+    } catch {
+      return { fala: String(content), acao: "CONVERSA" };
+    }
+  } catch (err) {
+    console.warn("Falha ao consultar o copiloto:", err);
+    return null;
+  }
+}
+
 // Modelos oficiais de mensagens rápidas idênticos ao Android (MessageTemplate)
 export const QUICK_TEMPLATES: Record<string, MessageTemplate> = {
   water: {

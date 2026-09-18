@@ -1,0 +1,286 @@
+import React, { useState, useRef, useCallback } from "react";
+import { X, Sparkles } from "lucide-react";
+import { askVoiceCopilot } from "../services/api";
+
+interface VoiceAssistantProps {
+  userId: string;
+  idToken?: string;
+  patientName: string;
+  actingAs?: "patient" | "caregiver";
+  patientId?: string;
+  onToast?: (msg: string, type?: "success" | "error") => void;
+}
+
+type AssistantState = "idle" | "listening" | "thinking" | "speaking";
+
+/**
+ * Copiloto de voz do cuidador: botão flutuante que ouve a pergunta
+ * (Web Speech API / SpeechRecognition), consulta /v1/chat/completions e
+ * responde em voz alta (SpeechSynthesis pt-BR).
+ */
+export const VoiceAssistant: React.FC<VoiceAssistantProps> = ({
+  userId,
+  idToken,
+  patientName,
+  actingAs = "patient",
+  patientId,
+  onToast,
+}) => {
+  const [state, setState] = useState<AssistantState>("idle");
+  const [panelOpen, setPanelOpen] = useState(false);
+  const [lastReply, setLastReply] = useState<string>("");
+  const [transcript, setTranscript] = useState<string>("");
+  const recognitionRef = useRef<any>(null);
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const speak = useCallback((text: string) => {
+    try {
+      if (!("speechSynthesis" in window)) return;
+      window.speechSynthesis.cancel();
+      const utter = new SpeechSynthesisUtterance(text);
+      utter.lang = "pt-BR";
+      utter.rate = 1.02;
+      utter.onend = () => setState("idle");
+      utter.onerror = () => setState("idle");
+      setState("speaking");
+      window.speechSynthesis.speak(utter);
+    } catch (e) {
+      console.warn("TTS indisponível:", e);
+      setState("idle");
+    }
+  }, []);
+
+  const stopSpeaking = () => {
+    try {
+      window.speechSynthesis?.cancel();
+    } catch {
+      /* noop */
+    }
+    setState("idle");
+  };
+
+  const stopListening = () => {
+    try {
+      recognitionRef.current?.stop();
+    } catch {
+      /* noop */
+    }
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+      timeoutRef.current = null;
+    }
+    setState("idle");
+  };
+
+  const handleAsk = useCallback(
+    async (question: string) => {
+      const clean = question.trim();
+      if (!clean) return;
+
+      setState("thinking");
+      const reply = await askVoiceCopilot(clean, userId, idToken, {
+        actingAs,
+        patientId,
+        patientName,
+      });
+
+      if (!reply) {
+        setLastReply(
+          "Não consegui me conectar agora. Verifique sua conexão e tente novamente."
+        );
+        setState("idle");
+        onToast?.("Copiloto indisponível — sem conexão", "error");
+        return;
+      }
+
+      setLastReply(reply.fala);
+      speak(reply.fala);
+    },
+    [userId, idToken, speak, onToast]
+  );
+
+  const startListening = () => {
+    const SpeechRecognition =
+      (window as any).SpeechRecognition ||
+      (window as any).webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      onToast?.("Seu navegador não suporta assistente por voz");
+      return;
+    }
+
+    try {
+      stopSpeaking();
+      const rec = new SpeechRecognition();
+      rec.lang = "pt-BR";
+      rec.interimResults = true;
+      rec.maxAlternatives = 1;
+      rec.continuous = false;
+
+      setTranscript("");
+      setLastReply("");
+      setState("listening");
+      setPanelOpen(true);
+
+      rec.onstart = () => setState("listening");
+      rec.onerror = () => setState("idle");
+      rec.onend = () => {
+        if (timeoutRef.current) {
+          clearTimeout(timeoutRef.current);
+          timeoutRef.current = null;
+        }
+        setState((s) => (s === "listening" ? "idle" : s));
+      };
+      rec.onresult = (event: any) => {
+        let text = "";
+        for (let i = 0; i < event.results.length; i++) {
+          text += event.results[i][0]?.transcript || "";
+        }
+        setTranscript(text);
+        // Ao parar de falar (resultado final), pergunta ao copiloto
+        if (event.results[event.results.length - 1]?.isFinal) {
+          const finalText = text.trim();
+          if (finalText.length >= 2) {
+            handleAsk(finalText);
+          } else {
+            setState("idle");
+          }
+        }
+      };
+
+      recognitionRef.current = rec;
+      rec.start();
+
+      // Trava de segurança: se o silêncio durar 8s, encerra a escuta
+      timeoutRef.current = setTimeout(() => {
+        try {
+          rec.stop();
+        } catch {
+          /* noop */
+        }
+      }, 8000);
+    } catch (e) {
+      console.warn("STT indisponível:", e);
+      setState("idle");
+      onToast?.("Não foi possível acessar o microfone", "error");
+    }
+  };
+
+  const handleMainButton = () => {
+    if (state === "listening") {
+      stopListening();
+    } else if (state === "speaking") {
+      stopSpeaking();
+    } else {
+      startListening();
+    }
+  };
+
+  const stateLabel: Record<AssistantState, string> = {
+    idle: "Falar com o Braga",
+    listening: "Ouvindo... toque para parar",
+    thinking: "Pensando...",
+    speaking: "Falando... toque para parar",
+  };
+
+  const isActive = state !== "idle";
+
+  return (
+    <>
+      {/* Botão flutuante do assistente */}
+      <button
+        onClick={handleMainButton}
+        className={`fixed bottom-20 right-4 z-50 flex items-center gap-2 pl-3.5 pr-4 py-3 rounded-full font-bold text-xs shadow-lg transition-all active:scale-95 ${
+          isActive
+            ? "bg-[#1E293B] text-white"
+            : "bg-gradient-to-b from-[#26A69A] to-[#00897B] text-white shadow-emerald-900/30"
+        }`}
+        aria-label={stateLabel[state]}
+      >
+        {isActive ? (
+          <X className="w-4 h-4" />
+        ) : (
+          <Sparkles className="w-4 h-4" />
+        )}
+        <span>{stateLabel[state]}</span>
+      </button>
+
+      {/* Painel de conversa */}
+      {panelOpen && (
+        <div className="fixed bottom-32 right-3 left-3 max-w-md mx-auto z-50 animate-in slide-in-from-bottom-3 duration-200">
+          <div className="bg-white rounded-3xl shadow-2xl border border-[#E5EBE8] p-4 space-y-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-full bg-gradient-to-b from-[#26A69A] to-[#00897B] flex items-center justify-center shrink-0">
+                  <Sparkles className="w-4 h-4 text-white" />
+                </div>
+                <div>
+                  <p className="text-xs font-bold text-[#1E293B]">Braga, seu copiloto</p>
+                  <p className="text-[10px] text-[#94A3B8]">
+                    Cuidando de {patientName || "paciente"}
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => {
+                  stopSpeaking();
+                  stopListening();
+                  setPanelOpen(false);
+                }}
+                aria-label="Fechar"
+                className="w-7 h-7 rounded-full bg-[#F1F5F9] hover:bg-[#E2E8F0] flex items-center justify-center text-[#64748B] active:scale-95 transition-all"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {transcript && (
+              <div className="bg-[#F1F5F9] rounded-2xl px-3.5 py-2.5">
+                <p className="text-[10px] font-bold text-[#94A3B8] uppercase tracking-wide mb-0.5">
+                  Você disse
+                </p>
+                <p className="text-[13px] text-[#1E293B] leading-snug">{transcript}</p>
+              </div>
+            )}
+
+            {state === "thinking" && (
+              <div className="flex items-center gap-2 px-1">
+                <div className="w-2 h-2 rounded-full bg-[#00897B] animate-bounce" style={{ animationDelay: "0ms" }} />
+                <div className="w-2 h-2 rounded-full bg-[#00897B] animate-bounce" style={{ animationDelay: "150ms" }} />
+                <div className="w-2 h-2 rounded-full bg-[#00897B] animate-bounce" style={{ animationDelay: "300ms" }} />
+                <span className="text-[11px] text-[#94A3B8] ml-1">Consultando...</span>
+              </div>
+            )}
+
+            {lastReply && (
+              <div className="bg-[#E0F2F1] rounded-2xl px-3.5 py-2.5">
+                <p className="text-[10px] font-bold text-[#00897B] uppercase tracking-wide mb-0.5">
+                  Braga responde
+                </p>
+                <p className="text-[13px] text-[#1E293B] leading-snug">{lastReply}</p>
+                {state === "speaking" && (
+                  <button
+                    onClick={stopSpeaking}
+                    className="mt-2 text-[10px] font-bold text-[#00897B] active:opacity-70"
+                  >
+                    Parar de falar
+                  </button>
+                )}
+              </div>
+            )}
+
+            {!transcript && !lastReply && state === "idle" && (
+              <p className="text-[11px] text-[#94A3B8] leading-relaxed">
+                Toque no botão e faça uma pergunta sobre os sinais vitais,
+                hidratação ou medicação de {patientName || "paciente"}.
+              </p>
+            )}
+
+            <p className="text-[9px] text-[#94A3B8] leading-tight text-center">
+              Apoio ao cuidado — não substitui orientação médica. Emergências: SAMU 192.
+            </p>
+          </div>
+        </div>
+      )}
+    </>
+  );
+};
