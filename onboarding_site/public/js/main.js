@@ -431,10 +431,11 @@
       });
     }
     
-    // Botão de instalação PWA (Em breve)
+    // Botão de instalação PWA — leva ao PWA, que oferece o atalho na tela inicial
+    // (beforeinstallprompt no Android/Chrome; guia "Adicionar à Tela de Início" no iOS).
     if (btnInstallPWA) {
       btnInstallPWA.addEventListener('click', () => {
-        alert('O Modo Cuidador (PWA / iOS) estará disponível em breve! Estamos realizando os últimos testes de segurança e homologação.');
+        console.log('[Braga Saúde] Abrindo PWA Modo Cuidador para instalação');
       });
     }
   }
@@ -496,13 +497,26 @@
 
   // ── Rastreamento de Conversões (Google Analytics 4) ──
   function setupAnalyticsTracking() {
-    const downloadBtns = document.querySelectorAll('a[href*="/api/app/download"], #btn-download-apk');
+    const downloadBtns = document.querySelectorAll('a[href*="/api/app/download"]');
     downloadBtns.forEach(btn => {
       btn.addEventListener('click', () => {
         if (typeof gtag === 'function') {
           gtag('event', 'download_apk', {
             event_category: 'conversion',
             event_label: 'BragaSaude.apk (v1.2.0)',
+            value: 1
+          });
+        }
+      });
+    });
+
+    const pwaBtns = document.querySelectorAll('#btn-install-pwa');
+    pwaBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        if (typeof gtag === 'function') {
+          gtag('event', 'open_pwa_cuidador', {
+            event_category: 'engagement',
+            event_label: 'PWA Modo Cuidador (iPhone/Web)',
             value: 1
           });
         }

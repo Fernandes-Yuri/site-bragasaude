@@ -1,5 +1,6 @@
-﻿import React from "react";
+import React from "react";
 import { Pill, Calendar, MessageCircle, Users } from "lucide-react";
+import { InstallAppChip } from "./InstallAppChip";
 
 interface QuickActionsChipsProps {
   onMedicationReminder: () => void;
@@ -75,6 +76,7 @@ export const QuickActionsChips: React.FC<QuickActionsChipsProps> = ({
             </button>
           );
         })}
+        <InstallAppChip />
       </div>
     </div>
   );
