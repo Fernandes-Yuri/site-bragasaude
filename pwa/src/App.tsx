@@ -14,6 +14,7 @@ import {
   fetchFamilyBindings,
   fetchPatientVitals,
   syncCaregiverPhone,
+  readTotpSecret,
 } from "./services/api";
 import { loadGroceryItems, toggleGroceryItemPantry } from "./services/grocery";
 import { queueMessage, flushMessageQueue } from "./services/messageQueue";
@@ -370,6 +371,8 @@ export const App: React.FC = () => {
             onLinkWhatsApp={() => setShowPhoneLinkDialog(true)}
             onConnectFamily={() => setShowConnectModal(true)}
             onLogout={handleLogout}
+            totpSecret={readTotpSecret(currentUser.uid)}
+            whatsappLinkedPhone={userPhone}
           />
         </main>
       ) : (

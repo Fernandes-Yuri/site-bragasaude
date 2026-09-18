@@ -9,6 +9,7 @@ import {
   ShieldCheck,
 } from "lucide-react";
 import type { FamilyBinding } from "../types";
+import { WhatsAppLinkButton } from "./WhatsAppLinkButton";
 
 interface ProfileScreenProps {
   caregiverName: string;
@@ -21,6 +22,10 @@ interface ProfileScreenProps {
   onLinkWhatsApp: () => void;
   onConnectFamily: () => void;
   onLogout: () => void;
+  /** Segredo TOTP (base32) do vinculo de WhatsApp; cliente gera, gateway guarda. */
+  totpSecret?: string | null;
+  /** Numero de WhatsApp ja vinculado (verificado pela Meta via webhook). */
+  whatsappLinkedPhone?: string | null;
 }
 
 export const ProfileScreen: React.FC<ProfileScreenProps> = ({
@@ -34,6 +39,8 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
   onLinkWhatsApp,
   onConnectFamily,
   onLogout,
+  totpSecret,
+  whatsappLinkedPhone,
 }) => {
   const initials = caregiverName
     ? caregiverName
@@ -102,6 +109,16 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
             </span>
           )}
         </button>
+      </div>
+
+      {/* Vinculo WhatsApp por TOTP (temporario ate a Meta liberar template).
+          Toque unico abre o WhatsApp com o codigo atual pronto para enviar. */}
+      <div className="bg-white rounded-3xl shadow-2xs border border-[#E5EBE8] p-5">
+        <h3 className="text-sm font-bold text-[#1E293B] mb-2">Vincular WhatsApp</h3>
+        <WhatsAppLinkButton
+          totpSecret={totpSecret}
+          alreadyLinked={!!whatsappLinkedPhone}
+        />
       </div>
 
       {/* Grupo familiar — todos os cuidadores conectados */}

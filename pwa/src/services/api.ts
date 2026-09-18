@@ -6,8 +6,38 @@ import type {
   FamilyMessage,
   VitalHistoryRecord
 } from "../types";
+import { generateTotpSecret } from "./waLinkTotp";
 
 export const API_BASE_URL = "https://api.bragasaude.online";
+
+/**
+ * Segredo TOTP do vinculo de WhatsApp por usuario. Fica no localStorage:
+ * e um segredo por conta, gerado uma unica vez (regenerar invalidaria o
+ * codigo de um cliente ja instalado). Arquitetura temporaria, sem template.
+ */
+function getOrCreateTotpSecret(userId: string): string {
+  const KEY = `braga.totp_secret.${userId}`;
+  try {
+    const existing = localStorage.getItem(KEY);
+    if (existing) return existing;
+    const secret = generateTotpSecret();
+    localStorage.setItem(KEY, secret);
+    return secret;
+  } catch {
+    // localStorage indisponivel (modo privado etc.): gera novo a cada chamada.
+    return generateTotpSecret();
+  }
+}
+
+/** Le o segredo TOTP do usuario, ou null se ainda nao foi gerado. */
+export function readTotpSecret(userId: string): string | null {
+  const KEY = `braga.totp_secret.${userId}`;
+  try {
+    return localStorage.getItem(KEY);
+  } catch {
+    return null;
+  }
+}
 
 /**
  * Confirma (pelo botao da tela) o rascunho de agendamento por voz (D51).
@@ -476,6 +506,7 @@ export async function syncCaregiverPhone(
         id: userId,
         fullName: fullName.trim(),
         phone: phone.trim(),
+        totpSecret: getOrCreateTotpSecret(userId),
       }),
     });
     return res.ok;
