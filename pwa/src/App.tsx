@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { PhoneCall, ShieldCheck, CheckCircle2, AlertCircle, MessageSquare, UserPlus } from "lucide-react";
+import { PhoneCall, CheckCircle2, AlertCircle, MessageSquare, UserPlus, Home, MessageCircle, User as UserIcon } from "lucide-react";
 import {
   auth,
   signOut,
@@ -17,13 +17,15 @@ import {
 } from "./services/api";
 import { loadGroceryItems, toggleGroceryItemPantry } from "./services/grocery";
 import { queueMessage, flushMessageQueue } from "./services/messageQueue";
-import type { CaregiverDashboardState, GroceryItem, VitalHistoryRecord } from "./types";
+import type { CaregiverDashboardState, GroceryItem, VitalHistoryRecord, FamilyBinding } from "./types";
 import { EmeraldHeaderBanner } from "./components/EmeraldHeaderBanner";
 import { PatientHeaderCard } from "./components/PatientHeaderCard";
 import { TodayVitalsCard } from "./components/TodayVitalsCard";
 import { QuickActionsChips } from "./components/QuickActionsChips";
 import { SharedGroceryListCard } from "./components/SharedGroceryListCard";
 import { QuickMessagesCard } from "./components/QuickMessagesCard";
+import { ProfileScreen } from "./components/ProfileScreen";
+import { FamilyChatScreen } from "./components/FamilyChatScreen";
 
 // Code-Splitting: componentes pesados carregados sob demanda
 const LoginScreen = React.lazy(() =>
@@ -63,6 +65,9 @@ export const App: React.FC = () => {
   const [historyRecords, setHistoryRecords] = useState<VitalHistoryRecord[]>(EMPTY_HISTORY_7D);
   const [hasRealBinding, setHasRealBinding] = useState(false);
   const [userPhone, setUserPhone] = useState<string | null>(null);
+  const [bindings, setBindings] = useState<FamilyBinding[]>([]);
+  const [activeTab, setActiveTab] = useState<"home" | "chat" | "profile">("home");
+  const [idToken, setIdToken] = useState<string | undefined>(undefined);
 
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [toastType, setToastType] = useState<"success" | "error">("success");
@@ -100,7 +105,9 @@ export const App: React.FC = () => {
         // Buscar vínculos reais do usuário
         try {
           const token = await user.getIdToken();
+          setIdToken(token);
           const bindings = await fetchFamilyBindings(user.uid, token);
+          setBindings(bindings);
           if (bindings.length > 0) {
             const active = bindings[0];
             setHasRealBinding(true);
@@ -241,6 +248,7 @@ export const App: React.FC = () => {
       if (currentUser) {
         const idToken = await currentUser.getIdToken(true);
         const bindings = await fetchFamilyBindings(currentUser.uid, idToken);
+        setBindings(bindings);
         if (bindings.length > 0) {
           const vitals = await fetchPatientVitals(bindings[0].patientUserId, idToken);
           if (vitals.length > 0) setHistoryRecords(vitals);
@@ -319,16 +327,14 @@ export const App: React.FC = () => {
         <DesktopGateModal />
       </React.Suspense>
 
-      {/* Cabeçalho Curvo Esmeralda Oficial com Logout e WhatsApp */}
+      {/* Cabeçalho Curvo Esmeralda — enxuto (ações de conta ficam na aba Perfil) */}
       <EmeraldHeaderBanner
         title="Acompanhamento"
         subtitle={`Cuidador: ${dashboard.caregiverName}`}
         patientName={dashboard.patientName}
-        onRefresh={handleRefresh}
         onConnectFamily={() => setShowConnectModal(true)}
-        onOpenChat={() => setShowCareNoteDialog(true)}
         onLinkWhatsApp={() => setShowPhoneLinkDialog(true)}
-        onLogout={handleLogout}
+        onOpenProfile={() => setActiveTab("profile")}
       />
 
       {/* Indicador de sincronização sutil */}
@@ -338,7 +344,34 @@ export const App: React.FC = () => {
         </div>
       )}
 
-      {/* Conteúdo Principal Rolável */}
+      {/* Conteúdo Principal — renderizado por aba */}
+      {activeTab === "chat" ? (
+        <main className="flex-1 flex flex-col min-h-0 overflow-hidden">
+          <FamilyChatScreen
+            patientId={dashboard.patientUserId}
+            patientName={dashboard.patientName}
+            currentUserId={currentUser.uid}
+            caregiverName={dashboard.caregiverName}
+            idToken={idToken}
+            onToast={showToast}
+          />
+        </main>
+      ) : activeTab === "profile" ? (
+        <main className="p-4 space-y-4 flex-1 pb-24 overflow-y-auto">
+          <ProfileScreen
+            caregiverName={dashboard.caregiverName}
+            email={currentUser.email || "—"}
+            phone={userPhone || ""}
+            patientName={dashboard.patientName}
+            bindings={bindings}
+            isRefreshing={dashboard.isLoading}
+            onRefresh={handleRefresh}
+            onLinkWhatsApp={() => setShowPhoneLinkDialog(true)}
+            onConnectFamily={() => setShowConnectModal(true)}
+            onLogout={handleLogout}
+          />
+        </main>
+      ) : (
       <main className="p-4 space-y-4 flex-1 pb-24 overflow-y-auto">
         {/* Banner de Lembrete para Vincular WhatsApp se ainda não tiver número */}
         {!userPhone && (
@@ -441,17 +474,40 @@ export const App: React.FC = () => {
           </p>
         </div>
       </main>
+      )}
 
-      {/* Barra Inferior Fixa com Safe Area iOS */}
-      <footer className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-white/95 backdrop-blur-md border-t border-[#E5EBE8] pb-safe pt-2 px-6 flex items-center justify-between text-[#64748B] text-[11px] z-40">
-        <div className="flex items-center gap-1.5 text-[#00897B] font-semibold">
-          <ShieldCheck className="w-4 h-4" />
-          <span>Sessão Protegida</span>
-        </div>
-        <div className="flex items-center gap-1 text-[#64748B]">
-          <span>{userPhone || currentUser.email}</span>
-        </div>
-      </footer>
+      {/* Navegação Inferior por Abas (safe area iOS) */}
+      <nav className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-white/95 backdrop-blur-md border-t border-[#E5EBE8] pb-safe pt-1.5 px-2 flex items-center justify-around z-40">
+        <button
+          onClick={() => setActiveTab("home")}
+          className={`flex flex-col items-center gap-0.5 px-5 py-1.5 rounded-xl transition-all active:scale-95 ${
+            activeTab === "home" ? "text-[#00897B]" : "text-[#94A3B8]"
+          }`}
+        >
+          <Home className="w-5 h-5" />
+          <span className="text-[10px] font-bold">Início</span>
+        </button>
+
+        <button
+          onClick={() => setActiveTab("chat")}
+          className={`relative flex flex-col items-center gap-0.5 px-5 py-1.5 rounded-xl transition-all active:scale-95 ${
+            activeTab === "chat" ? "text-[#00897B]" : "text-[#94A3B8]"
+          }`}
+        >
+          <MessageCircle className="w-5 h-5" />
+          <span className="text-[10px] font-bold">Família</span>
+        </button>
+
+        <button
+          onClick={() => setActiveTab("profile")}
+          className={`flex flex-col items-center gap-0.5 px-5 py-1.5 rounded-xl transition-all active:scale-95 ${
+            activeTab === "profile" ? "text-[#00897B]" : "text-[#94A3B8]"
+          }`}
+        >
+          <UserIcon className="w-5 h-5" />
+          <span className="text-[10px] font-bold">Perfil</span>
+        </button>
+      </nav>
 
       {/* Toast Feedback */}
       {toastMessage && (
@@ -540,7 +596,7 @@ export const App: React.FC = () => {
                 lastMeasurementLabel: "Novo familiar conectado",
               }));
               if (currentUser && patientUserId) {
-                currentUser.getIdToken().then((tok) => {
+                currentUser.getIdToken().then((tok: string) => {
                   fetchPatientVitals(patientUserId, tok).then((vitals) => {
                     if (vitals.length > 0) setHistoryRecords(vitals);
                   });

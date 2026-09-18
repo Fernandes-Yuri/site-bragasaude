@@ -1,16 +1,14 @@
 import React from "react";
-import { MessageCircle, UserPlus, RefreshCw, LogOut, MessageSquare } from "lucide-react";
+import { UserPlus, MessageSquare, User } from "lucide-react";
 
 interface EmeraldHeaderBannerProps {
   title?: string;
   subtitle?: string;
   patientName: string;
   avatarInitials?: string;
-  onRefresh?: () => void;
   onConnectFamily?: () => void;
-  onOpenChat?: () => void;
   onLinkWhatsApp?: () => void;
-  onLogout?: () => void;
+  onOpenProfile?: () => void;
 }
 
 export const EmeraldHeaderBanner: React.FC<EmeraldHeaderBannerProps> = ({
@@ -18,11 +16,9 @@ export const EmeraldHeaderBanner: React.FC<EmeraldHeaderBannerProps> = ({
   subtitle = "Círculo Familiar e Cuidados",
   patientName,
   avatarInitials,
-  onRefresh,
   onConnectFamily,
-  onOpenChat,
   onLinkWhatsApp,
-  onLogout,
+  onOpenProfile,
 }) => {
   const initials =
     avatarInitials ||
@@ -32,7 +28,13 @@ export const EmeraldHeaderBanner: React.FC<EmeraldHeaderBannerProps> = ({
     <header className="w-full bg-gradient-to-b from-[#26A69A] to-[#00897B] text-white rounded-b-[28px] shadow-md shadow-emerald-900/10 pt-safe px-5 pb-5 transition-all">
       {/* Barra de título e botões de ação */}
       <div className="flex items-center justify-between gap-3">
-        <div className="flex items-center gap-3">
+        {/* Avatar toca para abrir o Perfil */}
+        <button
+          onClick={onOpenProfile}
+          disabled={!onOpenProfile}
+          className="flex items-center gap-3 min-w-0 active:opacity-80 transition-opacity disabled:active:opacity-100"
+          title="Abrir meu perfil"
+        >
           <div className="w-10 h-10 rounded-full bg-white/20 border border-white/30 flex items-center justify-center text-sm font-bold text-white shadow-inner shrink-0">
             {initials}
           </div>
@@ -40,9 +42,9 @@ export const EmeraldHeaderBanner: React.FC<EmeraldHeaderBannerProps> = ({
             <h1 className="text-xl font-bold tracking-tight text-white truncate">{title}</h1>
             <p className="text-xs text-emerald-100/90 font-medium truncate">{subtitle}</p>
           </div>
-        </div>
+        </button>
 
-        {/* Ações superiores */}
+        {/* Ações superiores — apenas 2 botões para não estourar telas estreitas */}
         <div className="flex items-center gap-1.5 shrink-0">
           {onLinkWhatsApp && (
             <button
@@ -51,16 +53,6 @@ export const EmeraldHeaderBanner: React.FC<EmeraldHeaderBannerProps> = ({
               title="Vincular WhatsApp"
             >
               <MessageSquare className="w-4 h-4" />
-            </button>
-          )}
-
-          {onOpenChat && (
-            <button
-              onClick={onOpenChat}
-              className="w-9 h-9 rounded-full bg-white/15 hover:bg-white/25 active:scale-95 transition-all flex items-center justify-center text-white"
-              title="Recados da Família"
-            >
-              <MessageCircle className="w-4 h-4" />
             </button>
           )}
 
@@ -74,23 +66,13 @@ export const EmeraldHeaderBanner: React.FC<EmeraldHeaderBannerProps> = ({
             </button>
           )}
 
-          {onRefresh && (
+          {onOpenProfile && (
             <button
-              onClick={onRefresh}
+              onClick={onOpenProfile}
               className="w-9 h-9 rounded-full bg-white/15 hover:bg-white/25 active:scale-95 transition-all flex items-center justify-center text-white"
-              title="Atualizar dados"
+              title="Meu Perfil"
             >
-              <RefreshCw className="w-4 h-4" />
-            </button>
-          )}
-
-          {onLogout && (
-            <button
-              onClick={onLogout}
-              className="w-9 h-9 rounded-full bg-white/15 hover:bg-rose-500/40 active:scale-95 transition-all flex items-center justify-center text-white"
-              title="Sair da Conta"
-            >
-              <LogOut className="w-4 h-4" />
+              <User className="w-4 h-4" />
             </button>
           )}
         </div>

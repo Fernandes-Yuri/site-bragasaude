@@ -267,9 +267,46 @@ export async function fetchFamilyBindings(
 }
 
 /**
- * Sincroniza o telefone e perfil do cuidador no PostgreSQL
- * Endpoint oficial: POST /api/sync/profile
+ * Lista as mensagens da conversa em grupo do paciente.
+ * Endpoint oficial: GET /api/family/messages/{patient_id}
+ *
+ * Todos os cuidadores vinculados ao mesmo patient_id compartilham a mesma
+ * conversa (chat em grupo) — a autorização é validada no gateway por
+ * require_family_access. TTL de 24h por mensagem (D47).
  */
+export async function fetchFamilyMessages(
+  patientId: string,
+  idToken?: string,
+  limit: number = 50
+): Promise<FamilyMessage[]> {
+  try {
+    const headers: Record<string, string> = { "Content-Type": "application/json" };
+    if (idToken) headers["Authorization"] = `Bearer ${idToken}`;
+
+    const res = await fetch(
+      `${API_BASE_URL}/api/family/messages/${patientId}?limit=${limit}`,
+      { headers }
+    );
+    if (res.ok) {
+      const data = await res.json();
+      if (Array.isArray(data)) {
+        return data.map((m: any) => ({
+          id: String(m.id),
+          patientId: m.patient_id || m.patientId || patientId,
+          senderId: m.sender_id || m.senderId || "",
+          senderName: m.sender_name || m.senderName || "",
+          messageText: m.message_text || m.messageText || "",
+          iconType: m.icon_type || m.iconType || "LOVE",
+          sentAt: m.sent_at || m.sentAt || new Date().toISOString(),
+          expiresAt: m.expires_at || m.expiresAt || "",
+        }));
+      }
+    }
+  } catch (err) {
+    console.warn("Falha ao buscar mensagens da família:", err);
+  }
+  return [];
+}
 export async function syncCaregiverPhone(
   userId: string,
   fullName: string,
