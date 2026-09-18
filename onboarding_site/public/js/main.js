@@ -502,7 +502,7 @@
         if (typeof gtag === 'function') {
           gtag('event', 'download_apk', {
             event_category: 'conversion',
-            event_label: 'BragaSaude.apk (v1.1.0)',
+            event_label: 'BragaSaude.apk (v1.2.0)',
             value: 1
           });
         }
