@@ -10,6 +10,44 @@ import type {
 export const API_BASE_URL = "https://api.bragasaude.online";
 
 /**
+ * Sintetiza voz pelo Piper TTS do gateway — a MESMA voz do app Android
+ * (padrão "faber", pt_BR-faber-medium.onnx). Retorna um Blob de áudio WAV.
+ *
+ * O navegador sozinho (SpeechSynthesis) usa as vozes do sistema, que variam
+ * por aparelho e nao correspondem ao Braga. Aqui a voz e a identidade sonora
+ * sao sempre as do produto, vindas do servidor.
+ */
+export async function synthesizePiperVoice(
+  text: string,
+  idToken: string,
+  voice: string = "faber"
+): Promise<Blob | null> {
+  try {
+    const clean = text.trim();
+    if (!clean) return null;
+
+    const url = new URL(`${API_BASE_URL}/v1/audio/speech`);
+    url.searchParams.set("text", clean);
+    url.searchParams.set("voice", voice);
+
+    const res = await fetch(url.toString(), {
+      method: "GET",
+      headers: idToken ? { Authorization: `Bearer ${idToken}` } : {},
+    });
+
+    if (!res.ok) {
+      console.warn("Piper TTS rejeitou:", res.status);
+      return null;
+    }
+
+    return await res.blob();
+  } catch (err) {
+    console.warn("Falha no Piper TTS:", err);
+    return null;
+  }
+}
+
+/**
  * Copiloto de voz do cuidador.
  * Endpoint oficial: POST /v1/chat/completions (compatível com OpenAI)
  *

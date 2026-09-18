@@ -1,6 +1,6 @@
 import React, { useState, useRef, useCallback } from "react";
 import { X, Sparkles } from "lucide-react";
-import { askVoiceCopilot } from "../services/api";
+import { askVoiceCopilot, synthesizePiperVoice } from "../services/api";
 
 interface VoiceAssistantProps {
   userId: string;
@@ -33,24 +33,60 @@ export const VoiceAssistant: React.FC<VoiceAssistantProps> = ({
   const recognitionRef = useRef<any>(null);
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const speak = useCallback((text: string) => {
-    try {
-      if (!("speechSynthesis" in window)) return;
-      window.speechSynthesis.cancel();
-      const utter = new SpeechSynthesisUtterance(text);
-      utter.lang = "pt-BR";
-      utter.rate = 1.02;
-      utter.onend = () => setState("idle");
-      utter.onerror = () => setState("idle");
-      setState("speaking");
-      window.speechSynthesis.speak(utter);
-    } catch (e) {
-      console.warn("TTS indisponível:", e);
-      setState("idle");
-    }
-  }, []);
+  const speak = useCallback(
+    async (text: string) => {
+      // Fala com a voz Piper do gateway (mesma do Android, padrao "faber").
+      // Se falhar (offline / navegador sem suporte), cai no SpeechSynthesis.
+      try {
+        const blob = await synthesizePiperVoice(text, idToken || "");
+        if (blob && blob.size > 0) {
+          const audioUrl = URL.createObjectURL(blob);
+          const audio = new Audio(audioUrl);
+          setState("speaking");
+          audio.onended = () => {
+            setState("idle");
+            URL.revokeObjectURL(audioUrl);
+          };
+          audio.onerror = () => {
+            URL.revokeObjectURL(audioUrl);
+            setState("idle");
+          };
+          await audio.play();
+          return;
+        }
+      } catch (e) {
+        console.warn("Piper indisponível, fallback para voz do sistema:", e);
+      }
+
+      // Fallback: voz do aparelho (menos fiel)
+      try {
+        if (!("speechSynthesis" in window)) return;
+        window.speechSynthesis.cancel();
+        const utter = new SpeechSynthesisUtterance(text);
+        utter.lang = "pt-BR";
+        utter.rate = 1.02;
+        utter.onend = () => setState("idle");
+        utter.onerror = () => setState("idle");
+        setState("speaking");
+        window.speechSynthesis.speak(utter);
+      } catch (e) {
+        console.warn("TTS indisponível:", e);
+        setState("idle");
+      }
+    },
+    [idToken]
+  );
 
   const stopSpeaking = () => {
+    // Para áudio Piper
+    try {
+      document.querySelectorAll("audio").forEach((a) => {
+        a.pause();
+        a.src = "";
+      });
+    } catch {
+      /* noop */
+    }
     try {
       window.speechSynthesis?.cancel();
     } catch {

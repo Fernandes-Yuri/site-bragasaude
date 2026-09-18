@@ -3,6 +3,7 @@ import { Send, Mic, Volume2 } from "lucide-react";
 import {
   fetchFamilyMessages,
   sendCaregiverMessage,
+  synthesizePiperVoice,
   QUICK_TEMPLATES,
 } from "../services/api";
 import type { FamilyMessage } from "../types";
@@ -62,7 +63,21 @@ export const FamilyChatScreen: React.FC<FamilyChatScreenProps> = ({
     }
   }, [messages]);
 
-  const speak = (text: string) => {
+  const speak = async (text: string) => {
+    // Voz Piper do gateway (mesma do Android, "faber"); fallback na do aparelho
+    try {
+      const blob = await synthesizePiperVoice(text, idToken || "");
+      if (blob && blob.size > 0) {
+        const url = URL.createObjectURL(blob);
+        const audio = new Audio(url);
+        audio.onended = () => URL.revokeObjectURL(url);
+        audio.onerror = () => URL.revokeObjectURL(url);
+        await audio.play();
+        return;
+      }
+    } catch (e) {
+      console.warn("Piper indisponível, fallback na voz do sistema:", e);
+    }
     try {
       if (!("speechSynthesis" in window)) {
         onToast?.("Seu navegador não suporta leitura por voz");
