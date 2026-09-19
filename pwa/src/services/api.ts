@@ -29,14 +29,80 @@ function getOrCreateTotpSecret(userId: string): string {
   }
 }
 
-/** Le o segredo TOTP do usuario, ou null se ainda nao foi gerado. */
-export function readTotpSecret(userId: string): string | null {
+/**
+ * Le o segredo TOTP do usuario.
+ *
+ * Ordem: localStorage (gerado uma unica vez por este dispositivo) e, se nao
+ * existir, busca no backend — que agora garante que TODO perfil tem um
+ * segredo (contas pre-009 recebem na primeira leitura do perfil). Se o
+ * backend devolver um, guarda no localStorage para os proximos usos.
+ *
+ * Retorna null se nao houver jeito (off-line e sem cache local).
+ */
+export async function readTotpSecret(userId: string, idToken?: string): Promise<string | null> {
   const KEY = `braga.totp_secret.${userId}`;
   try {
-    return localStorage.getItem(KEY);
+    const existing = localStorage.getItem(KEY);
+    if (existing) return existing;
+  } catch {
+    // localStorage indisponivel: segue para a busca no backend.
+  }
+
+  try {
+    const headers: Record<string, string> = {};
+    if (idToken) headers["Authorization"] = `Bearer ${idToken}`;
+    const res = await fetch(`${API_BASE_URL}/api/profile/${userId}`, { headers });
+    if (!res.ok) return null;
+    const data = await res.json();
+    const segredo = data?.totp_secret ?? data?.totpSecret ?? null;
+    if (segredo) {
+      try {
+        localStorage.setItem(KEY, segredo);
+      } catch {
+        // Sem localStorage: funciona so para esta sessao.
+      }
+    }
+    return segredo;
   } catch {
     return null;
   }
+}
+
+/**
+ * Sincroniza o segredo TOTP local com o backend: se o backend ja tem um para
+ * esta conta, e ele que vale (evita dois segredos divergentes); senao, envia
+ * o gerado localmente. Retorna o segredo valido apos a sincronizacao.
+ */
+export async function syncTotpSecret(userId: string, idToken?: string): Promise<string | null> {
+  const KEY = `braga.totp_secret.${userId}`;
+  const local = (() => {
+    try { return localStorage.getItem(KEY); } catch { return null; }
+  })();
+
+  const remoto = await readTotpSecret(userId, idToken);
+  if (remoto) {
+    // O backend ja tem um segredo para esta conta: ele e a verdade.
+    if (local !== remoto) {
+      try { localStorage.setItem(KEY, remoto); } catch { /* sem storage */ }
+    }
+    return remoto;
+  }
+
+  // Nenhum dos lados tem: gera localmente e tenta registrar no backend.
+  const novo = getOrCreateTotpSecret(userId);
+  try {
+    const headers: Record<string, string> = { "Content-Type": "application/json" };
+    if (idToken) headers["Authorization"] = `Bearer ${idToken}`;
+    await fetch(`${API_BASE_URL}/api/sync/profile`, {
+      method: "POST",
+      headers,
+      body: JSON.stringify({ id: userId, totpSecret: novo }),
+    });
+  } catch {
+    // Sem rede: o segredo local ainda calcula um codigo, mas o vinculo
+    // so se completa quando o backend o conhecer.
+  }
+  return novo;
 }
 
 /**
@@ -499,6 +565,9 @@ export async function syncCaregiverPhone(
   if (idToken) headers["Authorization"] = `Bearer ${idToken}`;
 
   try {
+    // O segredo TOTP tem que ser o MESMO que o backend ja guarda para esta
+    // conta; gerar um divergente aqui fazia o codigo nunca casar no webhook.
+    const segredo = await syncTotpSecret(userId, idToken);
     const res = await fetch(`${API_BASE_URL}/api/sync/profile`, {
       method: "POST",
       headers,
@@ -506,7 +575,7 @@ export async function syncCaregiverPhone(
         id: userId,
         fullName: fullName.trim(),
         phone: phone.trim(),
-        totpSecret: getOrCreateTotpSecret(userId),
+        ...(segredo ? { totpSecret: segredo } : {}),
       }),
     });
     return res.ok;

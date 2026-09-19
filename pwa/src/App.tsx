@@ -172,6 +172,24 @@ export const App: React.FC = () => {
     return () => window.removeEventListener("online", handleOnline);
   }, [currentUser]);
 
+  // Segredo TOTP do vinculo de WhatsApp: vem do backend (que agora garante um
+  // para toda conta) e e cacheado no localStorage. Antes era gerado so no
+  // syncCaregiverPhone, deixando contas existentes sem segredo nenhum.
+  const [totpSecret, setTotpSecret] = useState<string | null>(null);
+  useEffect(() => {
+    if (!currentUser) {
+      setTotpSecret(null);
+      return;
+    }
+    let cancelado = false;
+    (async () => {
+      const tok = await currentUser.getIdToken().catch(() => undefined);
+      const seg = await readTotpSecret(currentUser.uid, tok);
+      if (!cancelado) setTotpSecret(seg);
+    })();
+    return () => { cancelado = true; };
+  }, [currentUser]);
+
   const handleToggleGrocery = (id: string) => {
     setGroceryItems((prev) => {
       const updated = prev.map((item) =>
@@ -371,7 +389,7 @@ export const App: React.FC = () => {
             onLinkWhatsApp={() => setShowPhoneLinkDialog(true)}
             onConnectFamily={() => setShowConnectModal(true)}
             onLogout={handleLogout}
-            totpSecret={readTotpSecret(currentUser.uid)}
+            totpSecret={totpSecret}
             whatsappLinkedPhone={userPhone}
           />
         </main>
