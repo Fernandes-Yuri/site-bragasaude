@@ -227,7 +227,7 @@
   <script src="js/main.js?v=1.3.0" defer></script>
 
   <!-- Schema.org / JSON-LD (Dados Estruturados para o Google) -->
-  <script type="application/ld+json">
+  <script type="application/ld+json" id="braga-ldjson">
   {
     "@context": "https://schema.org",
     "@graph": [
@@ -428,7 +428,7 @@
               </div>
               <p class="hero-download-note">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="16" y2="12"/><line x1="12" x2="12.01" y1="8" y2="8"/></svg>
-                <span class="hero-download-note-text">Android: <strong>APK oficial v1.2.4</strong> disponível. iPhone: <strong>Modo Cuidador PWA</strong> pronto — instala na sua tela inicial.</span>
+                <span class="hero-download-note-text">Android: <strong>APK oficial <span data-braga-version>v1.2.4</span></strong> disponível. iPhone: <strong>Modo Cuidador PWA</strong> pronto — instala na sua tela inicial.</span>
               </p>
             </div>
 
@@ -1207,7 +1207,7 @@
           <details class="faq-item">
             <summary>Onde posso baixar a versão oficial mais recente?</summary>
             <div class="faq-answer">
-              <p>Você pode fazer o download do <strong>APK oficial assinado (v1.2.4)</strong> diretamente nesta página no botão <em>"Baixar para Android"</em> ou acessar o repositório de lançamentos no GitHub. O aplicativo é compatível com Android 8.0 ou superior.</p>
+              <p>Você pode fazer o download do <strong>APK oficial assinado (<span data-braga-version>v1.2.4</span>)</strong> diretamente nesta página no botão <em>"Baixar para Android"</em> ou acessar o repositório de lançamentos no GitHub. O aplicativo é compatível com Android 8.0 ou superior.</p>
             </div>
           </details>
         </div>
@@ -1492,6 +1492,41 @@
         }
       } catch (e) {}
     };
+  </script>
+
+  <!--
+    Versão dinâmica do APK (D59): a landing busca a versão atual no gateway
+    (/api/app/latest) e preenche todos os [data-braga-version] + o JSON-LD.
+    Assim o site nunca mente sobre qual versão está disponível, e cada release
+    nova dispensa edição manual deste arquivo. Em caso de falha, mantém o
+    valor hardcoded (que é atualizado a cada release como fallback).
+  -->
+  <script>
+    (function() {
+      var els = document.querySelectorAll('[data-braga-version]');
+      if (!els.length) return;
+      fetch('https://api.bragasaude.online/api/app/latest', { cache: 'no-store' })
+        .then(function(r) { return r.ok ? r.json() : null; })
+        .then(function(data) {
+          if (!data || !data.version_name) return;
+          var v = data.version_name;
+          els.forEach(function(el) { el.textContent = v; });
+          // JSON-LD (SoftwareApplication.softwareVersion) para indexação
+          try {
+            var node = document.getElementById('braga-ldjson');
+            if (node) {
+              var ld = JSON.parse(node.textContent);
+              (ld['@graph'] || [ld]).forEach(function(g) {
+                if (g && g['@type'] === 'SoftwareApplication' && g.softwareVersion !== undefined) {
+                  g.softwareVersion = v.replace(/^v/, '');
+                }
+              });
+              node.textContent = JSON.stringify(ld);
+            }
+          } catch (e) {}
+        })
+        .catch(function() { /* mantém o fallback hardcoded */ });
+    })();
   </script>
 
 </body>
