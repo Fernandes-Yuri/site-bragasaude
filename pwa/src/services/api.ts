@@ -30,6 +30,22 @@ function getOrCreateTotpSecret(userId: string): string {
 }
 
 /**
+ * Remove o segredo TOTP do localStorage — deve rodar no logout.
+ *
+ * AUD-PW01: o segredo do vinculo de WhatsApp era gravado e NUNCA removido. Em
+ * aparelho compartilhado (o caso que este proprio codigo teme), quem entra
+ * depois lê o segredo e vincula o WhatsApp da conta a outro numero.
+ */
+export function clearTotpSecret(userId: string): void {
+  const KEY = `braga.totp_secret.${userId}`;
+  try {
+    localStorage.removeItem(KEY);
+  } catch {
+    // localStorage indisponivel: nada a limpar.
+  }
+}
+
+/**
  * Le o segredo TOTP do usuario.
  *
  * Ordem: localStorage (gerado uma unica vez por este dispositivo) e, se nao

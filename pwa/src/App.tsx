@@ -15,6 +15,7 @@ import {
   fetchPatientVitals,
   syncCaregiverPhone,
   readTotpSecret,
+  clearTotpSecret,
 } from "./services/api";
 import { loadGroceryItems, toggleGroceryItemPantry } from "./services/grocery";
 import { queueMessage, flushMessageQueue } from "./services/messageQueue";
@@ -299,10 +300,20 @@ export const App: React.FC = () => {
   };
 
   const handleLogout = async () => {
+    const uid = currentUser?.uid;
     await signOut(auth);
     // Zera todos os dados pessoais: em aparelho compartilhado, o proximo
     // usuario nao pode ver sinais vitais, lista de compras ou telefone
     // de quem saiu.
+    // AUD-PW01: o segredo TOTP do vinculo de WhatsApp tambem precisa sair do
+    // localStorage — senao quem entra depois pode vincular o WhatsApp da
+    // conta antiga a outro numero.
+    if (uid) clearTotpSecret(uid);
+    try {
+      localStorage.removeItem(`braga_phone_${uid}`);
+    } catch {
+      // sem localStorage: nada a limpar
+    }
     setHasRealBinding(false);
     setDashboard(EMPTY_CAREGIVER_STATE);
     setGroceryItems(EMPTY_GROCERY_ITEMS);
