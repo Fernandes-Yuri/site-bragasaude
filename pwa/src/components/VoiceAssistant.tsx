@@ -172,7 +172,7 @@ export const VoiceAssistant: React.FC<VoiceAssistantProps> = ({
         setPendingDraft(null);
       }
     },
-    [userId, idToken, speak, onToast]
+    [userId, getIdToken, speak, onToast]
   );
 
   const handleConfirmDraft = useCallback(async () => {

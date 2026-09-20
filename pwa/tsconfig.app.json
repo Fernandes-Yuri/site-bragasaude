@@ -17,6 +17,10 @@
     "jsx": "react-jsx",
 
     /* Linting */
+    // AUD-PW(M): strict era desligado — crashes de null (tipo o idToken órfão
+    // em VoiceAssistant.tsx:175) passavam batidos pelo compilador. Ativado;
+    // custou 1 correção de dependência de useCallback.
+    "strict": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "erasableSyntaxOnly": true,
