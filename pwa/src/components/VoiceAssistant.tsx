@@ -57,6 +57,8 @@ export const VoiceAssistant: React.FC<VoiceAssistantProps> = ({
   const [isConfirming, setIsConfirming] = useState(false);
   const recognitionRef = useRef<any>(null);
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // AUD-PW(B): audio Piper em reprodução — ver stopSpeaking.
+  const currentAudioRef = useRef<HTMLAudioElement | null>(null);
 
   const speak = useCallback(
     async (text: string) => {
@@ -69,14 +71,20 @@ export const VoiceAssistant: React.FC<VoiceAssistantProps> = ({
         if (blob && blob.size > 0) {
           const audioUrl = URL.createObjectURL(blob);
           const audio = new Audio(audioUrl);
+          // AUD-PW(B): guardamos a referencia — antes o stopSpeaking varria
+          // TODOS os <audio> da pagina com querySelectorAll e os pausava,
+          // incluindo as mensagens de voz do chat da familia.
+          currentAudioRef.current = audio;
           setState("speaking");
           audio.onended = () => {
             setState("idle");
             URL.revokeObjectURL(audioUrl);
+            currentAudioRef.current = null;
           };
           audio.onerror = () => {
             URL.revokeObjectURL(audioUrl);
             setState("idle");
+            currentAudioRef.current = null;
           };
           await audio.play();
           return;
@@ -105,12 +113,16 @@ export const VoiceAssistant: React.FC<VoiceAssistantProps> = ({
   );
 
   const stopSpeaking = () => {
-    // Para áudio Piper
+    // Para áudio Piper — SÓ o nosso. AUD-PW(B): antes fazia
+    // document.querySelectorAll("audio").forEach(pause), o que calava as
+    // mensagens de voz do chat da familia que estivessem tocando.
     try {
-      document.querySelectorAll("audio").forEach((a) => {
+      const a = currentAudioRef.current;
+      if (a) {
         a.pause();
         a.src = "";
-      });
+        currentAudioRef.current = null;
+      }
     } catch {
       /* noop */
     }

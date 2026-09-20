@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { Smartphone, QrCode } from "lucide-react";
 
 interface DesktopGateModalProps {
@@ -8,6 +8,11 @@ interface DesktopGateModalProps {
 export const DesktopGateModal: React.FC<DesktopGateModalProps> = ({ onBypassDev }) => {
   const [isDesktop, setIsDesktop] = useState(false);
   const [bypassed, setBypassed] = useState(false);
+  // AUD-PW(B): se o api.qrserver.com cair ou for bloqueado, a imagem quebra
+  // e o idoso fica sem o QR. Agora detectamos a falha e mostramos a URL
+  // com botão de copiar — sempre há um caminho.
+  const [qrFailed, setQrFailed] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     const checkWidth = () => {
@@ -27,6 +32,16 @@ export const DesktopGateModal: React.FC<DesktopGateModalProps> = ({ onBypassDev 
     currentAppUrl
   )}&bgcolor=FFFFFF&color=00897B&margin=1`;
 
+  const handleCopyUrl = async () => {
+    try {
+      await navigator.clipboard?.writeText("braga-saude.web.app");
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      /* clipboard pode ser negado — a URL já está visível na tela */
+    }
+  };
+
   return (
     <div className="fixed inset-0 z-50 bg-[#FAFCFB] flex flex-col items-center justify-center p-6 text-center select-text">
       <div className="max-w-md w-full bg-white rounded-3xl p-8 shadow-xl border border-[#E5EBE8] flex flex-col items-center">
@@ -43,15 +58,37 @@ export const DesktopGateModal: React.FC<DesktopGateModalProps> = ({ onBypassDev 
         </p>
 
         <div className="bg-[#F4FBF9] border border-[#B2DFDB] rounded-2xl p-4 mb-6 flex flex-col items-center shadow-inner">
-          <img
-            src={qrCodeUrl}
-            alt="QR Code para abrir no celular"
-            className="w-48 h-48 rounded-xl shadow-sm"
-          />
-          <div className="flex items-center gap-1.5 text-xs text-[#00897B] font-semibold mt-3">
-            <QrCode className="w-4 h-4" />
-            <span>Aponte a câmera do seu iPhone ou Android</span>
-          </div>
+          {qrFailed ? (
+            // AUD-PW(B): fallback quando o serviço de QR não responde
+            <div className="w-48 flex flex-col items-center gap-3 py-6">
+              <QrCode className="w-12 h-12 text-[#00897B]" />
+              <p className="text-sm text-[#64748B]">
+                Não foi possível gerar o QR Code. Abra no navegador do celular:
+              </p>
+              <span className="font-mono text-base text-[#00897B] font-semibold">
+                braga-saude.web.app
+              </span>
+              <button
+                onClick={handleCopyUrl}
+                className="text-xs font-semibold text-[#00897B] border border-[#00897B]/40 rounded-lg px-3 py-1.5 hover:bg-[#E0F2F1] transition-colors"
+              >
+                {copied ? "Copiado!" : "Copiar endereço"}
+              </button>
+            </div>
+          ) : (
+            <img
+              src={qrCodeUrl}
+              alt="QR Code para abrir no celular"
+              className="w-48 h-48 rounded-xl shadow-sm"
+              onError={() => setQrFailed(true)}
+            />
+          )}
+          {!qrFailed && (
+            <div className="flex items-center gap-1.5 text-xs text-[#00897B] font-semibold mt-3">
+              <QrCode className="w-4 h-4" />
+              <span>Aponte a câmera do seu iPhone ou Android</span>
+            </div>
+          )}
         </div>
 
         <p className="text-xs text-[#64748B] mb-6">

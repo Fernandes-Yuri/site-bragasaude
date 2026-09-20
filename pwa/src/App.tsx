@@ -659,11 +659,19 @@ export const App: React.FC = () => {
                 lastMeasurementLabel: "Novo familiar conectado",
               }));
               if (currentUser && patientUserId) {
-                currentUser.getIdToken().then((tok: string) => {
-                  fetchPatientVitals(patientUserId, tok).then((vitals) => {
-                    if (vitals.length > 0) setHistoryRecords(vitals);
-                  });
-                });
+                // AUD-PW(B): as duas .then() em cadeia não tinham .catch() —
+                // offline (pareamento offline via QR), a rejection virava
+                // "Unhandled promise rejection" no console e a UI ficava
+                // girando. Agora falha silenciosamente: os vitais serão
+                // puxados no próximo sync.
+                currentUser
+                  .getIdToken()
+                  .then((tok: string) =>
+                    fetchPatientVitals(patientUserId, tok).then((vitals) => {
+                      if (vitals.length > 0) setHistoryRecords(vitals);
+                    })
+                  )
+                  .catch((e) => console.warn("Vitais do novo vínculo pendentes:", e));
               }
               showToast(`Conectado com sucesso a ${patientName}!`);
             }}
