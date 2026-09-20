@@ -141,7 +141,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onSuccess }) => {
 
         <h1 className="text-2xl font-bold tracking-tight text-[#1E293B]">BRAGA SAÚDE</h1>
         <div className="flex items-center gap-1.5 mt-1">
-          <span className="text-[11px] font-bold bg-[#E0F2F1] text-[#00897B] border border-[#B2DFDB] px-2.5 py-0.5 rounded-full uppercase tracking-wider">
+          <span className="text-[12px] font-bold bg-[#E0F2F1] text-[#00897B] border border-[#B2DFDB] px-2.5 py-0.5 rounded-full uppercase tracking-wider">
             Modo Cuidador Oficial
           </span>
         </div>
@@ -162,7 +162,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onSuccess }) => {
               Detectamos violações repetidas das diretrizes de segurança da Gateway.
               Por proteção dos dados clínicos, este endereço IP foi suspenso por 24 horas pela Gateway.
             </p>
-            <div className="flex items-center gap-1.5 text-[11px] font-semibold text-[#64748B] mt-1 bg-white/60 p-2 rounded-xl border border-[#D9532F]/20">
+            <div className="flex items-center gap-1.5 text-[12px] font-semibold text-[#64748B] mt-1 bg-white/60 p-2 rounded-xl border border-[#D9532F]/20">
               <Clock className="w-3.5 h-3.5 text-[#D9532F]" />
               <span>Desbloqueio automático após 24 horas</span>
             </div>
@@ -204,7 +204,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onSuccess }) => {
         {/* Divisor */}
         <div className="relative my-5 flex items-center justify-center">
           <div className="border-t border-[#E2E8F0] w-full" />
-          <span className="bg-white px-3 text-[11px] font-medium text-[#64748B] uppercase tracking-wider absolute">
+          <span className="bg-white px-3 text-[12px] font-medium text-[#64748B] uppercase tracking-wider absolute">
             ou com e-mail
           </span>
         </div>
@@ -292,7 +292,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onSuccess }) => {
                   onChange={(e) => setLgpdAccepted(e.target.checked)}
                   className="mt-0.5 w-4 h-4 rounded text-[#00897B] focus:ring-0 cursor-pointer accent-[#00897B] shrink-0"
                 />
-                <span className="text-[11px] text-[#64748B] leading-tight">
+                <span className="text-[12px] text-[#64748B] leading-tight">
                   Concordo com os <strong className="text-[#1E293B]">Termos de Uso</strong> e autorizo o tratamento de dados de saúde e rotina familiar nos termos da <strong className="text-[#00897B]">LGPD (Art. 11)</strong>.
                 </span>
               </label>
@@ -334,7 +334,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onSuccess }) => {
           <ShieldCheck className="w-4 h-4 text-[#00897B]" />
           <span>Ambiente Seguro e Criptografado (LGPD)</span>
         </div>
-        <p className="text-[10px] text-[#64748B] leading-tight max-w-xs px-2">
+        <p className="text-[12px] text-[#64748B] leading-tight max-w-xs px-2">
           O Braga Saúde é uma ferramenta de suporte ao autocuidado e acompanhamento familiar, não substituindo diagnósticos, prescrições ou condutas médicas.
         </p>
       </div>

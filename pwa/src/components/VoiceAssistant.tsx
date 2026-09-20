@@ -316,7 +316,7 @@ export const VoiceAssistant: React.FC<VoiceAssistantProps> = ({
                 </div>
                 <div>
                   <p className="text-xs font-bold text-[#1E293B]">Braga, seu copiloto</p>
-                  <p className="text-[10px] text-[#64748B]">
+                  <p className="text-[12px] text-[#64748B]">
                     Cuidando de {patientName || "paciente"}
                   </p>
                 </div>
@@ -336,7 +336,7 @@ export const VoiceAssistant: React.FC<VoiceAssistantProps> = ({
 
             {transcript && (
               <div className="bg-[#F1F5F9] rounded-2xl px-3.5 py-2.5">
-                <p className="text-[10px] font-bold text-[#64748B] uppercase tracking-wide mb-0.5">
+                <p className="text-[12px] font-bold text-[#64748B] uppercase tracking-wide mb-0.5">
                   Você disse
                 </p>
                 <p className="text-[13px] text-[#1E293B] leading-snug">{transcript}</p>
@@ -348,20 +348,20 @@ export const VoiceAssistant: React.FC<VoiceAssistantProps> = ({
                 <div className="w-2 h-2 rounded-full bg-[#00897B] animate-bounce" style={{ animationDelay: "0ms" }} />
                 <div className="w-2 h-2 rounded-full bg-[#00897B] animate-bounce" style={{ animationDelay: "150ms" }} />
                 <div className="w-2 h-2 rounded-full bg-[#00897B] animate-bounce" style={{ animationDelay: "300ms" }} />
-                <span className="text-[11px] text-[#64748B] ml-1">Consultando...</span>
+                <span className="text-[12px] text-[#64748B] ml-1">Consultando...</span>
               </div>
             )}
 
             {lastReply && (
               <div className="bg-[#E0F2F1] rounded-2xl px-3.5 py-2.5">
-                <p className="text-[10px] font-bold text-[#00897B] uppercase tracking-wide mb-0.5">
+                <p className="text-[12px] font-bold text-[#00897B] uppercase tracking-wide mb-0.5">
                   Braga responde
                 </p>
                 <p className="text-[13px] text-[#1E293B] leading-snug">{lastReply}</p>
                 {state === "speaking" && (
                   <button
                     onClick={stopSpeaking}
-                    className="mt-2 text-[10px] font-bold text-[#00897B] active:opacity-70"
+                    className="mt-2 text-[12px] font-bold text-[#00897B] active:opacity-70"
                   >
                     Parar de falar
                   </button>
@@ -374,7 +374,7 @@ export const VoiceAssistant: React.FC<VoiceAssistantProps> = ({
               <div className="bg-white rounded-2xl border border-[#00897B]/30 px-3.5 py-3 space-y-2.5">
                 <div className="flex items-center gap-2">
                   <Calendar className="w-4 h-4 text-[#00897B] shrink-0" />
-                  <p className="text-[10px] font-bold text-[#00897B] uppercase tracking-wide">
+                  <p className="text-[12px] font-bold text-[#00897B] uppercase tracking-wide">
                     Aguardando sua confirmação
                   </p>
                 </div>
@@ -412,13 +412,13 @@ export const VoiceAssistant: React.FC<VoiceAssistantProps> = ({
             )}
 
             {!transcript && !lastReply && state === "idle" && (
-              <p className="text-[11px] text-[#64748B] leading-relaxed">
+              <p className="text-[12px] text-[#64748B] leading-relaxed">
                 Toque no botão e faça uma pergunta sobre os sinais vitais,
                 hidratação ou medicação de {patientName || "paciente"}.
               </p>
             )}
 
-            <p className="text-[9px] text-[#64748B] leading-tight text-center">
+            <p className="text-[12px] text-[#64748B] leading-tight text-center">
               Apoio ao cuidado — não substitui orientação médica. Emergências: SAMU 192.
             </p>
           </div>

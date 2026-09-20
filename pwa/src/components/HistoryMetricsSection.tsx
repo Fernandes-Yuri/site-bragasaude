@@ -93,10 +93,10 @@ export const HistoryMetricsSection: React.FC<HistoryMetricsSectionProps> = ({ hi
               : "bg-[#F8FAFC] border-[#E2E8F0]"
           }`}
         >
-          <span className="text-[11px] text-[#64748B] block font-medium">Média Pressão</span>
+          <span className="text-[12px] text-[#64748B] block font-medium">Média Pressão</span>
           <span className="text-lg font-bold text-[#1E293B]">
             {hasHistory ? `${avgSystolic}/${avgDiastolic}` : "--/--"}{" "}
-            <span className="text-[10px] text-[#64748B] font-normal">mmHg</span>
+            <span className="text-[12px] text-[#64748B] font-normal">mmHg</span>
           </span>
         </div>
 
@@ -108,10 +108,10 @@ export const HistoryMetricsSection: React.FC<HistoryMetricsSectionProps> = ({ hi
               : "bg-[#F8FAFC] border-[#E2E8F0]"
           }`}
         >
-          <span className="text-[11px] text-[#64748B] block font-medium">Média Glicose</span>
+          <span className="text-[12px] text-[#64748B] block font-medium">Média Glicose</span>
           <span className="text-lg font-bold text-[#1E293B]">
             {hasHistory ? `${avgGlucose}` : "--"}{" "}
-            <span className="text-[10px] text-[#64748B] font-normal">mg/dL</span>
+            <span className="text-[12px] text-[#64748B] font-normal">mg/dL</span>
           </span>
         </div>
       </div>

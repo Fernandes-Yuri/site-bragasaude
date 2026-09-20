@@ -46,7 +46,7 @@ export const QuickMessagesCard: React.FC<QuickMessagesCardProps> = ({ templates,
             <div className="p-1 rounded-lg group-hover:scale-110 transition-transform">
               {getIcon(template.iconType)}
             </div>
-            <span className="text-[11px] font-semibold text-[#1E293B] leading-tight line-clamp-2">
+            <span className="text-[12px] font-semibold text-[#1E293B] leading-tight line-clamp-2">
               {template.label}
             </span>
           </button>

@@ -85,7 +85,7 @@ export const SharedGroceryListCard: React.FC<SharedGroceryListCardProps> = ({
                   >
                     {item.foodName}
                   </p>
-                  <p className="text-[11px] text-[#64748B] truncate">
+                  <p className="text-[12px] text-[#64748B] truncate">
                     {item.purchaseUnitText} • {item.category}
                   </p>
                 </div>

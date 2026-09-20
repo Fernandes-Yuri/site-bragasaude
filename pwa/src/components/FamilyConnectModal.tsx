@@ -226,7 +226,7 @@ export const FamilyConnectModal: React.FC<FamilyConnectModalProps> = ({
         ) : (
           <div>
             <div id="qr-scanner-view" className="w-full rounded-2xl overflow-hidden bg-black/5 min-h-[220px]" />
-            <p className="text-[11px] text-[#64748B] text-center mt-3">
+            <p className="text-[12px] text-[#64748B] text-center mt-3">
               Aponte a câmera para o QR Code exibido na tela do familiar.
             </p>
           </div>

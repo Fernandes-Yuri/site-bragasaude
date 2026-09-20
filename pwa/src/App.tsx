@@ -420,7 +420,7 @@ export const App: React.FC = () => {
               <MessageSquare className="w-5 h-5 text-[#F57F17] shrink-0" />
               <div className="min-w-0">
                 <p className="text-xs font-bold text-[#1E293B]">Vincule seu WhatsApp</p>
-                <p className="text-[11px] text-[#64748B] truncate">
+                <p className="text-[12px] text-[#64748B] truncate">
                   Receba avisos de saúde e emergência direto no WhatsApp.
                 </p>
               </div>
@@ -443,7 +443,7 @@ export const App: React.FC = () => {
               </div>
               <div>
                 <p className="text-xs font-bold text-[#1E293B]">Conectar Novo Familiar</p>
-                <p className="text-[11px] text-[#64748B]">
+                <p className="text-[12px] text-[#64748B]">
                   Use o código de 8 dígitos gerado no celular do paciente.
                 </p>
               </div>
@@ -509,7 +509,7 @@ export const App: React.FC = () => {
 
         {/* Disclaimer Clínico Institucional */}
         <div className="pt-2 pb-6 text-center">
-          <p className="text-[10px] text-[#64748B] leading-tight max-w-xs mx-auto">
+          <p className="text-[12px] text-[#64748B] leading-tight max-w-xs mx-auto">
             O Braga Saúde é uma plataforma de suporte ao autocuidado e acompanhamento familiar preventivo, não substituindo consultas, diagnósticos ou prescrições médicas.
           </p>
         </div>
@@ -540,7 +540,7 @@ export const App: React.FC = () => {
           }`}
         >
           <Home className="w-5 h-5" />
-          <span className="text-[10px] font-bold">Início</span>
+          <span className="text-[12px] font-bold">Início</span>
         </button>
 
         <button
@@ -550,7 +550,7 @@ export const App: React.FC = () => {
           }`}
         >
           <MessageCircle className="w-5 h-5" />
-          <span className="text-[10px] font-bold">Família</span>
+          <span className="text-[12px] font-bold">Família</span>
         </button>
 
         <button
@@ -560,7 +560,7 @@ export const App: React.FC = () => {
           }`}
         >
           <UserIcon className="w-5 h-5" />
-          <span className="text-[10px] font-bold">Perfil</span>
+          <span className="text-[12px] font-bold">Perfil</span>
         </button>
       </nav>
 

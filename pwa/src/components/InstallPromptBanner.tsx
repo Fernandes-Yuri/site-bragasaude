@@ -78,7 +78,7 @@ export const InstallPromptBanner: React.FC = () => {
             </div>
             <div>
               <p className="text-xs font-bold text-white">Instalar o Braga Cuidador</p>
-              <p className="text-[10px] text-[#64748B]">
+              <p className="text-[12px] text-[#64748B]">
                 Acesse como aplicativo direto na sua tela inicial
               </p>
             </div>
@@ -95,10 +95,10 @@ export const InstallPromptBanner: React.FC = () => {
         {/* Instruções Específicas para iOS Safari */}
         {isIos ? (
           <div className="bg-white/5 border border-white/10 rounded-2xl p-3 flex flex-col gap-2 text-xs">
-            <div className="flex items-center gap-2 text-[#26A69A] font-semibold text-[11px]">
+            <div className="flex items-center gap-2 text-[#26A69A] font-semibold text-[12px]">
               <span>No Safari do seu iPhone:</span>
             </div>
-            <div className="flex items-center gap-2 text-[11px] text-slate-200">
+            <div className="flex items-center gap-2 text-[12px] text-slate-200">
               <div className="w-5 h-5 rounded-md bg-white/10 flex items-center justify-center shrink-0 text-[#26A69A]">
                 <Share className="w-3.5 h-3.5" />
               </div>
@@ -106,7 +106,7 @@ export const InstallPromptBanner: React.FC = () => {
                 1. Toque no botão de <strong>Compartilhar</strong> (barra inferior).
               </span>
             </div>
-            <div className="flex items-center gap-2 text-[11px] text-slate-200">
+            <div className="flex items-center gap-2 text-[12px] text-slate-200">
               <div className="w-5 h-5 rounded-md bg-white/10 flex items-center justify-center shrink-0 text-[#26A69A]">
                 <PlusSquare className="w-3.5 h-3.5" />
               </div>
@@ -130,7 +130,7 @@ export const InstallPromptBanner: React.FC = () => {
         <div className="flex justify-end">
           <button
             onClick={handleDismiss}
-            className="text-[10px] text-[#64748B] hover:text-white transition-colors"
+            className="text-[12px] text-[#64748B] hover:text-white transition-colors"
           >
             Agora não, continuar pelo navegador
           </button>

@@ -68,7 +68,7 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
             Cuidador de {patientName || "paciente"}
           </p>
         </div>
-        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#E0F2F1] text-[#00897B] text-[11px] font-bold">
+        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#E0F2F1] text-[#00897B] text-[12px] font-bold">
           <ShieldCheck className="w-3.5 h-3.5" />
           Conta protegida
         </span>
@@ -81,7 +81,7 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
             <Mail className="w-4.5 h-4.5" />
           </div>
           <div className="min-w-0 flex-1">
-            <p className="text-[10px] font-bold text-[#64748B] uppercase tracking-wide">
+            <p className="text-[12px] font-bold text-[#64748B] uppercase tracking-wide">
               E-mail
             </p>
             <p className="text-sm font-semibold text-[#1E293B] truncate">{email}</p>
@@ -96,7 +96,7 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
             <Phone className="w-4.5 h-4.5" />
           </div>
           <div className="min-w-0 flex-1">
-            <p className="text-[10px] font-bold text-[#64748B] uppercase tracking-wide">
+            <p className="text-[12px] font-bold text-[#64748B] uppercase tracking-wide">
               WhatsApp
             </p>
             <p className="text-sm font-semibold text-[#1E293B] truncate">
@@ -104,7 +104,7 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
             </p>
           </div>
           {!phone && (
-            <span className="px-2.5 py-1 rounded-full bg-[#FFF3E0] text-[#E65100] text-[10px] font-bold shrink-0">
+            <span className="px-2.5 py-1 rounded-full bg-[#FFF3E0] text-[#E65100] text-[12px] font-bold shrink-0">
               Vincular
             </span>
           )}
@@ -128,7 +128,7 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
             <Users className="w-4.5 h-4.5 text-[#00897B]" />
             <h3 className="text-sm font-bold text-[#1E293B]">Grupo de cuidados</h3>
           </div>
-          <span className="text-[11px] font-bold text-[#64748B]">
+          <span className="text-[12px] font-bold text-[#64748B]">
             {activeBindings.length} conectado{activeBindings.length === 1 ? "" : "s"}
           </span>
         </div>
@@ -152,7 +152,7 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
                   <p className="text-sm font-semibold text-[#1E293B] truncate">
                     {b.caregiverName || "Familiar"}
                   </p>
-                  <p className="text-[10px] text-[#64748B] truncate">
+                  <p className="text-[12px] text-[#64748B] truncate">
                     {b.caregiverRelation || "Familiar"}
                   </p>
                 </div>
@@ -169,7 +169,7 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
           <User className="w-4 h-4" />
           Conectar outro familiar
         </button>
-        <p className="text-[10px] text-[#64748B] mt-2 leading-relaxed">
+        <p className="text-[12px] text-[#64748B] mt-2 leading-relaxed">
           Cada novo familiar entra automaticamente no chat em grupo de {patientName || "paciente"}.
         </p>
       </div>
@@ -186,7 +186,7 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
           </div>
           <div className="flex-1">
             <p className="text-sm font-semibold text-[#1E293B]">Atualizar dados</p>
-            <p className="text-[11px] text-[#64748B]">
+            <p className="text-[12px] text-[#64748B]">
               {isRefreshing ? "Sincronizando..." : "Buscar sinais e mensagens mais recentes"}
             </p>
           </div>
@@ -201,12 +201,12 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
           </div>
           <div className="flex-1">
             <p className="text-sm font-semibold text-rose-600">Sair da conta</p>
-            <p className="text-[11px] text-[#64748B]">Encerrar sessão neste dispositivo</p>
+            <p className="text-[12px] text-[#64748B]">Encerrar sessão neste dispositivo</p>
           </div>
         </button>
       </div>
 
-      <p className="text-center text-[10px] text-[#64748B] leading-relaxed px-4">
+      <p className="text-center text-[12px] text-[#64748B] leading-relaxed px-4">
         O Braga Saúde é uma ferramenta de autocuidado e não substitui consultas médicas.
         Em emergências, ligue para o SAMU (192).
       </p>

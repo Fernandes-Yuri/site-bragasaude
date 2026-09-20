@@ -215,7 +215,7 @@ export const FamilyChatScreen: React.FC<FamilyChatScreenProps> = ({
       {/* Header do grupo */}
       <div className="px-4 py-2.5 border-b border-[#E5EBE8] bg-white">
         <p className="text-sm font-bold text-[#1E293B]">Chat da família</p>
-        <p className="text-[11px] text-[#64748B]">
+        <p className="text-[12px] text-[#64748B]">
           Grupo de {patientName || "paciente"} · todos os cuidadores veem esta conversa
         </p>
       </div>
@@ -248,7 +248,7 @@ export const FamilyChatScreen: React.FC<FamilyChatScreenProps> = ({
                 }`}
               >
                 {!isMine && (
-                  <p className="text-[10px] font-bold text-[#00897B] mb-0.5">
+                  <p className="text-[12px] font-bold text-[#00897B] mb-0.5">
                     {m.senderName || "Familiar"}
                   </p>
                 )}
@@ -265,7 +265,7 @@ export const FamilyChatScreen: React.FC<FamilyChatScreenProps> = ({
                   }`}
                 >
                   <span
-                    className={`text-[9px] ${
+                    className={`text-[12px] ${
                       isMine ? "text-emerald-100/80" : "text-[#64748B]"
                     }`}
                   >
@@ -289,7 +289,7 @@ export const FamilyChatScreen: React.FC<FamilyChatScreenProps> = ({
       </div>
 
       {error && (
-        <p className="text-[10px] text-rose-600 px-4 py-1 text-center">{error}</p>
+        <p className="text-[12px] text-rose-600 px-4 py-1 text-center">{error}</p>
       )}
 
       {/* Templates rápidos */}
@@ -300,7 +300,7 @@ export const FamilyChatScreen: React.FC<FamilyChatScreenProps> = ({
               key={t.key}
               onClick={() => sendMessage(t.text)}
               disabled={isSending}
-              className="shrink-0 px-2.5 py-1.5 rounded-full bg-[#E0F2F1] text-[#00897B] text-[11px] font-semibold active:scale-95 transition-all disabled:opacity-50"
+              className="shrink-0 px-2.5 py-1.5 rounded-full bg-[#E0F2F1] text-[#00897B] text-[12px] font-semibold active:scale-95 transition-all disabled:opacity-50"
             >
               {t.label}
             </button>

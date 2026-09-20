@@ -28,7 +28,7 @@ export const TodayVitalsCard: React.FC<TodayVitalsCardProps> = ({ state }) => {
           <h3 className="text-base font-bold text-[#1E293B]">Sinais vitais</h3>
         </div>
         {state.lastMeasurementLabel && (
-          <span className="text-[11px] text-[#64748B] font-medium">
+          <span className="text-[12px] text-[#64748B] font-medium">
             {state.lastMeasurementLabel}
           </span>
         )}
@@ -46,7 +46,7 @@ export const TodayVitalsCard: React.FC<TodayVitalsCardProps> = ({ state }) => {
             <span className="text-2xl font-black tracking-tight text-[#1E293B]">
               {state.systolic ? `${state.systolic}/${state.diastolic || "--"}` : "--"}
             </span>
-            <span className="text-[11px] font-medium text-[#64748B]">mmHg</span>
+            <span className="text-[12px] font-medium text-[#64748B]">mmHg</span>
           </div>
         </div>
 
@@ -60,7 +60,7 @@ export const TodayVitalsCard: React.FC<TodayVitalsCardProps> = ({ state }) => {
             <span className="text-2xl font-black tracking-tight text-[#1E293B]">
               {state.glucose ? `${state.glucose}` : "--"}
             </span>
-            <span className="text-[11px] font-medium text-[#64748B]">mg/dL</span>
+            <span className="text-[12px] font-medium text-[#64748B]">mg/dL</span>
           </div>
         </div>
       </div>
@@ -83,7 +83,7 @@ export const TodayVitalsCard: React.FC<TodayVitalsCardProps> = ({ state }) => {
             style={{ width: `${hydrationPct}%` }}
           />
         </div>
-        <div className="flex justify-between text-[11px] text-[#64748B]">
+        <div className="flex justify-between text-[12px] text-[#64748B]">
           <span>Meta: {state.hydrationTargetMl} ml</span>
           <span>{hydrationPct}%</span>
         </div>
@@ -107,14 +107,14 @@ export const TodayVitalsCard: React.FC<TodayVitalsCardProps> = ({ state }) => {
             style={{ width: `${stepsPct}%` }}
           />
         </div>
-        <div className="flex justify-between text-[11px] text-[#64748B]">
+        <div className="flex justify-between text-[12px] text-[#64748B]">
           <span>Meta: {state.stepGoal} passos</span>
           <span>{stepsPct}%</span>
         </div>
       </div>
 
       {/* Rodapé informativo sutil */}
-      <p className="text-[10px] text-[#64748B]/80 pt-1 text-center">
+      <p className="text-[12px] text-[#64748B]/80 pt-1 text-center">
         Leituras autorreportadas ou medidas no dia pelo próprio familiar.
       </p>
     </div>
