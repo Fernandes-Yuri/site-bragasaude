@@ -124,3 +124,19 @@ export async function getPendingMessageCount(): Promise<number> {
     return 0;
   }
 }
+
+/**
+ * Limpa a fila de mensagens do IndexedDB — deve rodar no logout.
+ *
+ * AUD-PW02: a fila é persistida no IndexedDB e continha textos de mensagens
+ * familiares de quem saiu. Em aparelho compartilhado, o próximo usuário via
+ * o conteúdo na fila (e ela tentava entregar com o token novo — mensagem
+ * cruzada entre contas).
+ */
+export async function clearMessageQueue(): Promise<void> {
+  try {
+    await db.messageQueue.clear();
+  } catch (err) {
+    console.warn("Falha ao limpar fila de mensagens:", err);
+  }
+}

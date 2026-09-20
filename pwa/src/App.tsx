@@ -18,7 +18,7 @@ import {
   clearTotpSecret,
 } from "./services/api";
 import { loadGroceryItems, toggleGroceryItemPantry } from "./services/grocery";
-import { queueMessage, flushMessageQueue } from "./services/messageQueue";
+import { queueMessage, flushMessageQueue, clearMessageQueue } from "./services/messageQueue";
 import type { CaregiverDashboardState, GroceryItem, VitalHistoryRecord, FamilyBinding } from "./types";
 import { EmeraldHeaderBanner } from "./components/EmeraldHeaderBanner";
 import { PatientHeaderCard } from "./components/PatientHeaderCard";
@@ -314,6 +314,10 @@ export const App: React.FC = () => {
     } catch {
       // sem localStorage: nada a limpar
     }
+    // AUD-PW02: a fila de mensagens no IndexedDB continua textos familiares de
+    // quem saiu — limpa junto, senão o próximo usuário de aparelho compartilhado
+    // lê (e a fila tenta entregar com o token novo = mensagem cruzada).
+    clearMessageQueue().catch(() => {});
     setHasRealBinding(false);
     setDashboard(EMPTY_CAREGIVER_STATE);
     setGroceryItems(EMPTY_GROCERY_ITEMS);

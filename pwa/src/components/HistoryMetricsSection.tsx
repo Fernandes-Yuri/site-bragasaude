@@ -38,15 +38,17 @@ export const HistoryMetricsSection: React.FC<HistoryMetricsSectionProps> = ({ hi
   }));
 
   const hasHistory = filtered.length > 0;
-  const avgSystolic = hasHistory
-    ? Math.round(filtered.reduce((acc, curr) => acc + (curr.systolic || 0), 0) / filtered.length)
-    : 0;
-  const avgDiastolic = hasHistory
-    ? Math.round(filtered.reduce((acc, curr) => acc + (curr.diastolic || 0), 0) / filtered.length)
-    : 0;
-  const avgGlucose = hasHistory
-    ? Math.round(filtered.reduce((acc, curr) => acc + (curr.glucose || 0), 0) / filtered.length)
-    : 0;
+  // AUD-PW05: antes `(curr.systolic || 0)` — um registro que só tem glicose
+  // entrava na média de pressão como ZERO. 3 leituras de 140 + 2 só-glicose
+  // davam média exibida de 84 mmHg, podendo assustar o cuidador à toa. Agora a
+  // média de cada sinal conta SÓ os registros que têm aquele sinal.
+  const avgOf = (vals: Array<number | null | undefined>): number => {
+    const present = vals.filter((v): v is number => typeof v === "number" && !Number.isNaN(v));
+    return present.length > 0 ? Math.round(present.reduce((a, b) => a + b, 0) / present.length) : 0;
+  };
+  const avgSystolic = avgOf(filtered.map((i) => i.systolic));
+  const avgDiastolic = avgOf(filtered.map((i) => i.diastolic));
+  const avgGlucose = avgOf(filtered.map((i) => i.glucose));
 
   return (
     <div className="w-full bg-white rounded-2xl p-5 border border-[#E5EBE8] shadow-sm">
