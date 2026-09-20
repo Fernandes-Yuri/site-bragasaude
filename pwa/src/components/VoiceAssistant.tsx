@@ -4,7 +4,11 @@ import { askVoiceCopilot, synthesizePiperVoice, confirmVoiceDraft } from "../ser
 
 interface VoiceAssistantProps {
   userId: string;
-  idToken?: string;
+  // AUD-PW03: era idToken?: string — snapshot do estado capturada no
+  // onAuthStateChanged, que NÃO dispara na renovação silenciosa do Firebase
+  // (~1h). O token stale fazia o copiloto parar de responder (401 no gateway)
+  // sem mensagem alguma. Agora cada chamada resolve o token fresco.
+  getIdToken?: () => Promise<string | undefined>;
   patientName: string;
   actingAs?: "patient" | "caregiver";
   patientId?: string;
@@ -35,7 +39,7 @@ function formatarDataPt(iso: string): string {
  */
 export const VoiceAssistant: React.FC<VoiceAssistantProps> = ({
   userId,
-  idToken,
+  getIdToken,
   patientName,
   actingAs = "patient",
   patientId,
@@ -59,7 +63,9 @@ export const VoiceAssistant: React.FC<VoiceAssistantProps> = ({
       // Fala com a voz Piper do gateway (mesma do Android, padrao "faber").
       // Se falhar (offline / navegador sem suporte), cai no SpeechSynthesis.
       try {
-        const blob = await synthesizePiperVoice(text, idToken || "");
+        // AUD-PW03: token fresco — a voz Piper somia após ~1h com token stale.
+        const token = (await getIdToken?.()) || "";
+        const blob = await synthesizePiperVoice(text, token);
         if (blob && blob.size > 0) {
           const audioUrl = URL.createObjectURL(blob);
           const audio = new Audio(audioUrl);
@@ -95,7 +101,7 @@ export const VoiceAssistant: React.FC<VoiceAssistantProps> = ({
         setState("idle");
       }
     },
-    [idToken]
+    [getIdToken]
   );
 
   const stopSpeaking = () => {
@@ -135,7 +141,9 @@ export const VoiceAssistant: React.FC<VoiceAssistantProps> = ({
       if (!clean) return;
 
       setState("thinking");
-      const reply = await askVoiceCopilot(clean, userId, idToken, {
+      // AUD-PW03: token fresco — 401 após ~1h fazia o copiloto "sumir".
+      const token = await (getIdToken ? getIdToken() : Promise.resolve(undefined));
+      const reply = await askVoiceCopilot(clean, userId, token, {
         actingAs,
         patientId,
         patientName,
@@ -171,7 +179,12 @@ export const VoiceAssistant: React.FC<VoiceAssistantProps> = ({
     if (!pendingDraft || !patientId) return;
     setIsConfirming(true);
     try {
-      const res = await confirmVoiceDraft(patientId, pendingDraft.id, idToken);
+      const res = await confirmVoiceDraft(
+        patientId,
+        pendingDraft.id,
+        // AUD-PW03: token fresco na confirmacao do rascunho.
+        await (getIdToken ? getIdToken() : Promise.resolve(undefined))
+      );
       if (res.ok) {
         const fala = res.fala || "Consulta confirmada! Já está na agenda.";
         setLastReply(fala);
@@ -185,7 +198,7 @@ export const VoiceAssistant: React.FC<VoiceAssistantProps> = ({
     } finally {
       setIsConfirming(false);
     }
-  }, [pendingDraft, patientId, idToken, speak]);
+  }, [pendingDraft, patientId, getIdToken, speak]);
 
   const startListening = () => {
     const SpeechRecognition =

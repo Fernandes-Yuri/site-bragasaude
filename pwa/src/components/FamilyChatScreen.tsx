@@ -13,7 +13,12 @@ interface FamilyChatScreenProps {
   patientName: string;
   currentUserId: string;
   caregiverName: string;
-  idToken?: string;
+  // AUD-PW03: era idToken?: string — uma snapshot capturada no onAuthStateChanged.
+  // O Firebase só dispara esse callback em login/logout, NÃO na renovação
+  // silenciosa do token (~1h). O idToken em estado envelhecia, o gateway
+  // passava a rejeitar com 401 e o chat sumia sem explicação. Agora resolvemos
+  // o token fresco no instante de cada chamada.
+  getIdToken?: () => Promise<string | undefined>;
   onToast?: (msg: string) => void;
 }
 
@@ -30,7 +35,7 @@ export const FamilyChatScreen: React.FC<FamilyChatScreenProps> = ({
   patientName,
   currentUserId,
   caregiverName,
-  idToken,
+  getIdToken,
   onToast,
 }) => {
   const [messages, setMessages] = useState<FamilyMessage[]>([]);
@@ -44,10 +49,12 @@ export const FamilyChatScreen: React.FC<FamilyChatScreenProps> = ({
   // Carrega mensagens (e re-carrega para refrescar o grupo)
   const loadMessages = useCallback(async () => {
     if (!patientId) return;
-    const fresh = await fetchFamilyMessages(patientId, idToken, 50);
+    // AUD-PW03: token resolvido no momento da chamada (nunca stale).
+    const token = await (getIdToken ? getIdToken() : Promise.resolve(undefined));
+    const fresh = await fetchFamilyMessages(patientId, token, 50);
     // O gateway retorna DESC (mais novas primeiro); inverte para o chat
     setMessages(fresh.slice().reverse());
-  }, [patientId, idToken]);
+  }, [patientId, getIdToken]);
 
   useEffect(() => {
     loadMessages();
@@ -66,7 +73,9 @@ export const FamilyChatScreen: React.FC<FamilyChatScreenProps> = ({
   const speak = async (text: string) => {
     // Voz Piper do gateway (mesma do Android, "faber"); fallback na do aparelho
     try {
-      const blob = await synthesizePiperVoice(text, idToken || "");
+      // AUD-PW03: token fresco — a voz somem após ~1h com token stale.
+      const token = (await getIdToken?.()) || "";
+      const blob = await synthesizePiperVoice(text, token);
       if (blob && blob.size > 0) {
         const url = URL.createObjectURL(blob);
         const audio = new Audio(url);
@@ -159,7 +168,9 @@ export const FamilyChatScreen: React.FC<FamilyChatScreenProps> = ({
       "LOVE",
       caregiverName,
       currentUserId,
-      idToken
+      // AUD-PW03: token fresco no envio — mensagem silenciosamente perdida
+      // após ~1h era sintoma do token stale.
+      await (getIdToken ? getIdToken() : Promise.resolve(undefined))
     );
     if (!result.delivered) {
       setError("Sem conexão — a mensagem será reenviada em breve");

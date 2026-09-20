@@ -70,7 +70,8 @@ export const App: React.FC = () => {
   const [userPhone, setUserPhone] = useState<string | null>(null);
   const [bindings, setBindings] = useState<FamilyBinding[]>([]);
   const [activeTab, setActiveTab] = useState<"home" | "chat" | "profile">("home");
-  const [idToken, setIdToken] = useState<string | undefined>(undefined);
+  // AUD-PW03: removido o estado idToken — era uma snapshot stale. Consumidores
+  // agora recebem um getter que resolve o token fresco no instante da chamada.
 
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [toastType, setToastType] = useState<"success" | "error">("success");
@@ -108,7 +109,6 @@ export const App: React.FC = () => {
         // Buscar vínculos reais do usuário
         try {
           const token = await user.getIdToken();
-          setIdToken(token);
           const bindings = await fetchFamilyBindings(user.uid, token);
           setBindings(bindings);
           if (bindings.length > 0) {
@@ -387,7 +387,10 @@ export const App: React.FC = () => {
             patientName={dashboard.patientName}
             currentUserId={currentUser.uid}
             caregiverName={dashboard.caregiverName}
-            idToken={idToken}
+            // AUD-PW03: getter no lugar da string — token sempre fresco.
+            getIdToken={async () =>
+              currentUser ? currentUser.getIdToken() : undefined
+            }
             onToast={showToast}
           />
         </main>
@@ -517,7 +520,10 @@ export const App: React.FC = () => {
       {activeTab === "home" && (
         <VoiceAssistant
           userId={currentUser.uid}
-          idToken={idToken}
+          // AUD-PW03: getter no lugar da string — token sempre fresco.
+          getIdToken={async () =>
+            currentUser ? currentUser.getIdToken() : undefined
+          }
           patientName={dashboard.patientName}
           actingAs="caregiver"
           patientId={dashboard.patientUserId}
