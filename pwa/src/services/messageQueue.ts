@@ -114,16 +114,9 @@ export async function flushMessageQueue(
   return deliveredCount;
 }
 
-/**
- * Total de mensagens aguardando entrega (para feedback na UI).
- */
-export async function getPendingMessageCount(): Promise<number> {
-  try {
-    return await db.messageQueue.where("status").equals("pending").count();
-  } catch {
-    return 0;
-  }
-}
+// AUD-PW(M): getPendingMessageCount era codigo MORTO — definido mas sem
+// nenhum chamador no app. Removido (a UI de "enviando" usa o estado local
+// do componente, nao esta contagem).
 
 /**
  * Limpa a fila de mensagens do IndexedDB — deve rodar no logout.

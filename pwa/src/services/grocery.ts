@@ -15,13 +15,10 @@ export async function loadGroceryItems(): Promise<GroceryItem[]> {
   }
 }
 
-export async function persistGroceryItem(item: GroceryItem): Promise<void> {
-  try {
-    await db.groceryItems.put(item);
-  } catch (err) {
-    console.warn("Falha ao gravar item local:", err);
-  }
-}
+// AUD-PW(M): persistGroceryItem e clearGroceryItems eram codigo MORTO —
+// nenhum chamador no app inteiro (nao existe fluxo de adicionar item; a UI
+// so marca/desmarca via toggleGroceryItemPantry, e o logout limpa a fila
+// pelo messageQueue). Removidas.
 
 export async function toggleGroceryItemPantry(
   id: string,
@@ -31,13 +28,5 @@ export async function toggleGroceryItemPantry(
     await db.groceryItems.update(id, { isCheckedInPantry: isChecked });
   } catch (err) {
     console.warn("Falha ao atualizar item local:", err);
-  }
-}
-
-export async function clearGroceryItems(): Promise<void> {
-  try {
-    await db.groceryItems.clear();
-  } catch (err) {
-    console.warn("Falha ao limpar lista local:", err);
   }
 }
