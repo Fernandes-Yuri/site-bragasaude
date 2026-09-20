@@ -29,8 +29,10 @@ bragasaude-site-pwa/
 │
 └── pwa/                      # Código-fonte do PWA React 19 + TypeScript
     ├── src/
-    │   ├── components/       # VitalsSection, MedicationsSection, HydrationCard, etc.
-    │   ├── services/         # Cliente de API e mocks de telemetria
+    │   ├── components/       # TodayVitalsCard, PatientHeaderCard, FamilyChatScreen,
+    │   │                    #   VoiceAssistant, SharedGroceryListCard, ... (19 componentes)
+    │   ├── services/         # api.ts, db.ts (Dexie), firebase.ts, grocery.ts,
+    │   │                    #   messageQueue.ts (fila offline), waLinkTotp.ts
     │   ├── types.ts          # Definições tipadas do cuidador e métricas
     │   ├── App.tsx           # Dashboard mobile do cuidador
     │   └── main.tsx          # Entrypoint React
