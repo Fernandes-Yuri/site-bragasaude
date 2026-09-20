@@ -24,6 +24,10 @@ export const WhatsAppLinkButton: React.FC<WhatsAppLinkButtonProps> = ({
   onLinkOpened,
 }) => {
   const [secondsLeft, setSecondsLeft] = useState(() => secondsUntilRotation());
+  // AUD-PW(M): currentTotpCode usa crypto.subtle e pode rejeitar (segredo
+  // malformado, contexto inseguro HTTP, navegador sem suporte). Sem try/catch
+  // virava promise rejection nao tratada e o botao simplesmente nao fazia nada.
+  const [linkError, setLinkError] = useState<string | null>(null);
 
   // Relogio decrescente da janela do codigo.
   useEffect(() => {
@@ -44,10 +48,23 @@ export const WhatsAppLinkButton: React.FC<WhatsAppLinkButtonProps> = ({
 
   const handleLink = async () => {
     if (!totpSecret) return;
-    const code = await currentTotpCode(totpSecret);
-    const text = encodeURIComponent(`Vincular Braga Saude ${code}`);
-    window.open(`https://wa.me/${businessPhone}?text=${text}`, "_blank", "noopener,noreferrer");
-    onLinkOpened?.();
+    setLinkError(null);
+    try {
+      const code = await currentTotpCode(totpSecret);
+      if (!code) {
+        setLinkError("Não foi possível gerar o código agora. Tente novamente em instantes.");
+        return;
+      }
+      const text = encodeURIComponent(`Vincular Braga Saude ${code}`);
+      window.open(`https://wa.me/${businessPhone}?text=${text}`, "_blank", "noopener,noreferrer");
+      onLinkOpened?.();
+    } catch (e) {
+      // AUD-PW(M): falha silenciosa do crypto.subtle — agora o usuário sabe.
+      console.warn("Falha ao gerar TOTP do vínculo", e);
+      setLinkError(
+        "Não conseguimos gerar o código de vínculo. Recarregue a página e tente novamente."
+      );
+    }
   };
 
   return (
@@ -68,6 +85,11 @@ export const WhatsAppLinkButton: React.FC<WhatsAppLinkButtonProps> = ({
         </svg>
         <span>{alreadyLinked ? "Vincular novamente" : "Vincular meu WhatsApp"}</span>
       </button>
+      {linkError && (
+        <p className="mt-2 text-center text-sm font-medium text-red-600" role="alert">
+          {linkError}
+        </p>
+      )}
       <div className="mt-2 flex items-center justify-center gap-1.5">
         <span
           className={`inline-block h-2 w-2 rounded-full ${

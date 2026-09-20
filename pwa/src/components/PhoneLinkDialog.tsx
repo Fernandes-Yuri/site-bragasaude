@@ -1,4 +1,4 @@
-﻿import React, { useState } from "react";
+import React, { useState } from "react";
 import { X, MessageSquare, ExternalLink, CheckCircle2, AlertCircle } from "lucide-react";
 import { sendPhoneOtp, verifyPhoneOtp } from "../services/api";
 
@@ -42,7 +42,11 @@ export const PhoneLinkDialog: React.FC<PhoneLinkDialogProps> = ({
     setIsLoading(true);
     setError(null);
 
-    const res = await sendPhoneOtp(phone);
+    // AUD-PW(M): antes enviava `phone` — a string MASCARADA "(11) 99999-8888".
+    // Se o gateway não sanitizar, o OTP ia para um número inválido e o idoso
+    // ficava esperando um código que nunca chega (canal de emergência do app).
+    // Agora envia só os dígitos.
+    const res = await sendPhoneOtp(cleanDigits);
     setIsLoading(false);
 
     if (res.success) {

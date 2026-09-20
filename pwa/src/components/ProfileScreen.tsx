@@ -1,4 +1,4 @@
-import React from "react";
+﻿import React from "react";
 import {
   User,
   Mail,
@@ -55,7 +55,7 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
 
   return (
     <div className="space-y-4">
-      {/* Cabeçalho do perfil com avatar */}
+      {/* CabeÃ§alho do perfil com avatar */}
       <div className="bg-white rounded-3xl shadow-2xs border border-[#E5EBE8] p-5 flex flex-col items-center gap-3">
         <div className="w-20 h-20 rounded-full bg-gradient-to-b from-[#26A69A] to-[#00897B] flex items-center justify-center text-2xl font-bold text-white shadow-lg shadow-emerald-900/20 border-2 border-white">
           {initials}
@@ -81,7 +81,7 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
             <Mail className="w-4.5 h-4.5" />
           </div>
           <div className="min-w-0 flex-1">
-            <p className="text-[10px] font-bold text-[#94A3B8] uppercase tracking-wide">
+            <p className="text-[10px] font-bold text-[#64748B] uppercase tracking-wide">
               E-mail
             </p>
             <p className="text-sm font-semibold text-[#1E293B] truncate">{email}</p>
@@ -96,11 +96,11 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
             <Phone className="w-4.5 h-4.5" />
           </div>
           <div className="min-w-0 flex-1">
-            <p className="text-[10px] font-bold text-[#94A3B8] uppercase tracking-wide">
+            <p className="text-[10px] font-bold text-[#64748B] uppercase tracking-wide">
               WhatsApp
             </p>
             <p className="text-sm font-semibold text-[#1E293B] truncate">
-              {phone || "Não vinculado — tocar para vincular"}
+              {phone || "NÃ£o vinculado â€” tocar para vincular"}
             </p>
           </div>
           {!phone && (
@@ -121,7 +121,7 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
         />
       </div>
 
-      {/* Grupo familiar — todos os cuidadores conectados */}
+      {/* Grupo familiar â€” todos os cuidadores conectados */}
       <div className="bg-white rounded-3xl shadow-2xs border border-[#E5EBE8] p-5">
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
@@ -135,7 +135,7 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
 
         {activeBindings.length === 0 ? (
           <p className="text-xs text-[#64748B] leading-relaxed mb-3">
-            Nenhum familiar conectado ainda. Todos que você conectar compartilham o
+            Nenhum familiar conectado ainda. Todos que vocÃª conectar compartilham o
             mesmo chat de mensagens.
           </p>
         ) : (
@@ -152,7 +152,7 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
                   <p className="text-sm font-semibold text-[#1E293B] truncate">
                     {b.caregiverName || "Familiar"}
                   </p>
-                  <p className="text-[10px] text-[#94A3B8] truncate">
+                  <p className="text-[10px] text-[#64748B] truncate">
                     {b.caregiverRelation || "Familiar"}
                   </p>
                 </div>
@@ -169,12 +169,12 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
           <User className="w-4 h-4" />
           Conectar outro familiar
         </button>
-        <p className="text-[10px] text-[#94A3B8] mt-2 leading-relaxed">
+        <p className="text-[10px] text-[#64748B] mt-2 leading-relaxed">
           Cada novo familiar entra automaticamente no chat em grupo de {patientName || "paciente"}.
         </p>
       </div>
 
-      {/* Ações da conta */}
+      {/* AÃ§Ãµes da conta */}
       <div className="bg-white rounded-3xl shadow-2xs border border-[#E5EBE8] divide-y divide-[#E5EBE8]">
         <button
           onClick={onRefresh}
@@ -186,7 +186,7 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
           </div>
           <div className="flex-1">
             <p className="text-sm font-semibold text-[#1E293B]">Atualizar dados</p>
-            <p className="text-[11px] text-[#94A3B8]">
+            <p className="text-[11px] text-[#64748B]">
               {isRefreshing ? "Sincronizando..." : "Buscar sinais e mensagens mais recentes"}
             </p>
           </div>
@@ -201,14 +201,14 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
           </div>
           <div className="flex-1">
             <p className="text-sm font-semibold text-rose-600">Sair da conta</p>
-            <p className="text-[11px] text-[#94A3B8]">Encerrar sessão neste dispositivo</p>
+            <p className="text-[11px] text-[#64748B]">Encerrar sessÃ£o neste dispositivo</p>
           </div>
         </button>
       </div>
 
-      <p className="text-center text-[10px] text-[#94A3B8] leading-relaxed px-4">
-        O Braga Saúde é uma ferramenta de autocuidado e não substitui consultas médicas.
-        Em emergências, ligue para o SAMU (192).
+      <p className="text-center text-[10px] text-[#64748B] leading-relaxed px-4">
+        O Braga SaÃºde Ã© uma ferramenta de autocuidado e nÃ£o substitui consultas mÃ©dicas.
+        Em emergÃªncias, ligue para o SAMU (192).
       </p>
     </div>
   );

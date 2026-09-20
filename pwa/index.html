@@ -3,7 +3,10 @@
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/png" href="./icons/icon-192x192.png" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+    <!-- AUD-PW(M): antes maximum-scale=1.0 + user-scalable=no — bloqueia zoom,
+         violando WCAG 1.4.4. O público do app é idoso com baixa visão; o zoom
+         do navegador é uma ferramenta de acessibilidade essencial. Removido. -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <title>Braga Saúde — Cuidador</title>
     
     <!-- iOS Safari PWA Metatags -->

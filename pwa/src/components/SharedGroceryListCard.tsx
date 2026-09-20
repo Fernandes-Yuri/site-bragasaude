@@ -1,4 +1,4 @@
-import React from "react";
+﻿import React from "react";
 import { ShoppingCart, Check } from "lucide-react";
 import type { GroceryItem } from "../types";
 
@@ -18,7 +18,7 @@ export const SharedGroceryListCard: React.FC<SharedGroceryListCardProps> = ({
 
   return (
     <div className="w-full bg-white rounded-2xl p-5 border border-[#E5EBE8] shadow-sm">
-      {/* Cabeçalho */}
+      {/* CabeÃ§alho */}
       <div className="flex items-center gap-3 mb-3">
         <div className="w-8 h-8 rounded-lg bg-[#E0F2F1] text-[#00897B] flex items-center justify-center shrink-0">
           <ShoppingCart className="w-4 h-4" />
@@ -68,7 +68,7 @@ export const SharedGroceryListCard: React.FC<SharedGroceryListCardProps> = ({
                   className={`w-5 h-5 rounded-md border flex items-center justify-center transition-all ${
                     isChecked
                       ? "bg-[#00897B] border-[#00897B] text-white"
-                      : "border-[#94A3B8] bg-white"
+                      : "border-[#64748B] bg-white"
                   }`}
                 >
                   {isChecked && <Check className="w-3.5 h-3.5 stroke-[3]" />}
@@ -86,14 +86,14 @@ export const SharedGroceryListCard: React.FC<SharedGroceryListCardProps> = ({
                     {item.foodName}
                   </p>
                   <p className="text-[11px] text-[#64748B] truncate">
-                    {item.purchaseUnitText} • {item.category}
+                    {item.purchaseUnitText} â€¢ {item.category}
                   </p>
                 </div>
 
-                {/* Preço Estimado em R$ */}
+                {/* PreÃ§o Estimado em R$ */}
                 <span
                   className={`text-xs font-semibold shrink-0 ${
-                    isChecked ? "text-[#94A3B8]" : "text-[#1E293B]"
+                    isChecked ? "text-[#64748B]" : "text-[#1E293B]"
                   }`}
                 >
                   R$ {item.estimatedPriceBrl.toFixed(2).replace(".", ",")}

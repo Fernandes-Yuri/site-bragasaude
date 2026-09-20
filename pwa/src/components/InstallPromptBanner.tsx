@@ -78,7 +78,7 @@ export const InstallPromptBanner: React.FC = () => {
             </div>
             <div>
               <p className="text-xs font-bold text-white">Instalar o Braga Cuidador</p>
-              <p className="text-[10px] text-[#94A3B8]">
+              <p className="text-[10px] text-[#64748B]">
                 Acesse como aplicativo direto na sua tela inicial
               </p>
             </div>
@@ -130,7 +130,7 @@ export const InstallPromptBanner: React.FC = () => {
         <div className="flex justify-end">
           <button
             onClick={handleDismiss}
-            className="text-[10px] text-[#94A3B8] hover:text-white transition-colors"
+            className="text-[10px] text-[#64748B] hover:text-white transition-colors"
           >
             Agora não, continuar pelo navegador
           </button>

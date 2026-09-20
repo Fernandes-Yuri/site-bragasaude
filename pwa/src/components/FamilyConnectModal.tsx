@@ -83,10 +83,24 @@ export const FamilyConnectModal: React.FC<FamilyConnectModalProps> = ({
             scanner?.clear();
             handleConnectWithCode(text.trim().toUpperCase());
           },
-          () => {}
+          // AUD-PW(M): antes era () => {} — se o usuário negou permissão da
+          // câmera ou o html5-qrcode falhava, a div ficava PRETA e nada
+          // acontecia. O idoso apontava o celular sem feedback nenhum.
+          (err) => {
+            console.warn("QR scanner error", err);
+            setError(
+              "Não consegui acessar a câmera. Verifique a permissão no navegador ou digite o código manualmente."
+            );
+            setMode("code");
+          }
         );
       } catch (e) {
         console.warn("Scanner failed to start", e);
+        // AUD-PW(M): falha de inicialização também precisa avisar o usuário.
+        setError(
+          "Câmera indisponível neste dispositivo. Digite o código de conexão manualmente."
+        );
+        setMode("code");
       }
     }, 250);
 
