@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect, useRef, useCallback } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { Send, Mic, Volume2 } from "lucide-react";
 import {
   fetchFamilyMessages,
@@ -13,22 +13,22 @@ interface FamilyChatScreenProps {
   patientName: string;
   currentUserId: string;
   caregiverName: string;
-  // AUD-PW03: era idToken?: string â€” uma snapshot capturada no onAuthStateChanged.
-  // O Firebase sÃ³ dispara esse callback em login/logout, NÃƒO na renovaÃ§Ã£o
+  // AUD-PW03: era idToken?: string — uma snapshot capturada no onAuthStateChanged.
+  // O Firebase só dispara esse callback em login/logout, NÃO na renovação
   // silenciosa do token (~1h). O idToken em estado envelhecia, o gateway
-  // passava a rejeitar com 401 e o chat sumia sem explicaÃ§Ã£o. Agora resolvemos
+  // passava a rejeitar com 401 e o chat sumia sem explicação. Agora resolvemos
   // o token fresco no instante de cada chamada.
   getIdToken?: () => Promise<string | undefined>;
   onToast?: (msg: string) => void;
 }
 
 /**
- * Chat em grupo da famÃ­lia: todos os cuidadores vinculados ao mesmo patient_id
- * compartilham a conversa. A autorizaÃ§Ã£o Ã© validada no gateway
- * (require_family_access), entÃ£o 1 ou 5 familiares veem o mesmo histÃ³rico.
+ * Chat em grupo da família: todos os cuidadores vinculados ao mesmo patient_id
+ * compartilham a conversa. A autorização é validada no gateway
+ * (require_family_access), então 1 ou 5 familiares veem o mesmo histórico.
  *
  * Voz: o microfone dita a mensagem via Web Speech API (SpeechRecognition);
- * o botÃ£o de alto-falante lÃª a mensagem em voz alta via SpeechSynthesis.
+ * o botão de alto-falante lê a mensagem em voz alta via SpeechSynthesis.
  */
 export const FamilyChatScreen: React.FC<FamilyChatScreenProps> = ({
   patientId,
@@ -58,7 +58,7 @@ export const FamilyChatScreen: React.FC<FamilyChatScreenProps> = ({
 
   useEffect(() => {
     loadMessages();
-    // Polling leve: atualiza o grupo a cada 15s enquanto a aba estÃ¡ aberta
+    // Polling leve: atualiza o grupo a cada 15s enquanto a aba está aberta
     const interval = setInterval(loadMessages, 15000);
     return () => clearInterval(interval);
   }, [loadMessages]);
@@ -73,7 +73,7 @@ export const FamilyChatScreen: React.FC<FamilyChatScreenProps> = ({
   const speak = async (text: string) => {
     // Voz Piper do gateway (mesma do Android, "faber"); fallback na do aparelho
     try {
-      // AUD-PW03: token fresco â€” a voz somem apÃ³s ~1h com token stale.
+      // AUD-PW03: token fresco — a voz somem após ~1h com token stale.
       const token = (await getIdToken?.()) || "";
       const blob = await synthesizePiperVoice(text, token);
       if (blob && blob.size > 0) {
@@ -85,11 +85,11 @@ export const FamilyChatScreen: React.FC<FamilyChatScreenProps> = ({
         return;
       }
     } catch (e) {
-      console.warn("Piper indisponÃ­vel, fallback na voz do sistema:", e);
+      console.warn("Piper indisponível, fallback na voz do sistema:", e);
     }
     try {
       if (!("speechSynthesis" in window)) {
-        onToast?.("Seu navegador nÃ£o suporta leitura por voz");
+        onToast?.("Seu navegador não suporta leitura por voz");
         return;
       }
       window.speechSynthesis.cancel();
@@ -98,7 +98,7 @@ export const FamilyChatScreen: React.FC<FamilyChatScreenProps> = ({
       utter.rate = 1;
       window.speechSynthesis.speak(utter);
     } catch (e) {
-      console.warn("TTS indisponÃ­vel:", e);
+      console.warn("TTS indisponível:", e);
     }
   };
 
@@ -107,7 +107,7 @@ export const FamilyChatScreen: React.FC<FamilyChatScreenProps> = ({
       (window as any).SpeechRecognition ||
       (window as any).webkitSpeechRecognition;
     if (!SpeechRecognition) {
-      onToast?.("Seu navegador nÃ£o suporta ditado por voz");
+      onToast?.("Seu navegador não suporta ditado por voz");
       return;
     }
     try {
@@ -127,7 +127,7 @@ export const FamilyChatScreen: React.FC<FamilyChatScreenProps> = ({
       recognitionRef.current = rec;
       rec.start();
     } catch (e) {
-      console.warn("STT indisponÃ­vel:", e);
+      console.warn("STT indisponível:", e);
       setIsListening(false);
     }
   };
@@ -168,13 +168,13 @@ export const FamilyChatScreen: React.FC<FamilyChatScreenProps> = ({
       "LOVE",
       caregiverName,
       currentUserId,
-      // AUD-PW03: token fresco no envio â€” mensagem silenciosamente perdida
-      // apÃ³s ~1h era sintoma do token stale.
+      // AUD-PW03: token fresco no envio — mensagem silenciosamente perdida
+      // após ~1h era sintoma do token stale.
       await (getIdToken ? getIdToken() : Promise.resolve(undefined))
     );
     if (!result.delivered) {
-      setError("Sem conexÃ£o â€” a mensagem serÃ¡ reenviada em breve");
-      onToast?.("Mensagem nÃ£o entregue â€” verifique sua conexÃ£o");
+      setError("Sem conexão — a mensagem será reenviada em breve");
+      onToast?.("Mensagem não entregue — verifique sua conexão");
     }
     // Recarrega para alinhar com o estado real do gateway
     await loadMessages();
@@ -203,7 +203,7 @@ export const FamilyChatScreen: React.FC<FamilyChatScreenProps> = ({
             Nenhum familiar conectado
           </p>
           <p className="text-xs text-[#64748B]">
-            Conecte-se a um paciente na aba InÃ­cio para comeÃ§ar a conversar.
+            Conecte-se a um paciente na aba Início para começar a conversar.
           </p>
         </div>
       </div>
@@ -214,9 +214,9 @@ export const FamilyChatScreen: React.FC<FamilyChatScreenProps> = ({
     <div className="flex-1 flex flex-col min-h-0">
       {/* Header do grupo */}
       <div className="px-4 py-2.5 border-b border-[#E5EBE8] bg-white">
-        <p className="text-sm font-bold text-[#1E293B]">Chat da famÃ­lia</p>
+        <p className="text-sm font-bold text-[#1E293B]">Chat da família</p>
         <p className="text-[11px] text-[#64748B]">
-          Grupo de {patientName || "paciente"} Â· todos os cuidadores veem esta conversa
+          Grupo de {patientName || "paciente"} · todos os cuidadores veem esta conversa
         </p>
       </div>
 
@@ -228,7 +228,7 @@ export const FamilyChatScreen: React.FC<FamilyChatScreenProps> = ({
         {messages.length === 0 && (
           <div className="h-full flex items-center justify-center">
             <p className="text-xs text-[#64748B] text-center max-w-[220px] leading-relaxed">
-              Nenhuma mensagem ainda. Mande um carinho para {patientName || "paciente"} ðŸ’š
+              Nenhuma mensagem ainda. Mande um carinho para {patientName || "paciente"} 💚
             </p>
           </div>
         )}
@@ -292,7 +292,7 @@ export const FamilyChatScreen: React.FC<FamilyChatScreenProps> = ({
         <p className="text-[10px] text-rose-600 px-4 py-1 text-center">{error}</p>
       )}
 
-      {/* Templates rÃ¡pidos */}
+      {/* Templates rápidos */}
       <div className="px-3 py-2 border-t border-[#E5EBE8] bg-white">
         <div className="flex gap-1.5 overflow-x-auto no-scrollbar">
           {Object.values(QUICK_TEMPLATES).map((t) => (

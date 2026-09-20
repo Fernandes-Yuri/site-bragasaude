@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { PhoneCall, CheckCircle2, AlertCircle, MessageSquare, UserPlus, Home, MessageCircle, User as UserIcon } from "lucide-react";
 import {
   auth,
@@ -70,13 +70,13 @@ export const App: React.FC = () => {
   const [userPhone, setUserPhone] = useState<string | null>(null);
   const [bindings, setBindings] = useState<FamilyBinding[]>([]);
   const [activeTab, setActiveTab] = useState<"home" | "chat" | "profile">("home");
-  // AUD-PW03: removido o estado idToken â€” era uma snapshot stale. Consumidores
+  // AUD-PW03: removido o estado idToken — era uma snapshot stale. Consumidores
   // agora recebem um getter que resolve o token fresco no instante da chamada.
 
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [toastType, setToastType] = useState<"success" | "error">("success");
 
-  // Estados dos modais de diÃ¡logo
+  // Estados dos modais de diálogo
   const [showMedicationDialog, setShowMedicationDialog] = useState(false);
   const [showAppointmentDialog, setShowAppointmentDialog] = useState(false);
   const [showCareNoteDialog, setShowCareNoteDialog] = useState(false);
@@ -89,7 +89,7 @@ export const App: React.FC = () => {
     setTimeout(() => setToastMessage(null), 3500);
   };
 
-  // Monitorar autenticaÃ§Ã£o do Firebase em tempo real
+  // Monitorar autenticação do Firebase em tempo real
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       setCurrentUser(user);
@@ -106,7 +106,7 @@ export const App: React.FC = () => {
         const savedPhone = localStorage.getItem(`braga_phone_${user.uid}`);
         if (savedPhone) setUserPhone(savedPhone);
 
-        // Buscar vÃ­nculos reais do usuÃ¡rio
+        // Buscar vínculos reais do usuário
         try {
           const token = await user.getIdToken();
           const bindings = await fetchFamilyBindings(user.uid, token);
@@ -133,7 +133,7 @@ export const App: React.FC = () => {
                 glucose: latest.glucose ?? prev.glucose,
                 hydrationMl: latest.hydrationMl ?? prev.hydrationMl,
                 steps: latest.steps ?? prev.steps,
-                lastMeasurementLabel: "MediÃ§Ã£o real recebida",
+                lastMeasurementLabel: "Medição real recebida",
               }));
             }
           }
@@ -229,12 +229,12 @@ export const App: React.FC = () => {
         tok
       );
       if (!result.delivered) {
-        showToast("Sem conexÃ£o â€” mensagem salva e serÃ¡ enviada depois.", "error");
+        showToast("Sem conexão — mensagem salva e será enviada depois.", "error");
       }
       return result.delivered;
     } catch (err) {
       console.warn("Falha ao enviar mensagem:", err);
-      showToast("Mensagem nÃ£o entregue â€” verifique sua conexÃ£o.", "error");
+      showToast("Mensagem não entregue — verifique sua conexão.", "error");
       return false;
     }
   };
@@ -257,7 +257,7 @@ export const App: React.FC = () => {
     showToast(
       delivered
         ? `Mensagem enviada: "${template.label}"`
-        : `Mensagem nÃ£o entregue: "${template.label}"`,
+        : `Mensagem não entregue: "${template.label}"`,
       delivered ? "success" : "error"
     );
   };
@@ -288,7 +288,7 @@ export const App: React.FC = () => {
         showToast(
           succeeded
             ? "Dados atualizados com sucesso"
-            : "Falha na sincronizaÃ§Ã£o â€” verifique sua conexÃ£o.",
+            : "Falha na sincronização — verifique sua conexão.",
           succeeded ? "success" : "error"
         );
       }, 500);
@@ -306,7 +306,7 @@ export const App: React.FC = () => {
     // usuario nao pode ver sinais vitais, lista de compras ou telefone
     // de quem saiu.
     // AUD-PW01: o segredo TOTP do vinculo de WhatsApp tambem precisa sair do
-    // localStorage â€” senao quem entra depois pode vincular o WhatsApp da
+    // localStorage — senao quem entra depois pode vincular o WhatsApp da
     // conta antiga a outro numero.
     if (uid) clearTotpSecret(uid);
     try {
@@ -315,28 +315,28 @@ export const App: React.FC = () => {
       // sem localStorage: nada a limpar
     }
     // AUD-PW02: a fila de mensagens no IndexedDB continua textos familiares de
-    // quem saiu â€” limpa junto, senÃ£o o prÃ³ximo usuÃ¡rio de aparelho compartilhado
-    // lÃª (e a fila tenta entregar com o token novo = mensagem cruzada).
+    // quem saiu — limpa junto, senão o próximo usuário de aparelho compartilhado
+    // lê (e a fila tenta entregar com o token novo = mensagem cruzada).
     clearMessageQueue().catch(() => {});
     setHasRealBinding(false);
     setDashboard(EMPTY_CAREGIVER_STATE);
     setGroceryItems(EMPTY_GROCERY_ITEMS);
     setHistoryRecords(EMPTY_HISTORY_7D);
     setUserPhone(null);
-    showToast("SessÃ£o encerrada com sucesso.");
+    showToast("Sessão encerrada com sucesso.");
   };
 
-  // 1. Tela de Carregamento de SessÃ£o
+  // 1. Tela de Carregamento de Sessão
   if (isAuthLoading) {
     return (
       <div className="min-h-screen bg-[#FAFCFB] flex flex-col items-center justify-center p-6 text-center">
         <div className="w-12 h-12 rounded-full border-3 border-[#E0F2F1] border-t-[#00897B] animate-spin mb-4" />
-        <p className="text-sm font-semibold text-[#1E293B]">Carregando sessÃ£o segura...</p>
+        <p className="text-sm font-semibold text-[#1E293B]">Carregando sessão segura...</p>
       </div>
     );
   }
 
-  // 2. Tela de Login se nÃ£o estiver autenticado
+  // 2. Tela de Login se não estiver autenticado
   if (!currentUser) {
     return (
       <React.Suspense
@@ -362,7 +362,7 @@ export const App: React.FC = () => {
         <DesktopGateModal />
       </React.Suspense>
 
-      {/* CabeÃ§alho Curvo Esmeralda â€” enxuto (aÃ§Ãµes de conta ficam na aba Perfil) */}
+      {/* Cabeçalho Curvo Esmeralda — enxuto (ações de conta ficam na aba Perfil) */}
       <EmeraldHeaderBanner
         title="Acompanhamento"
         subtitle={`Cuidador: ${dashboard.caregiverName}`}
@@ -372,14 +372,14 @@ export const App: React.FC = () => {
         onOpenProfile={() => setActiveTab("profile")}
       />
 
-      {/* Indicador de sincronizaÃ§Ã£o sutil */}
+      {/* Indicador de sincronização sutil */}
       {dashboard.isLoading && (
         <div className="w-full h-1 bg-[#E0F2F1] overflow-hidden">
           <div className="w-full h-full bg-[#00897B] animate-pulse" />
         </div>
       )}
 
-      {/* ConteÃºdo Principal â€” renderizado por aba */}
+      {/* Conteúdo Principal — renderizado por aba */}
       {activeTab === "chat" ? (
         <main className="flex-1 flex flex-col min-h-0 overflow-hidden">
           <FamilyChatScreen
@@ -387,7 +387,7 @@ export const App: React.FC = () => {
             patientName={dashboard.patientName}
             currentUserId={currentUser.uid}
             caregiverName={dashboard.caregiverName}
-            // AUD-PW03: getter no lugar da string â€” token sempre fresco.
+            // AUD-PW03: getter no lugar da string — token sempre fresco.
             getIdToken={async () =>
               currentUser ? currentUser.getIdToken() : undefined
             }
@@ -398,7 +398,7 @@ export const App: React.FC = () => {
         <main className="p-4 space-y-4 flex-1 pb-24 overflow-y-auto">
           <ProfileScreen
             caregiverName={dashboard.caregiverName}
-            email={currentUser.email || "â€”"}
+            email={currentUser.email || "—"}
             phone={userPhone || ""}
             patientName={dashboard.patientName}
             bindings={bindings}
@@ -413,7 +413,7 @@ export const App: React.FC = () => {
         </main>
       ) : (
       <main className="p-4 space-y-4 flex-1 pb-24 overflow-y-auto">
-        {/* Banner de Lembrete para Vincular WhatsApp se ainda nÃ£o tiver nÃºmero */}
+        {/* Banner de Lembrete para Vincular WhatsApp se ainda não tiver número */}
         {!userPhone && (
           <div className="bg-[#FFF8E1] border border-[#FFE082] rounded-2xl p-3.5 flex items-center justify-between shadow-2xs">
             <div className="flex items-center gap-2.5 min-w-0 pr-2">
@@ -421,7 +421,7 @@ export const App: React.FC = () => {
               <div className="min-w-0">
                 <p className="text-xs font-bold text-[#1E293B]">Vincule seu WhatsApp</p>
                 <p className="text-[11px] text-[#64748B] truncate">
-                  Receba avisos de saÃºde e emergÃªncia direto no WhatsApp.
+                  Receba avisos de saúde e emergência direto no WhatsApp.
                 </p>
               </div>
             </div>
@@ -434,7 +434,7 @@ export const App: React.FC = () => {
           </div>
         )}
 
-        {/* Banner de OrientaÃ§Ã£o se ainda nÃ£o tiver familiar conectado */}
+        {/* Banner de Orientação se ainda não tiver familiar conectado */}
         {!hasRealBinding && (
           <div className="bg-[#E0F2F1]/50 border border-[#B2DFDB] rounded-2xl p-4 flex items-center justify-between shadow-2xs">
             <div className="flex items-center gap-3">
@@ -444,7 +444,7 @@ export const App: React.FC = () => {
               <div>
                 <p className="text-xs font-bold text-[#1E293B]">Conectar Novo Familiar</p>
                 <p className="text-[11px] text-[#64748B]">
-                  Use o cÃ³digo de 8 dÃ­gitos gerado no celular do paciente.
+                  Use o código de 8 dígitos gerado no celular do paciente.
                 </p>
               </div>
             </div>
@@ -457,21 +457,21 @@ export const App: React.FC = () => {
           </div>
         )}
 
-        {/* IdentificaÃ§Ã£o do Familiar Acompanhado */}
+        {/* Identificação do Familiar Acompanhado */}
         <PatientHeaderCard state={dashboard} />
 
         {/* Card de Sinais Vitais de Hoje */}
         <TodayVitalsCard state={dashboard} />
 
-        {/* AÃ§Ãµes RÃ¡pidas em Chips Horizontais */}
+        {/* Ações Rápidas em Chips Horizontais */}
         <QuickActionsChips
           onMedicationReminder={() => setShowMedicationDialog(true)}
           onAppointment={() => setShowAppointmentDialog(true)}
           onCareNote={() => setShowCareNoteDialog(true)}
-          onFamilyPost={() => showToast("PublicaÃ§Ã£o compartilhada com a famÃ­lia")}
+          onFamilyPost={() => showToast("Publicação compartilhada com a família")}
         />
 
-        {/* HistÃ³rico e TendÃªncias (7d / 30d) com dados reais (Lazy Loaded) */}
+        {/* Histórico e Tendências (7d / 30d) com dados reais (Lazy Loaded) */}
         <React.Suspense
           fallback={
             <div className="bg-white rounded-3xl p-5 border border-[#E5EBE8] shadow-xs my-2 animate-pulse">
@@ -490,37 +490,37 @@ export const App: React.FC = () => {
           onToggle={handleToggleGrocery}
         />
 
-        {/* Mensagens RÃ¡pidas de 1 Toque */}
+        {/* Mensagens Rápidas de 1 Toque */}
         <QuickMessagesCard
           templates={QUICK_TEMPLATES}
           onSend={handleSendQuickTemplate}
         />
 
-        {/* BotÃ£o de EmergÃªncia RÃ¡pido SAMU 192 */}
+        {/* Botão de Emergência Rápido SAMU 192 */}
         <div className="pt-1">
           <button
             onClick={handleEmergencyCall}
             className="w-full bg-[#FFF5F2] hover:bg-[#FFEAE4] active:scale-98 border border-[#D9532F]/30 rounded-2xl p-3.5 text-[#D9532F] flex items-center justify-center gap-2 text-xs font-bold transition-all shadow-2xs"
           >
             <PhoneCall className="w-4 h-4 text-[#D9532F]" />
-            <span>Contato de EmergÃªncia / SAMU 192</span>
+            <span>Contato de Emergência / SAMU 192</span>
           </button>
         </div>
 
-        {/* Disclaimer ClÃ­nico Institucional */}
+        {/* Disclaimer Clínico Institucional */}
         <div className="pt-2 pb-6 text-center">
           <p className="text-[10px] text-[#64748B] leading-tight max-w-xs mx-auto">
-            O Braga SaÃºde Ã© uma plataforma de suporte ao autocuidado e acompanhamento familiar preventivo, nÃ£o substituindo consultas, diagnÃ³sticos ou prescriÃ§Ãµes mÃ©dicas.
+            O Braga Saúde é uma plataforma de suporte ao autocuidado e acompanhamento familiar preventivo, não substituindo consultas, diagnósticos ou prescrições médicas.
           </p>
         </div>
       </main>
       )}
 
-      {/* Copiloto de voz â€” disponÃ­vel na aba InÃ­cio (escopo: cuidador) */}
+      {/* Copiloto de voz — disponível na aba Início (escopo: cuidador) */}
       {activeTab === "home" && (
         <VoiceAssistant
           userId={currentUser.uid}
-          // AUD-PW03: getter no lugar da string â€” token sempre fresco.
+          // AUD-PW03: getter no lugar da string — token sempre fresco.
           getIdToken={async () =>
             currentUser ? currentUser.getIdToken() : undefined
           }
@@ -531,7 +531,7 @@ export const App: React.FC = () => {
         />
       )}
 
-      {/* NavegaÃ§Ã£o Inferior por Abas (safe area iOS) */}
+      {/* Navegação Inferior por Abas (safe area iOS) */}
       <nav className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-white/95 backdrop-blur-md border-t border-[#E5EBE8] pb-safe pt-1.5 px-2 flex items-center justify-around z-40">
         <button
           onClick={() => setActiveTab("home")}
@@ -540,7 +540,7 @@ export const App: React.FC = () => {
           }`}
         >
           <Home className="w-5 h-5" />
-          <span className="text-[10px] font-bold">InÃ­cio</span>
+          <span className="text-[10px] font-bold">Início</span>
         </button>
 
         <button
@@ -550,7 +550,7 @@ export const App: React.FC = () => {
           }`}
         >
           <MessageCircle className="w-5 h-5" />
-          <span className="text-[10px] font-bold">FamÃ­lia</span>
+          <span className="text-[10px] font-bold">Família</span>
         </button>
 
         <button
@@ -582,7 +582,7 @@ export const App: React.FC = () => {
         </div>
       )}
 
-      {/* DiÃ¡logos Modais (Lazy Loaded Sob Demanda) */}
+      {/* Diálogos Modais (Lazy Loaded Sob Demanda) */}
       <React.Suspense fallback={null}>
         {showMedicationDialog && (
           <MedicationReminderDialog
@@ -592,8 +592,8 @@ export const App: React.FC = () => {
               const ok = await handleSendMessage(text, "MEDICATION");
               showToast(
                 ok
-                  ? "Lembrete de medicaÃ§Ã£o enviado para o familiar"
-                  : "Lembrete nÃ£o entregue â€” verifique sua conexÃ£o.",
+                  ? "Lembrete de medicação enviado para o familiar"
+                  : "Lembrete não entregue — verifique sua conexão.",
                 ok ? "success" : "error"
               );
             }}
@@ -611,8 +611,8 @@ export const App: React.FC = () => {
               );
               showToast(
                 ok
-                  ? "Consulta mÃ©dica salva e notificada"
-                  : "Consulta nÃ£o entregue â€” verifique sua conexÃ£o.",
+                  ? "Consulta médica salva e notificada"
+                  : "Consulta não entregue — verifique sua conexão.",
                 ok ? "success" : "error"
               );
             }}
@@ -628,7 +628,7 @@ export const App: React.FC = () => {
               showToast(
                 ok
                   ? "Bilhete de carinho enviado com sucesso"
-                  : "Bilhete nÃ£o entregue â€” verifique sua conexÃ£o.",
+                  : "Bilhete não entregue — verifique sua conexão.",
                 ok ? "success" : "error"
               );
             }}

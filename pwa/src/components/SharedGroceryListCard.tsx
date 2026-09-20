@@ -1,4 +1,4 @@
-﻿import React from "react";
+import React from "react";
 import { ShoppingCart, Check } from "lucide-react";
 import type { GroceryItem } from "../types";
 
@@ -18,7 +18,7 @@ export const SharedGroceryListCard: React.FC<SharedGroceryListCardProps> = ({
 
   return (
     <div className="w-full bg-white rounded-2xl p-5 border border-[#E5EBE8] shadow-sm">
-      {/* CabeÃ§alho */}
+      {/* Cabeçalho */}
       <div className="flex items-center gap-3 mb-3">
         <div className="w-8 h-8 rounded-lg bg-[#E0F2F1] text-[#00897B] flex items-center justify-center shrink-0">
           <ShoppingCart className="w-4 h-4" />
@@ -86,11 +86,11 @@ export const SharedGroceryListCard: React.FC<SharedGroceryListCardProps> = ({
                     {item.foodName}
                   </p>
                   <p className="text-[11px] text-[#64748B] truncate">
-                    {item.purchaseUnitText} â€¢ {item.category}
+                    {item.purchaseUnitText} • {item.category}
                   </p>
                 </div>
 
-                {/* PreÃ§o Estimado em R$ */}
+                {/* Preço Estimado em R$ */}
                 <span
                   className={`text-xs font-semibold shrink-0 ${
                     isChecked ? "text-[#64748B]" : "text-[#1E293B]"

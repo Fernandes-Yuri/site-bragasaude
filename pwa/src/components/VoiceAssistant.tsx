@@ -1,11 +1,11 @@
-﻿import React, { useState, useRef, useCallback } from "react";
+import React, { useState, useRef, useCallback } from "react";
 import { X, Sparkles, Check, Calendar } from "lucide-react";
 import { askVoiceCopilot, synthesizePiperVoice, confirmVoiceDraft } from "../services/api";
 
 interface VoiceAssistantProps {
   userId: string;
-  // AUD-PW03: era idToken?: string â€” snapshot do estado capturada no
-  // onAuthStateChanged, que NÃƒO dispara na renovaÃ§Ã£o silenciosa do Firebase
+  // AUD-PW03: era idToken?: string — snapshot do estado capturada no
+  // onAuthStateChanged, que NÃO dispara na renovação silenciosa do Firebase
   // (~1h). O token stale fazia o copiloto parar de responder (401 no gateway)
   // sem mensagem alguma. Agora cada chamada resolve o token fresco.
   getIdToken?: () => Promise<string | undefined>;
@@ -17,7 +17,7 @@ interface VoiceAssistantProps {
 
 type AssistantState = "idle" | "listening" | "thinking" | "speaking";
 
-/** Converte ISO -> "24/09/2026 Ã s 14h00" (fuso de Brasilia). */
+/** Converte ISO -> "24/09/2026 às 14h00" (fuso de Brasilia). */
 function formatarDataPt(iso: string): string {
   try {
     const d = new Date(iso);
@@ -26,14 +26,14 @@ function formatarDataPt(iso: string): string {
     const mes = String(d.getMonth() + 1).padStart(2, "0");
     const hora = String(d.getHours()).padStart(2, "0");
     const min = String(d.getMinutes()).padStart(2, "0");
-    return `${dia}/${mes}/${d.getFullYear()} Ã s ${hora}h${min}`;
+    return `${dia}/${mes}/${d.getFullYear()} às ${hora}h${min}`;
   } catch {
     return iso;
   }
 }
 
 /**
- * Copiloto de voz do cuidador: botÃ£o flutuante que ouve a pergunta
+ * Copiloto de voz do cuidador: botão flutuante que ouve a pergunta
  * (Web Speech API / SpeechRecognition), consulta /v1/chat/completions e
  * responde em voz alta (SpeechSynthesis pt-BR).
  */
@@ -63,7 +63,7 @@ export const VoiceAssistant: React.FC<VoiceAssistantProps> = ({
       // Fala com a voz Piper do gateway (mesma do Android, padrao "faber").
       // Se falhar (offline / navegador sem suporte), cai no SpeechSynthesis.
       try {
-        // AUD-PW03: token fresco â€” a voz Piper somia apÃ³s ~1h com token stale.
+        // AUD-PW03: token fresco — a voz Piper somia após ~1h com token stale.
         const token = (await getIdToken?.()) || "";
         const blob = await synthesizePiperVoice(text, token);
         if (blob && blob.size > 0) {
@@ -82,7 +82,7 @@ export const VoiceAssistant: React.FC<VoiceAssistantProps> = ({
           return;
         }
       } catch (e) {
-        console.warn("Piper indisponÃ­vel, fallback para voz do sistema:", e);
+        console.warn("Piper indisponível, fallback para voz do sistema:", e);
       }
 
       // Fallback: voz do aparelho (menos fiel)
@@ -97,7 +97,7 @@ export const VoiceAssistant: React.FC<VoiceAssistantProps> = ({
         setState("speaking");
         window.speechSynthesis.speak(utter);
       } catch (e) {
-        console.warn("TTS indisponÃ­vel:", e);
+        console.warn("TTS indisponível:", e);
         setState("idle");
       }
     },
@@ -105,7 +105,7 @@ export const VoiceAssistant: React.FC<VoiceAssistantProps> = ({
   );
 
   const stopSpeaking = () => {
-    // Para Ã¡udio Piper
+    // Para áudio Piper
     try {
       document.querySelectorAll("audio").forEach((a) => {
         a.pause();
@@ -141,7 +141,7 @@ export const VoiceAssistant: React.FC<VoiceAssistantProps> = ({
       if (!clean) return;
 
       setState("thinking");
-      // AUD-PW03: token fresco â€” 401 apÃ³s ~1h fazia o copiloto "sumir".
+      // AUD-PW03: token fresco — 401 após ~1h fazia o copiloto "sumir".
       const token = await (getIdToken ? getIdToken() : Promise.resolve(undefined));
       const reply = await askVoiceCopilot(clean, userId, token, {
         actingAs,
@@ -151,17 +151,17 @@ export const VoiceAssistant: React.FC<VoiceAssistantProps> = ({
 
       if (!reply) {
         setLastReply(
-          "NÃ£o consegui me conectar agora. Verifique sua conexÃ£o e tente novamente."
+          "Não consegui me conectar agora. Verifique sua conexão e tente novamente."
         );
         setState("idle");
-        onToast?.("Copiloto indisponÃ­vel â€” sem conexÃ£o", "error");
+        onToast?.("Copiloto indisponível — sem conexão", "error");
         return;
       }
 
       setLastReply(reply.fala);
       speak(reply.fala);
 
-      // D51: rascunho de agendamento â€” mostra o botao Confirmar
+      // D51: rascunho de agendamento — mostra o botao Confirmar
       if (reply.acao === "AGENDAR_RASCUNHO" && reply.parametros?.id) {
         setPendingDraft({
           id: String(reply.parametros.id),
@@ -186,12 +186,12 @@ export const VoiceAssistant: React.FC<VoiceAssistantProps> = ({
         await (getIdToken ? getIdToken() : Promise.resolve(undefined))
       );
       if (res.ok) {
-        const fala = res.fala || "Consulta confirmada! JÃ¡ estÃ¡ na agenda.";
+        const fala = res.fala || "Consulta confirmada! Já está na agenda.";
         setLastReply(fala);
         setPendingDraft(null);
         speak(fala);
       } else {
-        const fala = res.fala || "NÃ£o consegui confirmar. Tente novamente.";
+        const fala = res.fala || "Não consegui confirmar. Tente novamente.";
         setLastReply(fala);
         speak(fala);
       }
@@ -205,7 +205,7 @@ export const VoiceAssistant: React.FC<VoiceAssistantProps> = ({
       (window as any).SpeechRecognition ||
       (window as any).webkitSpeechRecognition;
     if (!SpeechRecognition) {
-      onToast?.("Seu navegador nÃ£o suporta assistente por voz");
+      onToast?.("Seu navegador não suporta assistente por voz");
       return;
     }
 
@@ -251,7 +251,7 @@ export const VoiceAssistant: React.FC<VoiceAssistantProps> = ({
       recognitionRef.current = rec;
       rec.start();
 
-      // Trava de seguranÃ§a: se o silÃªncio durar 8s, encerra a escuta
+      // Trava de segurança: se o silêncio durar 8s, encerra a escuta
       timeoutRef.current = setTimeout(() => {
         try {
           rec.stop();
@@ -260,9 +260,9 @@ export const VoiceAssistant: React.FC<VoiceAssistantProps> = ({
         }
       }, 8000);
     } catch (e) {
-      console.warn("STT indisponÃ­vel:", e);
+      console.warn("STT indisponível:", e);
       setState("idle");
-      onToast?.("NÃ£o foi possÃ­vel acessar o microfone", "error");
+      onToast?.("Não foi possível acessar o microfone", "error");
     }
   };
 
@@ -287,7 +287,7 @@ export const VoiceAssistant: React.FC<VoiceAssistantProps> = ({
 
   return (
     <>
-      {/* BotÃ£o flutuante do assistente */}
+      {/* Botão flutuante do assistente */}
       <button
         onClick={handleMainButton}
         className={`fixed bottom-20 right-4 z-50 flex items-center gap-2 pl-3.5 pr-4 py-3 rounded-full font-bold text-xs shadow-lg transition-all active:scale-95 ${
@@ -337,7 +337,7 @@ export const VoiceAssistant: React.FC<VoiceAssistantProps> = ({
             {transcript && (
               <div className="bg-[#F1F5F9] rounded-2xl px-3.5 py-2.5">
                 <p className="text-[10px] font-bold text-[#64748B] uppercase tracking-wide mb-0.5">
-                  VocÃª disse
+                  Você disse
                 </p>
                 <p className="text-[13px] text-[#1E293B] leading-snug">{transcript}</p>
               </div>
@@ -369,13 +369,13 @@ export const VoiceAssistant: React.FC<VoiceAssistantProps> = ({
               </div>
             )}
 
-            {/* D51: rascunho de agendamento â€” botÃ£o Confirmar na tela */}
+            {/* D51: rascunho de agendamento — botão Confirmar na tela */}
             {pendingDraft && (
               <div className="bg-white rounded-2xl border border-[#00897B]/30 px-3.5 py-3 space-y-2.5">
                 <div className="flex items-center gap-2">
                   <Calendar className="w-4 h-4 text-[#00897B] shrink-0" />
                   <p className="text-[10px] font-bold text-[#00897B] uppercase tracking-wide">
-                    Aguardando sua confirmaÃ§Ã£o
+                    Aguardando sua confirmação
                   </p>
                 </div>
                 <div className="space-y-1">
@@ -399,7 +399,7 @@ export const VoiceAssistant: React.FC<VoiceAssistantProps> = ({
                     onClick={() => {
                       setPendingDraft(null);
                       setLastReply(
-                        "Tudo bem. Pode me dizer a correÃ§Ã£o, por exemplo: 'na verdade Ã© sexta Ã s 15h'."
+                        "Tudo bem. Pode me dizer a correção, por exemplo: 'na verdade é sexta às 15h'."
                       );
                     }}
                     disabled={isConfirming}
@@ -413,13 +413,13 @@ export const VoiceAssistant: React.FC<VoiceAssistantProps> = ({
 
             {!transcript && !lastReply && state === "idle" && (
               <p className="text-[11px] text-[#64748B] leading-relaxed">
-                Toque no botÃ£o e faÃ§a uma pergunta sobre os sinais vitais,
-                hidrataÃ§Ã£o ou medicaÃ§Ã£o de {patientName || "paciente"}.
+                Toque no botão e faça uma pergunta sobre os sinais vitais,
+                hidratação ou medicação de {patientName || "paciente"}.
               </p>
             )}
 
             <p className="text-[9px] text-[#64748B] leading-tight text-center">
-              Apoio ao cuidado â€” nÃ£o substitui orientaÃ§Ã£o mÃ©dica. EmergÃªncias: SAMU 192.
+              Apoio ao cuidado — não substitui orientação médica. Emergências: SAMU 192.
             </p>
           </div>
         </div>

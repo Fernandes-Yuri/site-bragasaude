@@ -1,4 +1,4 @@
-﻿import React, { useState, useCallback } from "react";
+import React, { useState, useCallback } from "react";
 import { Heart, Lock, Mail, User, ArrowRight, ShieldAlert, ShieldCheck, AlertCircle, Clock } from "lucide-react";
 import {
   auth,
@@ -41,7 +41,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onSuccess }) => {
     } catch (err: any) {
       console.warn("Falha no login com Google:", err);
       if (err.code !== "auth/popup-closed-by-user") {
-        setError("NÃ£o foi possÃ­vel autenticar com o Google. Tente novamente.");
+        setError("Não foi possível autenticar com o Google. Tente novamente.");
       }
     } finally {
       setIsLoading(false);
@@ -53,12 +53,12 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onSuccess }) => {
     setError(null);
 
     if (isIpBlocked) {
-      setError("EndereÃ§o IP bloqueado por 24 horas pela Gateway devido a excesso de tentativas.");
+      setError("Endereço IP bloqueado por 24 horas pela Gateway devido a excesso de tentativas.");
       return;
     }
 
     if (!captchaToken) {
-      setError("Por favor, conclua a verificaÃ§Ã£o de seguranÃ§a Google reCAPTCHA.");
+      setError("Por favor, conclua a verificação de segurança Google reCAPTCHA.");
       return;
     }
 
@@ -68,22 +68,22 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onSuccess }) => {
         return;
       }
       if (password !== confirmPassword) {
-        setError("A confirmaÃ§Ã£o de senha nÃ£o coincide.");
+        setError("A confirmação de senha não coincide.");
         return;
       }
       if (password.length < 6) {
-        setError("A senha deve ter no mÃ­nimo 6 caracteres.");
+        setError("A senha deve ter no mínimo 6 caracteres.");
         return;
       }
       if (!lgpdAccepted) {
-        setError("Ã‰ necessÃ¡rio concordar com os termos de tratamento de dados de saÃºde (LGPD) para criar a conta.");
+        setError("É necessário concordar com os termos de tratamento de dados de saúde (LGPD) para criar a conta.");
         return;
       }
     }
 
     setIsLoading(true);
     try {
-      // 1. ValidaÃ§Ã£o rigorosa na Gateway sob polÃ­tica Zero-Trust
+      // 1. Validação rigorosa na Gateway sob política Zero-Trust
       try {
         const checkRes = await fetch(`${API_BASE_URL}/api/auth/check-account`, {
           method: "POST",
@@ -96,7 +96,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onSuccess }) => {
 
         if (checkRes.status === 403) {
           setIsIpBlocked(true);
-          setError("ACESSO BLOQUEADO POR 24 HORAS: Este endereÃ§o IP violou as polÃ­ticas de seguranÃ§a da Gateway e foi bloqueado por 24 horas.");
+          setError("ACESSO BLOQUEADO POR 24 HORAS: Este endereço IP violou as políticas de segurança da Gateway e foi bloqueado por 24 horas.");
           return;
         }
 
@@ -108,7 +108,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onSuccess }) => {
         console.warn("Gateway check bypass:", gatewayErr);
       }
 
-      // 2. AutenticaÃ§Ã£o oficial Firebase
+      // 2. Autenticação oficial Firebase
       if (mode === "login") {
         await signInWithEmailAndPassword(auth, email.trim(), password);
       } else {
@@ -116,15 +116,15 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onSuccess }) => {
       }
       onSuccess();
     } catch (err: any) {
-      console.warn("Erro de autenticaÃ§Ã£o:", err);
+      console.warn("Erro de autenticação:", err);
       if (err.code === "auth/user-not-found" || err.code === "auth/wrong-password" || err.code === "auth/invalid-credential") {
         setError("E-mail ou senha incorretos.");
       } else if (err.code === "auth/email-already-in-use") {
-        setError("Este e-mail jÃ¡ possui cadastro. FaÃ§a login com suas credenciais.");
+        setError("Este e-mail já possui cadastro. Faça login com suas credenciais.");
       } else if (err.code === "auth/too-many-requests") {
-        setError("Muitas tentativas malsucedidas consecutivas. Seu acesso estÃ¡ sendo monitorado pela Gateway.");
+        setError("Muitas tentativas malsucedidas consecutivas. Seu acesso está sendo monitorado pela Gateway.");
       } else {
-        setError(err.message || "Falha na autenticaÃ§Ã£o. Verifique os dados.");
+        setError(err.message || "Falha na autenticação. Verifique os dados.");
       }
     } finally {
       setIsLoading(false);
@@ -133,24 +133,24 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onSuccess }) => {
 
   return (
     <div className="min-h-screen bg-[#FAFCFB] flex flex-col justify-between max-w-md mx-auto shadow-2xl border-x border-[#E5EBE8] p-6">
-      {/* Topo / Marca Braga SaÃºde */}
+      {/* Topo / Marca Braga Saúde */}
       <div className="pt-safe flex flex-col items-center text-center mt-4">
         <div className="w-16 h-16 rounded-3xl bg-gradient-to-tr from-[#00897B] to-[#26A69A] flex items-center justify-center text-white shadow-lg shadow-emerald-900/15 mb-4">
           <Heart className="w-8 h-8 fill-white/20" />
         </div>
 
-        <h1 className="text-2xl font-bold tracking-tight text-[#1E293B]">BRAGA SAÃšDE</h1>
+        <h1 className="text-2xl font-bold tracking-tight text-[#1E293B]">BRAGA SAÚDE</h1>
         <div className="flex items-center gap-1.5 mt-1">
           <span className="text-[11px] font-bold bg-[#E0F2F1] text-[#00897B] border border-[#B2DFDB] px-2.5 py-0.5 rounded-full uppercase tracking-wider">
             Modo Cuidador Oficial
           </span>
         </div>
         <p className="text-xs text-[#64748B] mt-2 max-w-xs">
-          Acompanhamento em tempo real da saÃºde, medicamentos e bem-estar dos seus familiares.
+          Acompanhamento em tempo real da saúde, medicamentos e bem-estar dos seus familiares.
         </p>
       </div>
 
-      {/* Card do FormulÃ¡rio */}
+      {/* Card do Formulário */}
       <div className="bg-white rounded-3xl p-6 border border-[#E5EBE8] shadow-sm my-6">
         {isIpBlocked ? (
           <div className="mb-4 p-4 rounded-2xl bg-[#FFF5F2] border-2 border-[#D9532F] flex flex-col gap-2 text-xs text-[#D9532F] shadow-sm">
@@ -159,12 +159,12 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onSuccess }) => {
               <span>ACESSO BLOQUEADO POR 24 HORAS</span>
             </div>
             <p className="leading-relaxed text-[#B91C1C]">
-              Detectamos violaÃ§Ãµes repetidas das diretrizes de seguranÃ§a da Gateway.
-              Por proteÃ§Ã£o dos dados clÃ­nicos, este endereÃ§o IP foi suspenso por 24 horas pela Gateway.
+              Detectamos violações repetidas das diretrizes de segurança da Gateway.
+              Por proteção dos dados clínicos, este endereço IP foi suspenso por 24 horas pela Gateway.
             </p>
             <div className="flex items-center gap-1.5 text-[11px] font-semibold text-[#64748B] mt-1 bg-white/60 p-2 rounded-xl border border-[#D9532F]/20">
               <Clock className="w-3.5 h-3.5 text-[#D9532F]" />
-              <span>Desbloqueio automÃ¡tico apÃ³s 24 horas</span>
+              <span>Desbloqueio automático após 24 horas</span>
             </div>
           </div>
         ) : error ? (
@@ -174,7 +174,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onSuccess }) => {
           </div>
         ) : null}
 
-        {/* 1. BotÃ£o Oficial Google Sign-In */}
+        {/* 1. Botão Oficial Google Sign-In */}
         <button
           onClick={handleGoogleLogin}
           disabled={isLoading}
@@ -209,7 +209,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onSuccess }) => {
           </span>
         </div>
 
-        {/* 2. FormulÃ¡rio E-mail e Senha */}
+        {/* 2. Formulário E-mail e Senha */}
         <form onSubmit={handleEmailSubmit} className="space-y-3.5">
           {mode === "signup" && (
             <div>
@@ -256,7 +256,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onSuccess }) => {
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
+                placeholder="••••••••"
                 required
                 className="w-full bg-[#FAFCFB] border border-[#CBD5E1] rounded-xl pl-10 pr-4 py-2.5 text-sm text-[#1E293B] focus:border-[#00897B] outline-hidden font-medium"
               />
@@ -274,7 +274,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onSuccess }) => {
                   type="password"
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
-                  placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
+                  placeholder="••••••••"
                   required
                   className="w-full bg-[#FAFCFB] border border-[#CBD5E1] rounded-xl pl-10 pr-4 py-2.5 text-sm text-[#1E293B] focus:border-[#00897B] outline-hidden font-medium"
                 />
@@ -282,7 +282,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onSuccess }) => {
             </div>
           )}
 
-          {/* Checkbox de Consentimento LGPD (Art. 11 - Dados de SaÃºde) */}
+          {/* Checkbox de Consentimento LGPD (Art. 11 - Dados de Saúde) */}
           {mode === "signup" && (
             <div className="pt-1 pb-1">
               <label className="flex items-start gap-2.5 cursor-pointer select-none">
@@ -293,7 +293,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onSuccess }) => {
                   className="mt-0.5 w-4 h-4 rounded text-[#00897B] focus:ring-0 cursor-pointer accent-[#00897B] shrink-0"
                 />
                 <span className="text-[11px] text-[#64748B] leading-tight">
-                  Concordo com os <strong className="text-[#1E293B]">Termos de Uso</strong> e autorizo o tratamento de dados de saÃºde e rotina familiar nos termos da <strong className="text-[#00897B]">LGPD (Art. 11)</strong>.
+                  Concordo com os <strong className="text-[#1E293B]">Termos de Uso</strong> e autorizo o tratamento de dados de saúde e rotina familiar nos termos da <strong className="text-[#00897B]">LGPD (Art. 11)</strong>.
                 </span>
               </label>
             </div>
@@ -312,7 +312,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onSuccess }) => {
           </button>
         </form>
 
-        {/* AlternÃ¢ncia de Modo (Login vs Cadastro) */}
+        {/* Alternância de Modo (Login vs Cadastro) */}
         <div className="text-center mt-5">
           <button
             onClick={() => {
@@ -322,20 +322,20 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onSuccess }) => {
             className="text-xs font-medium text-[#00897B] hover:underline"
           >
             {mode === "login"
-              ? "NÃ£o tem conta? Cadastre-se como cuidador"
-              : "JÃ¡ possui uma conta? Fazer login"}
+              ? "Não tem conta? Cadastre-se como cuidador"
+              : "Já possui uma conta? Fazer login"}
           </button>
         </div>
       </div>
 
-      {/* RodapÃ© Seguro e Disclaimer ClÃ­nico */}
+      {/* Rodapé Seguro e Disclaimer Clínico */}
       <div className="pb-safe flex flex-col items-center gap-2 text-center">
         <div className="flex items-center justify-center gap-1.5 text-xs text-[#64748B]">
           <ShieldCheck className="w-4 h-4 text-[#00897B]" />
           <span>Ambiente Seguro e Criptografado (LGPD)</span>
         </div>
         <p className="text-[10px] text-[#64748B] leading-tight max-w-xs px-2">
-          O Braga SaÃºde Ã© uma ferramenta de suporte ao autocuidado e acompanhamento familiar, nÃ£o substituindo diagnÃ³sticos, prescriÃ§Ãµes ou condutas mÃ©dicas.
+          O Braga Saúde é uma ferramenta de suporte ao autocuidado e acompanhamento familiar, não substituindo diagnósticos, prescrições ou condutas médicas.
         </p>
       </div>
     </div>
