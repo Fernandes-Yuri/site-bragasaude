@@ -18,6 +18,9 @@ export interface CaregiverDashboardState {
   stepGoal: number;
   lastMeasurementLabel: string | null;
   isLoading: boolean;
+  // AUD-PW(B): a badge "Ativo" do PatientHeaderCard precisa saber se há
+  // vínculo — antes era sempre true e virava falso-positivo clínico.
+  hasActiveBinding?: boolean;
 }
 
 export interface FamilyBinding {

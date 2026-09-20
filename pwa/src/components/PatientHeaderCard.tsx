@@ -1,4 +1,4 @@
-﻿import React from "react";
+import React from "react";
 import { User } from "lucide-react";
 import type { CaregiverDashboardState } from "../types";
 
@@ -32,10 +32,15 @@ export const PatientHeaderCard: React.FC<PatientHeaderCardProps> = ({ state }) =
       </div>
 
       {/* Badge de Vínculo Ativo (exato ao Kotlin) */}
-      <div className="px-2.5 py-1 rounded-full bg-[#E8F5E9] border border-[#4CAF50]/40 flex items-center gap-1.5 shrink-0">
-        <span className="w-2 h-2 rounded-full bg-[#4CAF50] animate-pulse" />
-        <span className="text-xs font-semibold text-[#2E7D32]">Ativo</span>
-      </div>
+      {/* AUD-PW(B): antes era renderizada SEMPRE — falso-positivo clínico.
+           Sem vínculo, o cuidador via "Ativo" verde pulsante sobre um
+           paciente que não estava conectado. Agora só aparece com vínculo. */}
+      {state.hasActiveBinding && (
+        <div className="px-2.5 py-1 rounded-full bg-[#E8F5E9] border border-[#4CAF50]/40 flex items-center gap-1.5 shrink-0">
+          <span className="w-2 h-2 rounded-full bg-[#4CAF50] animate-pulse" />
+          <span className="text-xs font-semibold text-[#2E7D32]">Ativo</span>
+        </div>
+      )}
     </div>
   );
 };

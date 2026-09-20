@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { PhoneCall, CheckCircle2, AlertCircle, MessageSquare, UserPlus, Home, MessageCircle, User as UserIcon } from "lucide-react";
 import {
   auth,
@@ -75,6 +75,8 @@ export const App: React.FC = () => {
 
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [toastType, setToastType] = useState<"success" | "error">("success");
+  // AUD-PW(B): timer do toast — ver showToast.
+  const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Estados dos modais de diálogo
   const [showMedicationDialog, setShowMedicationDialog] = useState(false);
@@ -86,7 +88,11 @@ export const App: React.FC = () => {
   const showToast = (msg: string, type: "success" | "error" = "success") => {
     setToastMessage(msg);
     setToastType(type);
-    setTimeout(() => setToastMessage(null), 3500);
+    // AUD-PW(B): antes, dois toasts em <3.5s faziam o timer DO PRIMEIRO
+    // apagar o segundo — a mensagem sumia antes da hora. Ref guarda o timer
+    // atual; cada showToast limpa o anterior antes de armar o novo.
+    if (toastTimer.current) clearTimeout(toastTimer.current);
+    toastTimer.current = setTimeout(() => setToastMessage(null), 3500);
   };
 
   // Monitorar autenticação do Firebase em tempo real
@@ -119,6 +125,8 @@ export const App: React.FC = () => {
               patientUserId: active.patientUserId,
               patientName: active.caregiverName ? `Familiar de ${displayName}` : "Familiar Conectado",
               caregiverRelation: active.caregiverRelation || "Cuidador",
+              // AUD-PW(B): badge "Ativo" só com vínculo de verdade.
+              hasActiveBinding: true,
             }));
 
             // Buscar sinais vitais reais do paciente

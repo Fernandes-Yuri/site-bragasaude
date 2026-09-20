@@ -418,10 +418,13 @@
       btnDownloadAPK.style.display = 'none';
     }
     
-    // Botão de download APK — Direto via GitHub Releases (Sem telas de aviso, CDN global ultra-rápida)
+    // Botão de download APK — via API do gateway (/api/app/download), NÃO via
+    // GitHub Releases. AUD-PW(B): o comentário aqui embaixo dizia "GitHub
+    // Releases (CDN global ultra-rápida)" — mentira; o href real é o endpoint
+    // do gateway. Corrigido para descrever o que o botão faz de verdade.
     if (btnDownloadAPK) {
       btnDownloadAPK.addEventListener('click', () => {
-        console.log('[Braga Saúde] Download do APK iniciado via GitHub Releases CDN');
+        console.log('[Braga Saúde] Download do APK iniciado via /api/app/download');
         setTimeout(() => {
           const guide = document.getElementById('como-instalar');
           if (guide) {
@@ -503,7 +506,9 @@
         if (typeof gtag === 'function') {
           gtag('event', 'download_apk', {
             event_category: 'conversion',
-            event_label: 'BragaSaude.apk (v1.2.0)',
+            // AUD-PW(B): versão hardcoded defasada — dizia v1.2.0 enquanto o
+            // app já está em 1.2.5. Analítica de conversão inútil até hoje.
+            event_label: 'BragaSaude.apk (v1.2.5)',
             value: 1
           });
         }

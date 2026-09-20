@@ -91,12 +91,17 @@ export const SharedGroceryListCard: React.FC<SharedGroceryListCardProps> = ({
                 </div>
 
                 {/* Preço Estimado em R$ */}
+                {/* AUD-PW(B): toFixed sem guard — se o item vinha sem preço
+                     (null/undefined), TypeError derrubava o CARD INTEIRO da
+                     lista de compras, não só a linha. */}
                 <span
                   className={`text-xs font-semibold shrink-0 ${
                     isChecked ? "text-[#64748B]" : "text-[#1E293B]"
                   }`}
                 >
-                  R$ {item.estimatedPriceBrl.toFixed(2).replace(".", ",")}
+                  {typeof item.estimatedPriceBrl === "number"
+                    ? `R$ ${item.estimatedPriceBrl.toFixed(2).replace(".", ",")}`
+                    : "—"}
                 </span>
               </div>
             );
