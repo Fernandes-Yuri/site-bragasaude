@@ -317,7 +317,7 @@
 
 .sim-metric-meta {
   font-size: 0.6rem;
-  color: #94A3B8;
+  color: #64748B;
   margin-top: 2px;
 }
 
@@ -419,7 +419,7 @@
 
 .sim-vital-mini-unit {
   font-size: 0.55rem;
-  color: #94A3B8;
+  color: #64748B;
 }
 
 .sim-vital-mini-status {
@@ -687,7 +687,7 @@
 
 .sim-history-date {
   font-size: 0.6rem;
-  color: #94A3B8;
+  color: #64748B;
   flex-shrink: 0;
 }
 
@@ -827,7 +827,7 @@
 
 .sim-log-time {
   font-size: 0.65rem;
-  color: #94A3B8;
+  color: #64748B;
 }
 
 /* ══════════════════════════════════════════════════════════
@@ -892,7 +892,7 @@
 
 .sim-family-msg-date {
   font-size: 0.55rem;
-  color: #94A3B8;
+  color: #64748B;
 }
 
 .sim-family-msg-actions {

@@ -10,7 +10,7 @@ O **PWA Modo Cuidador** foi projetado especificamente para familiares e cuidador
 - **Zero fricção de instalação:** Roda diretamente via Safari no iOS ("Adicionar à Tela de Início") com experiência nativa (Safe Area, status bar translúcida, ícones de alta resolução e funcionamento offline via Service Worker).
 - **Modo Cuidador (`VIEWER_ONLY` / `HYBRID`):** Foco em monitoramento de sinais vitais (pressão arterial, frequência cardíaca, glicemia, saturação), checagem de medicamentos administrados no dia, progresso de hidratação e envio de mensagens de carinho.
 - **Gráficos e Histórico:** Visualização de tendências semanais com Recharts.
-- **Pareamento Ágil:** Scanner de QR Code integrado via câmera e inserção manual de código de 6 dígitos.
+- **Pareamento Ágil:** Scanner de QR Code integrado via câmera e inserção manual do **código de 8 dígitos** gerado no app do paciente (`FamilyConnectModal`). Não confundir com o código **OTP de 6 dígitos** usado no vínculo por WhatsApp (`PhoneLinkDialog`).
 - **Botão de Emergência Rápido:** Acesso direto de discagem ao SAMU 192 ou contato de emergência.
 
 ---
