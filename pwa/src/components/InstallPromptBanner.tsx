@@ -7,17 +7,17 @@ export const InstallPromptBanner: React.FC = () => {
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
 
   useEffect(() => {
-    // 1. Verifica se o usu·rio j· dispensou o aviso nesta semana
+    // 1. Verifica se o usu√°rio j√° dispensou o aviso nesta semana
     const dismissed = localStorage.getItem("braga_install_banner_dismissed");
     if (dismissed) {
       const dismissedTime = parseInt(dismissed, 10);
-      // Se dispensou h· menos de 3 dias, n„o exibe
+      // Se dispensou h√° menos de 3 dias, n√£o exibe
       if (Date.now() - dismissedTime < 3 * 24 * 60 * 60 * 1000) {
         return;
       }
     }
 
-    // 2. Verifica se o app j· est· rodando em modo Standalone (PWA Instalado)
+    // 2. Verifica se o app j√° est√° rodando em modo Standalone (PWA Instalado)
     const isStandalone =
       ("standalone" in window.navigator && (window.navigator as any).standalone) ||
       window.matchMedia("(display-mode: standalone)").matches;
@@ -26,18 +26,18 @@ export const InstallPromptBanner: React.FC = () => {
       return;
     }
 
-    // 3. DetecÁ„o de iOS (iPhone / iPad)
+    // 3. Detec√ß√£o de iOS (iPhone / iPad)
     const userAgent = window.navigator.userAgent.toLowerCase();
     const isIosDevice = /iphone|ipad|ipod/.test(userAgent);
     setIsIos(isIosDevice);
 
     if (isIosDevice) {
-      // Exibe apÛs 2.5 segundos para n„o sobrecarregar o primeiro impacto visual
+      // Exibe ap√≥s 2.5 segundos para n√£o sobrecarregar o primeiro impacto visual
       const timer = setTimeout(() => setIsVisible(true), 2500);
       return () => clearTimeout(timer);
     }
 
-    // 4. Captura de evento de instalaÁ„o nativo no Android / Chrome
+    // 4. Captura de evento de instala√ß√£o nativo no Android / Chrome
     const handleBeforeInstall = (e: Event) => {
       e.preventDefault();
       setDeferredPrompt(e);
@@ -92,7 +92,7 @@ export const InstallPromptBanner: React.FC = () => {
           </button>
         </div>
 
-        {/* InstruÁıes EspecÌficas para iOS Safari */}
+        {/* Instru√ß√µes Espec√≠ficas para iOS Safari */}
         {isIos ? (
           <div className="bg-white/5 border border-white/10 rounded-2xl p-3 flex flex-col gap-2 text-xs">
             <div className="flex items-center gap-2 text-[#26A69A] font-semibold text-[12px]">
@@ -103,7 +103,7 @@ export const InstallPromptBanner: React.FC = () => {
                 <Share className="w-3.5 h-3.5" />
               </div>
               <span>
-                1. Toque no bot„o de <strong>Compartilhar</strong> (barra inferior).
+                1. Toque no bot√£o de <strong>Compartilhar</strong> (barra inferior).
               </span>
             </div>
             <div className="flex items-center gap-2 text-[12px] text-slate-200">
@@ -111,28 +111,28 @@ export const InstallPromptBanner: React.FC = () => {
                 <PlusSquare className="w-3.5 h-3.5" />
               </div>
               <span>
-                2. Role para baixo e selecione <strong>Adicionar ‡ Tela de InÌcio</strong>.
+                2. Role para baixo e selecione <strong>Adicionar √† Tela de In√≠cio</strong>.
               </span>
             </div>
           </div>
         ) : (
-          /* Bot„o de InstalaÁ„o Nativa Android/Chrome */
+          /* Bot√£o de Instala√ß√£o Nativa Android/Chrome */
           <button
             onClick={handleNativeInstall}
             className="w-full bg-[#00897B] hover:bg-[#00796B] active:scale-98 text-white font-bold text-xs py-2.5 rounded-xl flex items-center justify-center gap-2 transition-all shadow-md shadow-emerald-950/20"
           >
             <Download className="w-4 h-4" />
-            <span>Adicionar ‡ Tela Inicial</span>
+            <span>Adicionar √† Tela Inicial</span>
           </button>
         )}
 
-        {/* Bot„o de dispensar */}
+        {/* Bot√£o de dispensar */}
         <div className="flex justify-end">
           <button
             onClick={handleDismiss}
             className="text-[12px] text-[#64748B] hover:text-white transition-colors"
           >
-            Agora n„o, continuar pelo navegador
+            Agora n√£o, continuar pelo navegador
           </button>
         </div>
       </div>

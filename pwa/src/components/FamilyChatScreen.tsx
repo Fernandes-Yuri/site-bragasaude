@@ -45,23 +45,41 @@ export const FamilyChatScreen: React.FC<FamilyChatScreenProps> = ({
   const [error, setError] = useState<string | null>(null);
   const listRef = useRef<HTMLDivElement>(null);
   const recognitionRef = useRef<any>(null);
+  const requestSequence = useRef(0);
 
   // Carrega mensagens (e re-carrega para refrescar o grupo)
   const loadMessages = useCallback(async () => {
     if (!patientId) return;
+    const sequence = ++requestSequence.current;
     // AUD-PW03: token resolvido no momento da chamada (nunca stale).
-    const token = await (getIdToken ? getIdToken() : Promise.resolve(undefined));
-    const fresh = await fetchFamilyMessages(patientId, token, 50);
-    // O gateway retorna DESC (mais novas primeiro); inverte para o chat
-    setMessages(fresh.slice().reverse());
+    try {
+      const token = await getIdToken?.();
+      const fresh = await fetchFamilyMessages(patientId, token, 50);
+      if (sequence === requestSequence.current) {
+        setMessages(fresh.slice().reverse());
+        setError(null);
+      }
+    } catch {
+      if (sequence !== requestSequence.current) return;
+      setMessages([]);
+      setError("Não foi possível atualizar o grupo. Verifique sua conexão e o vínculo.");
+    }
   }, [patientId, getIdToken]);
 
   useEffect(() => {
     loadMessages();
     // Polling leve: atualiza o grupo a cada 15s enquanto a aba está aberta
     const interval = setInterval(loadMessages, 15000);
-    return () => clearInterval(interval);
+    return () => { clearInterval(interval); requestSequence.current++; recognitionRef.current?.stop(); };
   }, [loadMessages]);
+
+  useEffect(() => {
+    const timer = setInterval(() => setMessages(previous => {
+      const valid = previous.filter(message => Date.parse(message.expiresAt) > Date.now());
+      return valid.length === previous.length ? previous : valid;
+    }), 1000);
+    return () => clearInterval(timer);
+  }, []);
 
   // Auto-scroll para a mensagem mais recente
   useEffect(() => {
@@ -162,6 +180,7 @@ export const FamilyChatScreen: React.FC<FamilyChatScreenProps> = ({
     setMessages((prev) => [...prev, optimistic]);
     setInput("");
 
+    try {
     const result = await sendCaregiverMessage(
       patientId,
       clean,
@@ -173,12 +192,17 @@ export const FamilyChatScreen: React.FC<FamilyChatScreenProps> = ({
       await (getIdToken ? getIdToken() : Promise.resolve(undefined))
     );
     if (!result.delivered) {
-      setError("Sem conexão — a mensagem será reenviada em breve");
+      setError("Mensagem não entregue. Tente enviar novamente.");
+      setInput(clean);
       onToast?.("Mensagem não entregue — verifique sua conexão");
     }
     // Recarrega para alinhar com o estado real do gateway
     await loadMessages();
-    setIsSending(false);
+    } catch {
+      setInput(clean);
+      setMessages(prev => prev.filter(message => message.id !== optimistic.id));
+      setError("Mensagem não entregue. Tente enviar novamente.");
+    } finally { setIsSending(false); }
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -200,10 +224,10 @@ export const FamilyChatScreen: React.FC<FamilyChatScreenProps> = ({
       <div className="flex-1 flex items-center justify-center p-6 text-center">
         <div>
           <p className="text-sm font-semibold text-[#1E293B] mb-1">
-            Nenhum familiar conectado
+            Selecione um grupo da família
           </p>
           <p className="text-xs text-[#64748B]">
-            Conecte-se a um paciente na aba Início para começar a conversar.
+            Escolha a família acima ou conecte um familiar na aba Início.
           </p>
         </div>
       </div>
@@ -228,7 +252,7 @@ export const FamilyChatScreen: React.FC<FamilyChatScreenProps> = ({
         {messages.length === 0 && (
           <div className="h-full flex items-center justify-center">
             <p className="text-xs text-[#64748B] text-center max-w-[220px] leading-relaxed">
-              Nenhuma mensagem ainda. Mande um carinho para {patientName || "paciente"} 💚
+              Nenhuma mensagem ainda. Mande um carinho para {patientName || "paciente"}
             </p>
           </div>
         )}

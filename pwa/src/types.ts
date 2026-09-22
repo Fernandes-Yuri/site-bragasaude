@@ -24,6 +24,7 @@ export interface CaregiverDashboardState {
 }
 
 export interface FamilyBinding {
+  patientName?: string;
   id: string;
   patientUserId: string;
   caregiverUserId: string;

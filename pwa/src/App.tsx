@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useRef } from "react";
+import { familyGroups, resolveFamilyGroup } from './services/familyGroups';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { PhoneCall, CheckCircle2, AlertCircle, MessageSquare, UserPlus, Home, MessageCircle, User as UserIcon } from "lucide-react";
 import {
   auth,
@@ -69,6 +70,10 @@ export const App: React.FC = () => {
   const [hasRealBinding, setHasRealBinding] = useState(false);
   const [userPhone, setUserPhone] = useState<string | null>(null);
   const [bindings, setBindings] = useState<FamilyBinding[]>([]);
+  const [selectedGroup, setSelectedGroup] = useState<string | null>(null);
+  const groups = useMemo(() => familyGroups(bindings, currentUser?.uid || ''), [bindings, currentUser?.uid]);
+  const chatPatientId = resolveFamilyGroup(bindings, currentUser?.uid || '', selectedGroup);
+  const getChatToken = useCallback(async () => currentUser?.getIdToken(), [currentUser]);
   const [activeTab, setActiveTab] = useState<"home" | "chat" | "profile">("home");
   // AUD-PW03: removido o estado idToken — era uma snapshot stale. Consumidores
   // agora recebem um getter que resolve o token fresco no instante da chamada.
@@ -99,6 +104,11 @@ export const App: React.FC = () => {
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       setCurrentUser(user);
+      setBindings([]);
+      setSelectedGroup(null);
+      setDashboard(EMPTY_CAREGIVER_STATE);
+      setHistoryRecords([]);
+      setHasRealBinding(false);
       setIsAuthLoading(false);
 
       if (user) {
@@ -117,34 +127,7 @@ export const App: React.FC = () => {
           const token = await user.getIdToken();
           const bindings = await fetchFamilyBindings(user.uid, token);
           setBindings(bindings);
-          if (bindings.length > 0) {
-            const active = bindings[0];
-            setHasRealBinding(true);
-            setDashboard((prev) => ({
-              ...prev,
-              patientUserId: active.patientUserId,
-              patientName: active.caregiverName ? `Familiar de ${displayName}` : "Familiar Conectado",
-              caregiverRelation: active.caregiverRelation || "Cuidador",
-              // AUD-PW(B): badge "Ativo" só com vínculo de verdade.
-              hasActiveBinding: true,
-            }));
 
-            // Buscar sinais vitais reais do paciente
-            const vitals = await fetchPatientVitals(active.patientUserId, token);
-            if (vitals.length > 0) {
-              setHistoryRecords(vitals);
-              const latest = vitals[0];
-              setDashboard((prev) => ({
-                ...prev,
-                systolic: latest.systolic ?? prev.systolic,
-                diastolic: latest.diastolic ?? prev.diastolic,
-                glucose: latest.glucose ?? prev.glucose,
-                hydrationMl: latest.hydrationMl ?? prev.hydrationMl,
-                steps: latest.steps ?? prev.steps,
-                lastMeasurementLabel: "Medição real recebida",
-              }));
-            }
-          }
         } catch (err) {
           console.warn("Erro ao sincronizar dados iniciais:", err);
         }
@@ -153,6 +136,29 @@ export const App: React.FC = () => {
 
     return () => unsubscribe();
   }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    const caregiverName = currentUser?.displayName || currentUser?.email?.split('@')[0] || 'Cuidador';
+    setHistoryRecords([]);
+    setHasRealBinding(Boolean(chatPatientId));
+    setDashboard({ ...EMPTY_CAREGIVER_STATE, caregiverName, patientUserId: chatPatientId,
+      patientName: chatPatientId === currentUser?.uid ? 'Minha família' :
+        (groups.find(b => b.patientUserId === chatPatientId)?.patientName || 'Familiar conectado'),
+      hasActiveBinding: Boolean(chatPatientId), isLoading: Boolean(chatPatientId) });
+    if (chatPatientId && currentUser) {
+      currentUser.getIdToken().then(token => fetchPatientVitals(chatPatientId, token)).then(vitals => {
+        if (cancelled) return;
+        setHistoryRecords(vitals);
+        const latest = vitals[0];
+        setDashboard(prev => ({ ...prev, isLoading: false,
+          systolic: latest?.systolic ?? null, diastolic: latest?.diastolic ?? null,
+          glucose: latest?.glucose ?? null, hydrationMl: latest?.hydrationMl ?? 0,
+          steps: latest?.steps ?? 0 }));
+      }).catch(() => { if (!cancelled) setDashboard(prev => ({ ...prev, isLoading: false })); });
+    }
+    return () => { cancelled = true; };
+  }, [chatPatientId, currentUser, groups]);
 
   // Carregar lista de compras persistida localmente (offline-first)
   useEffect(() => {
@@ -216,8 +222,8 @@ export const App: React.FC = () => {
     iconType: "LOVE" | "MEDICATION" | "WATER" | "WALK" | "APPOINTMENT"
   ): Promise<boolean> => {
     if (!currentUser) return false;
-    if (!dashboard.patientUserId) {
-      showToast("Conecte um familiar antes de enviar mensagens.", "error");
+    if (!chatPatientId || dashboard.patientUserId !== chatPatientId) {
+      showToast("Selecione uma família antes de enviar mensagens.", "error");
       return false;
     }
     try {
@@ -278,10 +284,6 @@ export const App: React.FC = () => {
         const idToken = await currentUser.getIdToken(true);
         const bindings = await fetchFamilyBindings(currentUser.uid, idToken);
         setBindings(bindings);
-        if (bindings.length > 0) {
-          const vitals = await fetchPatientVitals(bindings[0].patientUserId, idToken);
-          if (vitals.length > 0) setHistoryRecords(vitals);
-        }
         succeeded = true;
       }
     } catch (e) {
@@ -380,6 +382,18 @@ export const App: React.FC = () => {
         onOpenProfile={() => setActiveTab("profile")}
       />
 
+      {groups.length > 1 && (
+        <div className="px-4 py-3">
+          <label htmlFor="family-group" className="block text-sm font-semibold mb-2">Grupo da família</label>
+          <select id="family-group" value={chatPatientId} onChange={event => setSelectedGroup(event.target.value)}
+            className="w-full min-h-12 rounded-xl border border-[#B2DFDB] bg-white px-3 text-base">
+            <option value="">Selecione a família</option>
+            {groups.map((group, index) => <option key={group.patientUserId} value={group.patientUserId}>
+              {group.patientUserId === currentUser.uid ? 'Minha família' : group.patientName || `Familiar ${index + 1}`}
+            </option>)}
+          </select>
+        </div>
+      )}
       {/* Indicador de sincronização sutil */}
       {dashboard.isLoading && (
         <div className="w-full h-1 bg-[#E0F2F1] overflow-hidden">
@@ -391,14 +405,13 @@ export const App: React.FC = () => {
       {activeTab === "chat" ? (
         <main className="flex-1 flex flex-col min-h-0 overflow-hidden">
           <FamilyChatScreen
-            patientId={dashboard.patientUserId}
+            key={`${currentUser.uid}:${chatPatientId}`}
+            patientId={chatPatientId}
             patientName={dashboard.patientName}
             currentUserId={currentUser.uid}
             caregiverName={dashboard.caregiverName}
             // AUD-PW03: getter no lugar da string — token sempre fresco.
-            getIdToken={async () =>
-              currentUser ? currentUser.getIdToken() : undefined
-            }
+            getIdToken={getChatToken}
             onToast={showToast}
           />
         </main>
@@ -650,6 +663,9 @@ export const App: React.FC = () => {
             defaultCaregiverName={dashboard.caregiverName}
             getIdToken={async () => (currentUser ? currentUser.getIdToken() : undefined)}
             onSuccessPair={(patientName, relation, patientUserId) => {
+              setSelectedGroup(patientUserId);
+              if (currentUser) currentUser.getIdToken().then(token => fetchFamilyBindings(currentUser.uid, token))
+                .then(setBindings).catch(() => showToast('Atualize os vínculos para abrir o grupo.', 'error'));
               setHasRealBinding(true);
               setDashboard((prev) => ({
                 ...prev,

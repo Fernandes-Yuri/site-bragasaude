@@ -6,7 +6,7 @@
     --safe-bottom: env(safe-area-inset-bottom, 0px);
 
     /* Paleta Oficial Braga Saúde Android */
-    --braga-emerald: #00897B;
+    --braga-emerald: #00A884;
     --braga-emerald-dark: #00695C;
     --braga-emerald-light: #26A69A;
     --braga-mint: #E0F2F1;
@@ -49,3 +49,13 @@
   scrollbar-width: none;
 }
 
+
+@layer base {
+  button, input:not([type="checkbox"]):not([type="radio"]), select, [role="button"] { min-height: 48px; }
+  button, [role="button"] { min-width: 48px; }
+  :focus-visible { outline: 3px solid #00695C; outline-offset: 3px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+}

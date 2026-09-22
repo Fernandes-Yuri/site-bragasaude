@@ -1,5 +1,6 @@
+import { BragaLogo } from "./BragaLogo";
 import React, { useState, useCallback } from "react";
-import { Heart, Lock, Mail, User, ArrowRight, ShieldAlert, ShieldCheck, AlertCircle, Clock } from "lucide-react";
+import { Lock, Mail, User, ArrowRight, ShieldAlert, ShieldCheck, AlertCircle, Clock } from "lucide-react";
 import {
   auth,
   googleProvider,
@@ -135,17 +136,17 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onSuccess }) => {
     <div className="min-h-screen bg-[#FAFCFB] flex flex-col justify-between max-w-md mx-auto shadow-2xl border-x border-[#E5EBE8] p-6">
       {/* Topo / Marca Braga Saúde */}
       <div className="pt-safe flex flex-col items-center text-center mt-4">
-        <div className="w-16 h-16 rounded-3xl bg-gradient-to-tr from-[#00897B] to-[#26A69A] flex items-center justify-center text-white shadow-lg shadow-emerald-900/15 mb-4">
-          <Heart className="w-8 h-8 fill-white/20" />
+        <div className="w-16 h-16 rounded-3xl bg-gradient-to-tr from-[#F4FBF9] to-[#E0F2F1] flex items-center justify-center text-white shadow-lg shadow-emerald-900/15 mb-4">
+          <BragaLogo className="w-16 h-16" />
         </div>
 
         <h1 className="text-2xl font-bold tracking-tight text-[#1E293B]">BRAGA SAÚDE</h1>
         <div className="flex items-center gap-1.5 mt-1">
-          <span className="text-[12px] font-bold bg-[#E0F2F1] text-[#00897B] border border-[#B2DFDB] px-2.5 py-0.5 rounded-full uppercase tracking-wider">
+          <span className="text-sm font-bold bg-[#E0F2F1] text-[#00695C] border border-[#B2DFDB] px-2.5 py-0.5 rounded-full uppercase tracking-wider">
             Modo Cuidador Oficial
           </span>
         </div>
-        <p className="text-xs text-[#64748B] mt-2 max-w-xs">
+        <p className="text-base text-[#64748B] mt-2 max-w-xs">
           Acompanhamento em tempo real da saúde, medicamentos e bem-estar dos seus familiares.
         </p>
       </div>
@@ -153,7 +154,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onSuccess }) => {
       {/* Card do Formulário */}
       <div className="bg-white rounded-3xl p-6 border border-[#E5EBE8] shadow-sm my-6">
         {isIpBlocked ? (
-          <div className="mb-4 p-4 rounded-2xl bg-[#FFF5F2] border-2 border-[#D9532F] flex flex-col gap-2 text-xs text-[#D9532F] shadow-sm">
+          <div className="mb-4 p-4 rounded-2xl bg-[#FFF5F2] border-2 border-[#D9532F] flex flex-col gap-2 text-sm text-[#D9532F] shadow-sm">
             <div className="flex items-center gap-2 font-bold text-sm">
               <ShieldAlert className="w-5 h-5 shrink-0 text-[#D9532F]" />
               <span>ACESSO BLOQUEADO POR 24 HORAS</span>
@@ -162,13 +163,13 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onSuccess }) => {
               Detectamos violações repetidas das diretrizes de segurança da Gateway.
               Por proteção dos dados clínicos, este endereço IP foi suspenso por 24 horas pela Gateway.
             </p>
-            <div className="flex items-center gap-1.5 text-[12px] font-semibold text-[#64748B] mt-1 bg-white/60 p-2 rounded-xl border border-[#D9532F]/20">
+            <div className="flex items-center gap-1.5 text-sm font-semibold text-[#64748B] mt-1 bg-white/60 p-2 rounded-xl border border-[#D9532F]/20">
               <Clock className="w-3.5 h-3.5 text-[#D9532F]" />
               <span>Desbloqueio automático após 24 horas</span>
             </div>
           </div>
         ) : error ? (
-          <div className="mb-4 p-3 rounded-2xl bg-[#FFF5F2] border border-[#D9532F]/30 flex items-start gap-2.5 text-xs text-[#D9532F]">
+          <div className="mb-4 p-3 rounded-2xl bg-[#FFF5F2] border border-[#D9532F]/30 flex items-start gap-2.5 text-sm text-[#D9532F]">
             <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
             <span>{error}</span>
           </div>
@@ -204,7 +205,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onSuccess }) => {
         {/* Divisor */}
         <div className="relative my-5 flex items-center justify-center">
           <div className="border-t border-[#E2E8F0] w-full" />
-          <span className="bg-white px-3 text-[12px] font-medium text-[#64748B] uppercase tracking-wider absolute">
+          <span className="bg-white px-3 text-sm font-medium text-[#64748B] uppercase tracking-wider absolute">
             ou com e-mail
           </span>
         </div>
@@ -213,70 +214,70 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onSuccess }) => {
         <form onSubmit={handleEmailSubmit} className="space-y-3.5">
           {mode === "signup" && (
             <div>
-              <label className="text-xs font-semibold text-[#1E293B] block mb-1">
-                Nome do Cuidador(a)
+              <label htmlFor="caregiver-name" className="text-sm font-semibold text-[#1E293B] block mb-1">Nome do Cuidador(a)
               </label>
               <div className="relative">
                 <User className="w-4 h-4 text-[#64748B] absolute left-3.5 top-3" />
                 <input
                   type="text"
+                  id="caregiver-name"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   placeholder="Seu nome completo"
-                  className="w-full bg-[#FAFCFB] border border-[#CBD5E1] rounded-xl pl-10 pr-4 py-2.5 text-sm text-[#1E293B] focus:border-[#00897B] outline-hidden font-medium"
+                  className="w-full bg-[#FAFCFB] border border-[#CBD5E1] rounded-xl pl-10 pr-4 py-2.5 text-base text-[#1E293B] focus:border-[#00695C] outline-hidden font-medium"
                 />
               </div>
             </div>
           )}
 
           <div>
-            <label className="text-xs font-semibold text-[#1E293B] block mb-1">
-              E-mail
+            <label htmlFor="caregiver-email" className="text-sm font-semibold text-[#1E293B] block mb-1">E-mail
             </label>
             <div className="relative">
               <Mail className="w-4 h-4 text-[#64748B] absolute left-3.5 top-3" />
               <input
                 type="email"
-                value={email}
+                id="caregiver-email"
+                  value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="exemplo@email.com"
                 required
-                className="w-full bg-[#FAFCFB] border border-[#CBD5E1] rounded-xl pl-10 pr-4 py-2.5 text-sm text-[#1E293B] focus:border-[#00897B] outline-hidden font-medium"
+                className="w-full bg-[#FAFCFB] border border-[#CBD5E1] rounded-xl pl-10 pr-4 py-2.5 text-base text-[#1E293B] focus:border-[#00695C] outline-hidden font-medium"
               />
             </div>
           </div>
 
           <div>
-            <label className="text-xs font-semibold text-[#1E293B] block mb-1">
-              Senha
+            <label htmlFor="caregiver-password" className="text-sm font-semibold text-[#1E293B] block mb-1">Senha
             </label>
             <div className="relative">
               <Lock className="w-4 h-4 text-[#64748B] absolute left-3.5 top-3" />
               <input
                 type="password"
-                value={password}
+                id="caregiver-password"
+                  value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
                 required
-                className="w-full bg-[#FAFCFB] border border-[#CBD5E1] rounded-xl pl-10 pr-4 py-2.5 text-sm text-[#1E293B] focus:border-[#00897B] outline-hidden font-medium"
+                className="w-full bg-[#FAFCFB] border border-[#CBD5E1] rounded-xl pl-10 pr-4 py-2.5 text-base text-[#1E293B] focus:border-[#00695C] outline-hidden font-medium"
               />
             </div>
           </div>
 
           {mode === "signup" && (
             <div>
-              <label className="text-xs font-semibold text-[#1E293B] block mb-1">
-                Confirmar Senha
+              <label htmlFor="caregiver-confirm-password" className="text-sm font-semibold text-[#1E293B] block mb-1">Confirmar Senha
               </label>
               <div className="relative">
                 <Lock className="w-4 h-4 text-[#64748B] absolute left-3.5 top-3" />
                 <input
                   type="password"
+                  id="caregiver-confirm-password"
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   placeholder="••••••••"
                   required
-                  className="w-full bg-[#FAFCFB] border border-[#CBD5E1] rounded-xl pl-10 pr-4 py-2.5 text-sm text-[#1E293B] focus:border-[#00897B] outline-hidden font-medium"
+                  className="w-full bg-[#FAFCFB] border border-[#CBD5E1] rounded-xl pl-10 pr-4 py-2.5 text-base text-[#1E293B] focus:border-[#00695C] outline-hidden font-medium"
                 />
               </div>
             </div>
@@ -285,15 +286,15 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onSuccess }) => {
           {/* Checkbox de Consentimento LGPD (Art. 11 - Dados de Saúde) */}
           {mode === "signup" && (
             <div className="pt-1 pb-1">
-              <label className="flex items-start gap-2.5 cursor-pointer select-none">
+              <label className="flex min-h-12 items-start gap-2.5 cursor-pointer select-none">
                 <input
                   type="checkbox"
                   checked={lgpdAccepted}
                   onChange={(e) => setLgpdAccepted(e.target.checked)}
-                  className="mt-0.5 w-4 h-4 rounded text-[#00897B] focus:ring-0 cursor-pointer accent-[#00897B] shrink-0"
+                  className="mt-0.5 w-4 h-4 rounded text-[#00695C] focus:ring-0 cursor-pointer accent-[#00695C] shrink-0"
                 />
-                <span className="text-[12px] text-[#64748B] leading-tight">
-                  Concordo com os <strong className="text-[#1E293B]">Termos de Uso</strong> e autorizo o tratamento de dados de saúde e rotina familiar nos termos da <strong className="text-[#00897B]">LGPD (Art. 11)</strong>.
+                <span className="text-sm text-[#64748B] leading-tight">
+                  Concordo com os <strong className="text-[#1E293B]">Termos de Uso</strong> e autorizo o tratamento de dados de saúde e rotina familiar nos termos da <strong className="text-[#00695C]">LGPD (Art. 11)</strong>.
                 </span>
               </label>
             </div>
@@ -305,7 +306,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onSuccess }) => {
           <button
             type="submit"
             disabled={isLoading}
-            className="w-full bg-[#00897B] hover:bg-[#00695C] active:scale-98 disabled:opacity-50 text-white font-bold text-sm rounded-2xl py-3 flex items-center justify-center gap-2 transition-all shadow-md shadow-emerald-900/15"
+            className="w-full bg-[#00695C] hover:bg-[#00695C] active:scale-98 disabled:opacity-50 text-white font-bold text-sm rounded-2xl py-3 flex items-center justify-center gap-2 transition-all shadow-md shadow-emerald-900/15"
           >
             <span>{isLoading ? "Processando..." : mode === "login" ? "Entrar na Conta" : "Criar Conta de Cuidador"}</span>
             <ArrowRight className="w-4 h-4" />
@@ -319,7 +320,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onSuccess }) => {
               setMode(mode === "login" ? "signup" : "login");
               setError(null);
             }}
-            className="text-xs font-medium text-[#00897B] hover:underline"
+            className="text-sm font-medium text-[#00695C] hover:underline"
           >
             {mode === "login"
               ? "Não tem conta? Cadastre-se como cuidador"
@@ -330,11 +331,11 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onSuccess }) => {
 
       {/* Rodapé Seguro e Disclaimer Clínico */}
       <div className="pb-safe flex flex-col items-center gap-2 text-center">
-        <div className="flex items-center justify-center gap-1.5 text-xs text-[#64748B]">
-          <ShieldCheck className="w-4 h-4 text-[#00897B]" />
+        <div className="flex items-center justify-center gap-1.5 text-sm text-[#64748B]">
+          <ShieldCheck className="w-4 h-4 text-[#00695C]" />
           <span>Ambiente Seguro e Criptografado (LGPD)</span>
         </div>
-        <p className="text-[12px] text-[#64748B] leading-tight max-w-xs px-2">
+        <p className="text-sm text-[#64748B] leading-tight max-w-xs px-2">
           O Braga Saúde é uma ferramenta de suporte ao autocuidado e acompanhamento familiar, não substituindo diagnósticos, prescrições ou condutas médicas.
         </p>
       </div>

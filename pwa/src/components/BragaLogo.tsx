@@ -1,0 +1,3 @@
+export function BragaLogo({ className = "h-12 w-12" }: { className?: string }) {
+  return (<svg className={className} role="img" aria-label="Braga Saúde" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="none"><path d="M20,5 Q5,5 5,20 L5,80 Q5,95 20,95 L80,95 Q95,95 95,80 L95,20 Q95,5 80,5 Z" fill="#00A884"/><path d="M14,50 L30,50 L37,30 L46,70 L53,38 L59,57 L65,50 L86,50" stroke="#FFFFFF" strokeWidth="5" strokeLinecap="round" strokeLinejoin="round"/></svg>);
+}
