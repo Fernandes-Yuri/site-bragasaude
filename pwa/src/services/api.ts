@@ -358,6 +358,7 @@ export async function acceptFamilyBinding(
       return {
         id: String(b.id),
         patientUserId: b.patient_id || b.patientUserId || "",
+        patientName: b.patient_name || b.patientName || "",
         caregiverUserId: b.caregiver_id || b.caregiverUserId || "",
         caregiverName: b.caregiver_name || b.caregiverName || "",
         caregiverRelation: b.caregiver_relation || b.caregiverRelation || "",
@@ -514,6 +515,7 @@ export async function fetchFamilyBindings(
         return data.map((b: any) => ({
           id: String(b.id),
           patientUserId: b.patient_id || b.patientUserId || "",
+          patientName: b.patient_name || b.patientName || "",
           caregiverUserId: b.caregiver_id || b.caregiverUserId || "",
           caregiverName: b.caregiver_name || b.caregiverName || "",
           caregiverRelation: b.caregiver_relation || b.caregiverRelation || "",
@@ -543,7 +545,6 @@ export async function fetchFamilyMessages(
   idToken?: string,
   limit: number = 50
 ): Promise<FamilyMessage[]> {
-  try {
     const headers: Record<string, string> = { "Content-Type": "application/json" };
     if (idToken) headers["Authorization"] = `Bearer ${idToken}`;
 
@@ -554,7 +555,8 @@ export async function fetchFamilyMessages(
     if (res.ok) {
       const data = await res.json();
       if (Array.isArray(data)) {
-        return data.map((m: any) => ({
+        return data.filter((m: any) => !m.deleted_at && !m.deletedAt &&
+          new Date(m.expires_at || m.expiresAt).getTime() > Date.now()).map((m: any) => ({
           id: String(m.id),
           patientId: m.patient_id || m.patientId || patientId,
           senderId: m.sender_id || m.senderId || "",
@@ -566,10 +568,7 @@ export async function fetchFamilyMessages(
         }));
       }
     }
-  } catch (err) {
-    console.warn("Falha ao buscar mensagens da família:", err);
-  }
-  return [];
+    throw new Error('Não foi possível atualizar a conversa. Verifique sua conexão e o vínculo.');
 }
 export async function syncCaregiverPhone(
   userId: string,
