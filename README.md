@@ -72,3 +72,24 @@ Para realizar o deploy do hosting:
 cd onboarding_site
 firebase deploy --only hosting
 ```
+
+---
+
+## 👨‍👩‍👧 Saúde do chat da família
+
+O chat da família faz um **polling leve de 15s** enquanto a aba está aberta.
+Defeitos antigos desse fluxo, já quitados (AUD-PW03):
+
+- ~~**`idToken` stale fazia o chat sumir silenciosamente após ~1h**~~ — o
+  token deixou de ser uma snapshot de estado e virou um **getter**
+  (`getIdToken?: () => Promise<string | undefined>`) resolvido no instante
+  de cada chamada (`App.tsx:76`, consumido por `FamilyChatScreen`,
+  `VoiceAssistant` e `FamilyConnectModal`).
+- ~~**401 tratado como lista vazia**~~ — `FamilyChatScreen` trata a falha e
+  mostra "Não foi possível atualizar o grupo…" na UI.
+- **Ciclo de vida respeitado:** o `setInterval` é limpo no `useEffect`
+  teardown — a aba fechada não faz mais polling.
+
+> O lado Android do polling ganhou resiliência equivalente (gate de tela,
+> backoff exponencial e skip de ciclo idêntico) na branch
+> `fix/ponte-familiar-polling` do app.
