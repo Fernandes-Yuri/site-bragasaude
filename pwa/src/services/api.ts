@@ -4,7 +4,14 @@ import type {
   GroceryItem,
   MessageTemplate,
   FamilyMessage,
-  VitalHistoryRecord
+  VitalHistoryRecord,
+  MedicationStockItem,
+  ActivityFeedItem,
+  DailyBulletin,
+  ClinicalCorrelation,
+  MedicalAccessGrant,
+  BarcodeMedication,
+  MedicationCreateInput
 } from "../types";
 import { generateTotpSecret } from "./waLinkTotp";
 
@@ -631,5 +638,163 @@ export async function fetchPatientVitals(
     console.warn("Falha ao buscar sinais vitais reais:", err);
   }
   return [];
+}
+
+function careHeaders(idToken?: string, json = false): Record<string, string> {
+  const headers: Record<string, string> = {};
+  if (json) headers["Content-Type"] = "application/json";
+  if (idToken) headers.Authorization = `Bearer ${idToken}`;
+  return headers;
+}
+
+async function requireOk(response: Response, fallbackMessage: string): Promise<Response> {
+  if (response.ok) return response;
+  const payload = await response.json().catch(() => ({}));
+  throw new Error(payload?.detail || fallbackMessage);
+}
+
+export async function fetchMedicationStock(patientId: string, idToken?: string): Promise<MedicationStockItem[]> {
+  const response = await fetch(`${API_BASE_URL}/api/family/patients/${encodeURIComponent(patientId)}/medications/stock`, { headers: careHeaders(idToken) });
+  await requireOk(response, "Não foi possível consultar o estoque de medicamentos.");
+  const data = await response.json();
+  if (!Array.isArray(data)) return [];
+  return data.map((item: any) => ({
+    id: String(item.id), name: item.name || "Medicamento",
+    activePrinciple: item.active_principle ?? item.activePrinciple ?? null,
+    pharmaceuticalForm: item.pharmaceutical_form ?? item.pharmaceuticalForm ?? null,
+    currentUnits: Number(item.current_units ?? item.currentUnits ?? 0),
+    totalUnits: Number(item.total_units ?? item.totalUnits ?? 0),
+    alertThresholdDays: Number(item.alert_threshold_days ?? item.alertThresholdDays ?? 5),
+    daysRemaining: Number(item.days_remaining ?? item.daysRemaining ?? 0),
+    isCritical: Boolean(item.is_critical ?? item.isCritical),
+    photoReferenceUrl: item.photo_reference_url ?? item.photoReferenceUrl ?? null,
+    prescriptionExpiresOn: item.prescription_expires_on ?? item.prescriptionExpiresOn ?? null,
+  }));
+}
+
+export async function takeMedicationDose(medicationId: string, scheduledFor: string, idToken?: string): Promise<{ ok: boolean; status: number; message?: string }> {
+  const response = await fetch(`${API_BASE_URL}/api/medications/${encodeURIComponent(medicationId)}/take`, {
+    method: "POST", headers: careHeaders(idToken, true),
+    body: JSON.stringify({ scheduled_for: scheduledFor, units_taken: 1, idempotency_key: `${medicationId}_${scheduledFor}`.slice(0, 100) }),
+  });
+  if (response.status === 409) {
+    const payload = await response.json().catch(() => ({}));
+    const detail = String(payload?.detail || "");
+    if (/confirmada|registrada|duplicad/i.test(detail)) {
+      return { ok: true, status: 409, message: "Dose já confirmada anteriormente" };
+    }
+    throw new Error(detail || "Não foi possível confirmar a dose.");
+  }
+  await requireOk(response, "Não foi possível confirmar a dose.");
+  return { ok: true, status: response.status };
+}
+
+export async function fetchActivityFeed(patientId: string, limit = 50, idToken?: string): Promise<ActivityFeedItem[]> {
+  const safeLimit = Math.min(100, Math.max(1, limit));
+  const response = await fetch(`${API_BASE_URL}/api/family/patients/${encodeURIComponent(patientId)}/activity-feed?limit=${safeLimit}`, { headers: careHeaders(idToken) });
+  await requireOk(response, "Não foi possível atualizar a linha do tempo.");
+  const data = await response.json();
+  if (!Array.isArray(data)) return [];
+  return data.map((item: any) => ({
+    id: String(item.id), actorId: item.actor_id ?? item.actorId ?? "",
+    actorName: item.actor_name ?? item.actorName ?? "Familiar",
+    actionType: item.action_type ?? item.actionType ?? "CARE_ACTION",
+    details: item.details && typeof item.details === "object" ? item.details : {},
+    occurredAt: item.occurred_at ?? item.occurredAt ?? new Date().toISOString(),
+  }));
+}
+
+export async function fetchDailyBulletin(patientId: string, day?: string, idToken?: string): Promise<DailyBulletin | null> {
+  const url = new URL(`${API_BASE_URL}/api/family/patients/${encodeURIComponent(patientId)}/daily-bulletin`);
+  if (day) url.searchParams.set("day", day);
+  const response = await fetch(url, { headers: careHeaders(idToken) });
+  if (response.status === 404 || response.status === 204) return null;
+  await requireOk(response, "Não foi possível carregar o boletim do dia.");
+  const item = await response.json();
+  const pressure = item.latest_blood_pressure ?? item.latestBloodPressure;
+  const pressureParts = typeof pressure === "string" ? pressure.split("/").map(Number) : null;
+  const normalizedPressure = pressureParts && pressureParts.length === 2 && pressureParts.every(Number.isFinite)
+    ? { systolic: pressureParts[0], diastolic: pressureParts[1], measuredAt: "" }
+    : pressure && typeof pressure === "object"
+      ? {
+          systolic: Number(pressure.systolic),
+          diastolic: Number(pressure.diastolic),
+          measuredAt: pressure.measured_at ?? pressure.measuredAt ?? "",
+        }
+      : null;
+  return {
+    patientId: item.patient_id ?? item.patientId ?? patientId, day: item.day,
+    medicationsTaken: Number(item.medications_taken ?? item.medicationsTaken ?? 0),
+    medicationsExpected: Number(item.medications_expected ?? item.medicationsExpected ?? 0),
+    latestBloodPressure: normalizedPressure,
+    hydrationMl: Number(item.hydration_ml ?? item.hydrationMl ?? 0),
+    hydrationTargetMl: Number(item.hydration_target_ml ?? item.hydrationTargetMl ?? 2000),
+    sleepQuality: item.sleep_quality ?? item.sleepQuality ?? null,
+    disposition: item.disposition ?? null,
+  };
+}
+
+export async function fetchClinicalCorrelations(patientId: string, idToken?: string): Promise<ClinicalCorrelation[]> {
+  const response = await fetch(`${API_BASE_URL}/api/patients/${encodeURIComponent(patientId)}/clinical-correlations`, { headers: careHeaders(idToken) });
+  await requireOk(response, "Não foi possível consultar as correlações clínicas.");
+  const payload = await response.json();
+  const data = Array.isArray(payload) ? payload : payload?.correlations;
+  if (!Array.isArray(data)) return [];
+  return data.map((item: any) => ({
+    type: item.type ?? item.event_type ?? "CLINICAL_PATTERN",
+    severity: item.severity ?? (item.event_type === "BLOOD_PRESSURE_PEAK" ? "HIGH" : "MEDIUM"),
+    title: item.title ?? (item.event_type === "BLOOD_PRESSURE_PEAK" ? "Pico de pressão associado à rotina" : item.event_type === "GLUCOSE_PEAK" ? "Pico de glicemia associado à rotina" : "Padrão detectado"),
+    description: item.description ?? [item.observation, ...(Array.isArray(item.evidence) ? item.evidence : [])].filter(Boolean).join(" "),
+    observedAt: item.observed_at ?? item.observedAt ?? item.event_at ?? new Date().toISOString(),
+  }));
+}
+
+export async function downloadDoctorReportPdf(patientId: string, days = 30, idToken?: string): Promise<Blob> {
+  const response = await fetch(`${API_BASE_URL}/api/family/patients/${encodeURIComponent(patientId)}/doctor-report/pdf?days=${days}`, { headers: careHeaders(idToken) });
+  await requireOk(response, "Não foi possível gerar o relatório médico.");
+  return response.blob();
+}
+
+export async function generateMedicalAccess(patientId: string, idToken?: string): Promise<MedicalAccessGrant> {
+  const response = await fetch(`${API_BASE_URL}/api/patients/${encodeURIComponent(patientId)}/medical-access/generate`, {
+    method: "POST", headers: careHeaders(idToken, true), body: JSON.stringify({ purpose: "CONSULTATION" }),
+  });
+  await requireOk(response, "Não foi possível gerar o acesso temporário.");
+  const item = await response.json();
+  return {
+    accessToken: item.access_token ?? item.accessToken, magicLink: item.magic_link ?? item.magicLink,
+    qrCodePayload: item.qr_code_payload ?? item.qrCodePayload, expiresAt: item.expires_at ?? item.expiresAt,
+    expiresInSeconds: Number(item.expires_in_seconds ?? item.expiresInSeconds ?? 7200),
+  };
+}
+
+export async function fetchAnvisaByBarcode(ean: string, idToken?: string): Promise<BarcodeMedication> {
+  const response = await fetch(`${API_BASE_URL}/api/anvisa/medications/barcode/${encodeURIComponent(ean)}`, { headers: careHeaders(idToken) });
+  await requireOk(response, "Código não localizado na base da ANVISA.");
+  const item = await response.json();
+  return {
+    eanBarcode: item.ean_barcode ?? item.eanBarcode ?? ean, name: item.name,
+    activePrinciple: item.active_principle ?? item.activePrinciple ?? null,
+    concentration: item.concentration ?? null,
+    pharmaceuticalForm: item.pharmaceutical_form ?? item.pharmaceuticalForm ?? null,
+    manufacturer: item.manufacturer ?? null,
+    farmaciaPopularEligible: item.farmacia_popular_eligible ?? item.farmaciaPopularEligible ?? null,
+    sourceName: item.source_name ?? item.sourceName ?? "ANVISA", sourceUrl: item.source_url ?? item.sourceUrl ?? null,
+    sourceCheckedAt: item.source_checked_at ?? item.sourceCheckedAt ?? new Date().toISOString(),
+  };
+}
+
+export async function createMedication(patientId: string, input: MedicationCreateInput, idToken?: string): Promise<void> {
+  const response = await fetch(`${API_BASE_URL}/api/family/patients/${encodeURIComponent(patientId)}/medications`, {
+    method: "POST", headers: careHeaders(idToken, true),
+    body: JSON.stringify({
+      ean_barcode: input.eanBarcode || null, name: input.name,
+      active_principle: input.activePrinciple || null, manufacturer: input.manufacturer || null,
+      pharmaceutical_form: input.pharmaceuticalForm || null, schedule_times: input.scheduleTimes,
+      total_units: input.totalUnits, alert_threshold_days: input.alertThresholdDays,
+      confirmed_with_prescription: input.confirmedWithPrescription,
+    }),
+  });
+  await requireOk(response, "Não foi possível cadastrar o medicamento.");
 }
 

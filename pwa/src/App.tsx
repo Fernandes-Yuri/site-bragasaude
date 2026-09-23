@@ -1,6 +1,6 @@
 import { familyGroups, resolveFamilyGroup } from './services/familyGroups';
 import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
-import { PhoneCall, CheckCircle2, AlertCircle, MessageSquare, UserPlus, Home, MessageCircle, User as UserIcon } from "lucide-react";
+import { PhoneCall, CheckCircle2, AlertCircle, MessageSquare, UserPlus, Home, MessageCircle, User as UserIcon, FileText } from "lucide-react";
 import {
   auth,
   signOut,
@@ -17,10 +17,14 @@ import {
   syncCaregiverPhone,
   readTotpSecret,
   clearTotpSecret,
+  fetchMedicationStock,
+  fetchActivityFeed,
+  fetchDailyBulletin,
+  fetchClinicalCorrelations,
 } from "./services/api";
-import { loadGroceryItems, toggleGroceryItemPantry } from "./services/grocery";
+import { loadGroceryItems, persistGroceryItem, toggleGroceryItemPantry } from "./services/grocery";
 import { queueMessage, flushMessageQueue, clearMessageQueue } from "./services/messageQueue";
-import type { CaregiverDashboardState, GroceryItem, VitalHistoryRecord, FamilyBinding } from "./types";
+import type { CaregiverDashboardState, GroceryItem, VitalHistoryRecord, FamilyBinding, MedicationStockItem, ActivityFeedItem, DailyBulletin, ClinicalCorrelation } from "./types";
 import { EmeraldHeaderBanner } from "./components/EmeraldHeaderBanner";
 import { PatientHeaderCard } from "./components/PatientHeaderCard";
 import { TodayVitalsCard } from "./components/TodayVitalsCard";
@@ -30,6 +34,11 @@ import { QuickMessagesCard } from "./components/QuickMessagesCard";
 import { ProfileScreen } from "./components/ProfileScreen";
 import { FamilyChatScreen } from "./components/FamilyChatScreen";
 import { VoiceAssistant } from "./components/VoiceAssistant";
+import { MedicationStockSection } from "./components/MedicationStockSection";
+import { DailyBulletinCard } from "./components/DailyBulletinCard";
+import { ActivityFeedTimeline } from "./components/ActivityFeedTimeline";
+import { ClinicalCorrelationsAlert } from "./components/ClinicalCorrelationsAlert";
+import { DoctorReportModal } from "./components/DoctorReportModal";
 
 // Code-Splitting: componentes pesados carregados sob demanda
 const LoginScreen = React.lazy(() =>
@@ -82,6 +91,7 @@ export const App: React.FC = () => {
   const [toastType, setToastType] = useState<"success" | "error">("success");
   // AUD-PW(B): timer do toast — ver showToast.
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const careOsRequest = useRef(0);
 
   // Estados dos modais de diálogo
   const [showMedicationDialog, setShowMedicationDialog] = useState(false);
@@ -89,8 +99,14 @@ export const App: React.FC = () => {
   const [showCareNoteDialog, setShowCareNoteDialog] = useState(false);
   const [showConnectModal, setShowConnectModal] = useState(false);
   const [showPhoneLinkDialog, setShowPhoneLinkDialog] = useState(false);
+  const [showDoctorReport, setShowDoctorReport] = useState(false);
+  const [medicationStock, setMedicationStock] = useState<MedicationStockItem[]>([]);
+  const [activityFeed, setActivityFeed] = useState<ActivityFeedItem[]>([]);
+  const [dailyBulletin, setDailyBulletin] = useState<DailyBulletin | null>(null);
+  const [clinicalCorrelations, setClinicalCorrelations] = useState<ClinicalCorrelation[]>([]);
+  const [careOsLoading, setCareOsLoading] = useState(false);
 
-  const showToast = (msg: string, type: "success" | "error" = "success") => {
+  const showToast = useCallback((msg: string, type: "success" | "error" = "success") => {
     setToastMessage(msg);
     setToastType(type);
     // AUD-PW(B): antes, dois toasts em <3.5s faziam o timer DO PRIMEIRO
@@ -98,7 +114,7 @@ export const App: React.FC = () => {
     // atual; cada showToast limpa o anterior antes de armar o novo.
     if (toastTimer.current) clearTimeout(toastTimer.current);
     toastTimer.current = setTimeout(() => setToastMessage(null), 3500);
-  };
+  }, []);
 
   // Monitorar autenticação do Firebase em tempo real
   useEffect(() => {
@@ -160,6 +176,56 @@ export const App: React.FC = () => {
     return () => { cancelled = true; };
   }, [chatPatientId, currentUser, groups]);
 
+  const refreshCareOs = useCallback(async (showLoading = false, reset = false) => {
+    await Promise.resolve();
+    const requestId = ++careOsRequest.current;
+    if (!chatPatientId || !currentUser) {
+      setMedicationStock([]);
+      setActivityFeed([]);
+      setDailyBulletin(null);
+      setClinicalCorrelations([]);
+      setCareOsLoading(false);
+      return;
+    }
+    if (showLoading) setCareOsLoading(true);
+    if (reset) {
+      setMedicationStock([]);
+      setActivityFeed([]);
+      setDailyBulletin(null);
+      setClinicalCorrelations([]);
+    }
+    try {
+      const token = await currentUser.getIdToken();
+      const [stock, feed, bulletin, correlations] = await Promise.allSettled([
+        fetchMedicationStock(chatPatientId, token),
+        fetchActivityFeed(chatPatientId, 50, token),
+        fetchDailyBulletin(chatPatientId, undefined, token),
+        fetchClinicalCorrelations(chatPatientId, token),
+      ]);
+      if (requestId !== careOsRequest.current) return;
+      if (stock.status === "fulfilled") setMedicationStock(stock.value);
+      if (feed.status === "fulfilled") setActivityFeed(feed.value);
+      if (bulletin.status === "fulfilled") setDailyBulletin(bulletin.value);
+      if (correlations.status === "fulfilled") setClinicalCorrelations(correlations.value);
+      const failures = [stock, feed, bulletin, correlations].filter((result) => result.status === "rejected");
+      if (failures.length) console.warn(`${failures.length} área(s) do Care OS não puderam ser atualizadas.`);
+    } catch (error) {
+      console.warn("Care OS indisponível:", error);
+    } finally {
+      if (requestId === careOsRequest.current) setCareOsLoading(false);
+    }
+  }, [chatPatientId, currentUser]);
+
+  useEffect(() => {
+    const initialRefresh = window.setTimeout(() => void refreshCareOs(true, true), 0);
+    if (!chatPatientId || !currentUser) return () => window.clearTimeout(initialRefresh);
+    const interval = window.setInterval(() => void refreshCareOs(false), 30_000);
+    return () => {
+      window.clearTimeout(initialRefresh);
+      window.clearInterval(interval);
+    };
+  }, [chatPatientId, currentUser, refreshCareOs]);
+
   // Carregar lista de compras persistida localmente (offline-first)
   useEffect(() => {
     loadGroceryItems().then((items) => {
@@ -185,7 +251,7 @@ export const App: React.FC = () => {
     flushMessageQueue(getToken);
 
     return () => window.removeEventListener("online", handleOnline);
-  }, [currentUser]);
+  }, [currentUser, showToast]);
 
   // Segredo TOTP do vinculo de WhatsApp: vem do backend (que agora garante um
   // para toda conta) e e cacheado no localStorage. Antes era gerado so no
@@ -215,6 +281,24 @@ export const App: React.FC = () => {
       if (item) toggleGroceryItemPantry(id, item.isCheckedInPantry);
       return updated;
     });
+  };
+
+  const handleAddMedicationToShoppingList = (medication: MedicationStockItem) => {
+    const itemId = `med-${medication.id}`;
+    if (groceryItems.some((item) => item.id === itemId)) {
+      showToast(`${medication.name} já está na lista de compras.`);
+      return;
+    }
+    const item: GroceryItem = {
+      id: itemId,
+      foodName: medication.name,
+      purchaseUnitText: "1 embalagem",
+      category: "Farmácia",
+      isCheckedInPantry: false,
+    };
+    setGroceryItems((current) => [...current, item]);
+    void persistGroceryItem(item);
+    showToast(`${medication.name} adicionado à lista de compras.`);
   };
 
   const handleSendMessage = async (
@@ -284,6 +368,7 @@ export const App: React.FC = () => {
         const idToken = await currentUser.getIdToken(true);
         const bindings = await fetchFamilyBindings(currentUser.uid, idToken);
         setBindings(bindings);
+        await refreshCareOs(false);
         succeeded = true;
       }
     } catch (e) {
@@ -481,8 +566,53 @@ export const App: React.FC = () => {
         {/* Identificação do Familiar Acompanhado */}
         <PatientHeaderCard state={dashboard} />
 
+        <MedicationStockSection
+          mode="alert"
+          items={medicationStock}
+          patientId={dashboard.patientUserId}
+          patientName={dashboard.patientName}
+          getIdToken={getChatToken}
+          onAddToShoppingList={handleAddMedicationToShoppingList}
+          onMedicationCreated={() => void refreshCareOs(true)}
+          onToast={showToast}
+        />
+
+        <DailyBulletinCard
+          bulletin={dailyBulletin}
+          patientName={dashboard.patientName}
+          isLoading={careOsLoading}
+          onToast={showToast}
+        />
+
+        <ClinicalCorrelationsAlert correlations={clinicalCorrelations} />
+
         {/* Card de Sinais Vitais de Hoje */}
         <TodayVitalsCard state={dashboard} />
+
+        <MedicationStockSection
+          items={medicationStock}
+          patientId={dashboard.patientUserId}
+          patientName={dashboard.patientName}
+          getIdToken={getChatToken}
+          onAddToShoppingList={handleAddMedicationToShoppingList}
+          onMedicationCreated={() => void refreshCareOs(true)}
+          onToast={showToast}
+        />
+
+        <ActivityFeedTimeline items={activityFeed} />
+
+        {dashboard.patientUserId && <button
+          onClick={() => setShowDoctorReport(true)}
+          className="w-full rounded-2xl bg-[#004D40] p-4 text-white flex items-center gap-3 text-left shadow-sm"
+        >
+          <span className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center">
+            <FileText className="w-5 h-5" />
+          </span>
+          <span>
+            <strong className="block text-sm">Leva pro Doutor</strong>
+            <span className="text-xs text-white/75">PDF de 30 dias ou QR Code temporário</span>
+          </span>
+        </button>}
 
         {/* Ações Rápidas em Chips Horizontais */}
         <QuickActionsChips
@@ -710,6 +840,15 @@ export const App: React.FC = () => {
             }}
           />
         )}
+
+        <DoctorReportModal
+          isOpen={showDoctorReport}
+          patientId={dashboard.patientUserId}
+          patientName={dashboard.patientName}
+          getIdToken={getChatToken}
+          onClose={() => setShowDoctorReport(false)}
+          onToast={showToast}
+        />
 
         <InstallPromptBanner />
       </React.Suspense>

@@ -42,7 +42,7 @@ export interface GroceryItem {
   foodName: string;
   purchaseUnitText: string;
   category: string;
-  estimatedPriceBrl: number;
+  estimatedPriceBrl?: number;
   isCheckedInPantry: boolean;
 }
 
@@ -72,5 +72,81 @@ export interface VitalHistoryRecord {
   glucose?: number;
   hydrationMl?: number;
   steps?: number;
+}
+
+export interface MedicationStockItem {
+  id: string;
+  name: string;
+  activePrinciple?: string | null;
+  pharmaceuticalForm?: string | null;
+  currentUnits: number;
+  totalUnits: number;
+  alertThresholdDays: number;
+  daysRemaining: number;
+  isCritical: boolean;
+  photoReferenceUrl?: string | null;
+  prescriptionExpiresOn?: string | null;
+}
+
+export interface ActivityFeedItem {
+  id: string;
+  actorId: string;
+  actorName: string;
+  actionType: string;
+  details: Record<string, unknown>;
+  occurredAt: string;
+}
+
+export interface DailyBulletin {
+  patientId: string;
+  day: string;
+  medicationsTaken: number;
+  medicationsExpected: number;
+  latestBloodPressure: { systolic: number; diastolic: number; measuredAt: string } | null;
+  hydrationMl: number;
+  hydrationTargetMl: number;
+  sleepQuality?: number | null;
+  disposition?: number | null;
+}
+
+export interface ClinicalCorrelation {
+  type: string;
+  severity: "LOW" | "MEDIUM" | "HIGH";
+  title: string;
+  description: string;
+  observedAt: string;
+}
+
+export interface MedicalAccessGrant {
+  accessToken: string;
+  magicLink: string;
+  qrCodePayload: string;
+  expiresAt: string;
+  expiresInSeconds: number;
+}
+
+export interface BarcodeMedication {
+  eanBarcode: string;
+  name: string;
+  activePrinciple?: string | null;
+  concentration?: string | null;
+  pharmaceuticalForm?: string | null;
+  manufacturer?: string | null;
+  farmaciaPopularEligible?: boolean | null;
+  sourceName: string;
+  sourceUrl?: string | null;
+  sourceCheckedAt: string;
+}
+
+export interface MedicationCreateInput {
+  eanBarcode?: string | null;
+  name: string;
+  activePrinciple?: string | null;
+  manufacturer?: string | null;
+  pharmaceuticalForm?: string | null;
+  scheduleTimes: string[];
+  totalUnits: number;
+  alertThresholdDays: number;
+  confirmedWithPrescription: boolean;
 }
 

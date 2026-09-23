@@ -30,3 +30,11 @@ export async function toggleGroceryItemPantry(
     console.warn("Falha ao atualizar item local:", err);
   }
 }
+
+export async function persistGroceryItem(item: GroceryItem): Promise<void> {
+  try {
+    await db.groceryItems.put(item);
+  } catch (err) {
+    console.warn("Falha ao salvar item na lista local:", err);
+  }
+}
