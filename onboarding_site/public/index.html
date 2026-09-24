@@ -248,7 +248,7 @@
         "description": "Aplicativo assistente de saúde para registro e controle de pressão arterial, glicemia, hidratação, remédios e acompanhamento familiar com alertas via WhatsApp.",
         "url": "https://bragasaude.online/",
         "downloadUrl": "https://api.bragasaude.online/api/app/download",
-        "softwareVersion": "1.2.4",
+        "softwareVersion": "1.2.7",
         "fileSize": "35MB"
       },
       {
@@ -428,8 +428,22 @@
               </div>
               <p class="hero-download-note">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="16" y2="12"/><line x1="12" x2="12.01" y1="8" y2="8"/></svg>
-                <span class="hero-download-note-text">Android: <strong>APK oficial <span data-braga-version>v1.2.4</span></strong> disponível. iPhone: <strong>Modo Cuidador PWA</strong> pronto — instala na sua tela inicial.</span>
+                <span class="hero-download-note-text">Android: <strong>APK oficial <span data-braga-version>v1.2.7</span></strong> disponível. iPhone: <strong>Modo Cuidador PWA</strong> pronto — instala na sua tela inicial.</span>
               </p>
+              <!-- Card de Integridade & Hash SHA-256 Oficial (Pré-Download) -->
+              <div class="hero-download-integrity" id="apk-integrity-container">
+                <div class="integrity-header">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg>
+                  <span>Assinatura Digital & Integridade (SHA-256):</span>
+                </div>
+                <div class="integrity-hash-box">
+                  <code id="apk-sha256-hash" class="integrity-hash-code">40678E7817E82CDF5C9411532B7C624A2312AF26BAFC31016F056841757C61FE</code>
+                  <button type="button" id="btn-copy-hash" class="btn-copy-hash" title="Copiar Hash SHA-256">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                    <span id="copy-hash-label">Copiar</span>
+                  </button>
+                </div>
+              </div>
             </div>
 
             <div class="hero-trust-badges">
@@ -1207,7 +1221,7 @@
           <details class="faq-item">
             <summary>Onde posso baixar a versão oficial mais recente?</summary>
             <div class="faq-answer">
-              <p>Você pode fazer o download do <strong>APK oficial assinado (<span data-braga-version>v1.2.4</span>)</strong> diretamente nesta página no botão <em>"Baixar para Android"</em> ou acessar o repositório de lançamentos no GitHub. O aplicativo é compatível com Android 8.0 ou superior.</p>
+              <p>Você pode fazer o download do <strong>APK oficial assinado (<span data-braga-version>v1.2.7</span>)</strong> diretamente nesta página no botão <em>"Baixar para Android"</em> ou acessar o repositório de lançamentos no GitHub. O aplicativo é compatível com Android 8.0 ou superior.</p>
             </div>
           </details>
         </div>
@@ -1502,30 +1516,71 @@
   <script>
     (function() {
       var els = document.querySelectorAll('[data-braga-version]');
-      if (!els.length) return;
+      var hashEl = document.getElementById('apk-sha256-hash');
+      var modalHashEl = document.getElementById('modal-apk-sha256');
+
       fetch('https://api.bragasaude.online/api/app/latest', { cache: 'no-store' })
         .then(function(r) { return r.ok ? r.json() : null; })
         .then(function(data) {
-          if (!data || !data.version_name) return;
-          var v = data.version_name;
-          els.forEach(function(el) { el.textContent = v; });
-          // JSON-LD (SoftwareApplication.softwareVersion) para indexação
-          try {
-            var node = document.getElementById('braga-ldjson');
-            if (node) {
-              var ld = JSON.parse(node.textContent);
-              (ld['@graph'] || [ld]).forEach(function(g) {
-                if (g && g['@type'] === 'SoftwareApplication' && g.softwareVersion !== undefined) {
-                  g.softwareVersion = v.replace(/^v/, '');
-                }
-              });
-              node.textContent = JSON.stringify(ld);
-            }
-          } catch (e) {}
+          if (!data) return;
+          if (data.version_name && els.length) {
+            var v = data.version_name;
+            els.forEach(function(el) { el.textContent = v; });
+            try {
+              var node = document.getElementById('braga-ldjson');
+              if (node) {
+                var ld = JSON.parse(node.textContent);
+                (ld['@graph'] || [ld]).forEach(function(g) {
+                  if (g && g['@type'] === 'SoftwareApplication' && g.softwareVersion !== undefined) {
+                    g.softwareVersion = v.replace(/^v/, '');
+                  }
+                });
+                node.textContent = JSON.stringify(ld);
+              }
+            } catch (e) {}
+          }
+          if (data.sha256_hash) {
+            if (hashEl) hashEl.textContent = data.sha256_hash;
+            if (modalHashEl) modalHashEl.textContent = data.sha256_hash;
+          }
         })
         .catch(function() { /* mantém o fallback hardcoded */ });
     })();
   </script>
+
+  <!-- ── Modal de Segurança no Ato do Download (SHA-256) ── -->
+  <div class="download-modal-overlay" id="download-security-modal" role="dialog" aria-modal="true" aria-labelledby="download-modal-title">
+    <div class="download-modal-card">
+      <div class="download-modal-header">
+        <div class="download-modal-title" id="download-modal-title">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#00A884" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg>
+          Download do APK Oficial Iniciado
+        </div>
+        <button type="button" class="download-modal-close" id="btn-close-download-modal" aria-label="Fechar">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+      <div class="download-modal-body">
+        <p>Seu download de <strong>BragaSaude.apk (<span data-braga-version>v1.2.7</span>)</strong> está em andamento. Para garantir autenticidade e segurança contra adulterações, compare o hash do pacote:</p>
+        <div class="download-modal-box">
+          <span class="download-modal-box-label">Hash SHA-256 Oficial do Pacote:</span>
+          <div class="integrity-hash-box">
+            <code id="modal-apk-sha256" class="integrity-hash-code">40678E7817E82CDF5C9411532B7C624A2312AF26BAFC31016F056841757C61FE</code>
+            <button type="button" id="modal-btn-copy-hash" class="btn-copy-hash" title="Copiar Hash">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+              <span id="modal-copy-hash-label">Copiar</span>
+            </button>
+          </div>
+        </div>
+        <p style="font-size: 0.82rem; color: #64748B;">
+          ℹ️ <strong>Dica de instalação:</strong> Se o Android alertar <em>"App de fonte desconhecida"</em>, toque em <em>"Mais detalhes"</em> e confirme em <em>"Instalar assim mesmo"</em>. Nosso aplicativo é 100% verificado, seguro e assinado digitalmente.
+        </p>
+      </div>
+      <div class="download-modal-actions">
+        <button type="button" class="download-modal-btn-primary" id="btn-confirm-download-modal">Entendi</button>
+      </div>
+    </div>
+  </div>
 
 </body>
 </html>

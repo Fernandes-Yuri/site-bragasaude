@@ -85,3 +85,179 @@
     justify-content: center;
   }
 }
+
+/* ── Integridade e Hash SHA-256 (Pré-Download) ── */
+.hero-download-integrity {
+  margin-top: 10px;
+  padding: 10px 14px;
+  background: rgba(0, 168, 132, 0.05);
+  border: 1px solid rgba(0, 168, 132, 0.2);
+  border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 0.8rem;
+}
+
+.integrity-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #00A884;
+  font-weight: 600;
+}
+
+.integrity-hash-box {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  background: rgba(15, 23, 42, 0.04);
+  padding: 6px 10px;
+  border-radius: 6px;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.integrity-hash-code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.72rem;
+  color: #334155;
+  word-break: break-all;
+  user-select: all;
+}
+
+.btn-copy-hash {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: #00A884;
+  color: #ffffff;
+  border: none;
+  padding: 5px 10px;
+  border-radius: 6px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.2s ease;
+  flex-shrink: 0;
+}
+
+.btn-copy-hash:hover {
+  background: #008769;
+}
+
+/* ── Modal de Segurança no Ato do Download ── */
+.download-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.6);
+  backdrop-filter: blur(4px);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.25s ease;
+}
+
+.download-modal-overlay.active {
+  opacity: 1;
+  visibility: visible;
+}
+
+.download-modal-card {
+  background: #ffffff;
+  border-radius: 20px;
+  max-width: 520px;
+  width: 100%;
+  padding: 24px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  transform: translateY(20px);
+  transition: transform 0.25s ease;
+}
+
+.download-modal-overlay.active .download-modal-card {
+  transform: translateY(0);
+}
+
+.download-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.download-modal-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #1E293B;
+}
+
+.download-modal-close {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #64748B;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.download-modal-body {
+  font-size: 0.9rem;
+  color: #475569;
+  line-height: 1.5;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.download-modal-box {
+  background: #F8FAFC;
+  border: 1px solid #E2E8F0;
+  border-radius: 12px;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.download-modal-box-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #64748B;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.download-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.download-modal-btn-primary {
+  background: #00A884;
+  color: #ffffff;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 10px;
+  font-weight: 700;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.download-modal-btn-primary:hover {
+  background: #008769;
+}

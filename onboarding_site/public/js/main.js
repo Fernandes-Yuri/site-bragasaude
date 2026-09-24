@@ -418,19 +418,75 @@
       btnDownloadAPK.style.display = 'none';
     }
     
-    // Botão de download APK — via API do gateway (/api/app/download), NÃO via
-    // GitHub Releases. AUD-PW(B): o comentário aqui embaixo dizia "GitHub
-    // Releases (CDN global ultra-rápida)" — mentira; o href real é o endpoint
-    // do gateway. Corrigido para descrever o que o botão faz de verdade.
+    // Modal de confirmação e integridade SHA-256 no ato do download
+    const securityModal = document.getElementById('download-security-modal');
+    const btnCloseModal = document.getElementById('btn-close-download-modal');
+    const btnConfirmModal = document.getElementById('btn-confirm-download-modal');
+
+    function openSecurityModal() {
+      if (securityModal) {
+        securityModal.classList.add('active');
+        document.body.style.overflow = 'hidden';
+      }
+    }
+
+    function closeSecurityModal() {
+      if (securityModal) {
+        securityModal.classList.remove('active');
+        document.body.style.overflow = '';
+      }
+    }
+
+    if (btnCloseModal) btnCloseModal.addEventListener('click', closeSecurityModal);
+    if (btnConfirmModal) btnConfirmModal.addEventListener('click', closeSecurityModal);
+    if (securityModal) {
+      securityModal.addEventListener('click', (e) => {
+        if (e.target === securityModal) closeSecurityModal();
+      });
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && securityModal.classList.contains('active')) {
+          closeSecurityModal();
+        }
+      });
+    }
+
+    // Função de cópia do Hash SHA-256 com feedback
+    function setupCopyButton(btnId, codeId, labelId) {
+      const btn = document.getElementById(btnId);
+      const code = document.getElementById(codeId);
+      const label = document.getElementById(labelId);
+      if (!btn || !code) return;
+      btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        const hashText = code.textContent.trim();
+        if (!hashText || hashText.includes('...')) return;
+        navigator.clipboard.writeText(hashText).then(() => {
+          const original = label ? label.textContent : '';
+          if (label) label.textContent = 'Copiado!';
+          btn.style.background = '#00695C';
+          setTimeout(() => {
+            if (label) label.textContent = original;
+            btn.style.background = '';
+          }, 2000);
+        }).catch(() => {
+          const range = document.createRange();
+          range.selectNodeContents(code);
+          const sel = window.getSelection();
+          sel.removeAllRanges();
+          sel.addRange(range);
+        });
+      });
+    }
+
+    setupCopyButton('btn-copy-hash', 'apk-sha256-hash', 'copy-hash-label');
+    setupCopyButton('modal-btn-copy-hash', 'modal-apk-sha256', 'modal-copy-hash-label');
+
+    // Botão de download APK — dispara download e exibe o modal com a hash oficial
     if (btnDownloadAPK) {
       btnDownloadAPK.addEventListener('click', () => {
         console.log('[Braga Saúde] Download do APK iniciado via /api/app/download');
-        setTimeout(() => {
-          const guide = document.getElementById('como-instalar');
-          if (guide) {
-            guide.scrollIntoView({ behavior: 'smooth', block: 'start' });
-          }
-        }, 300);
+        openSecurityModal();
       });
     }
     
