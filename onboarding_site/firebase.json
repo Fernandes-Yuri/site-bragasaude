@@ -12,6 +12,22 @@
         "destination": "/app/index.html"
       },
       {
+        "source": "/privacidade",
+        "destination": "/privacidade.html"
+      },
+      {
+        "source": "/privacy",
+        "destination": "/privacidade.html"
+      },
+      {
+        "source": "/termos",
+        "destination": "/termos.html"
+      },
+      {
+        "source": "/terms",
+        "destination": "/termos.html"
+      },
+      {
         "source": "**",
         "destination": "/index.html"
       }
