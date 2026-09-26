@@ -21,6 +21,7 @@ import {
   fetchActivityFeed,
   fetchDailyBulletin,
   fetchClinicalCorrelations,
+  revokeFamilyBinding,
 } from "./services/api";
 import { loadGroceryItems, persistGroceryItem, toggleGroceryItemPantry } from "./services/grocery";
 import { queueMessage, flushMessageQueue, clearMessageQueue } from "./services/messageQueue";
@@ -33,6 +34,8 @@ import { SharedGroceryListCard } from "./components/SharedGroceryListCard";
 import { QuickMessagesCard } from "./components/QuickMessagesCard";
 import { ProfileScreen } from "./components/ProfileScreen";
 import { FamilyChatScreen } from "./components/FamilyChatScreen";
+import { FamilyInboxList } from "./components/FamilyInboxList";
+import { FamilyMemberProfileModal } from "./components/FamilyMemberProfileModal";
 import { VoiceAssistant } from "./components/VoiceAssistant";
 import { MedicationStockSection } from "./components/MedicationStockSection";
 import { DailyBulletinCard } from "./components/DailyBulletinCard";
@@ -80,6 +83,8 @@ export const App: React.FC = () => {
   const [userPhone, setUserPhone] = useState<string | null>(null);
   const [bindings, setBindings] = useState<FamilyBinding[]>([]);
   const [selectedGroup, setSelectedGroup] = useState<string | null>(null);
+  const [showInboxList, setShowInboxList] = useState(false);
+  const [inspectingBinding, setInspectingBinding] = useState<FamilyBinding | null>(null);
   const groups = useMemo(() => familyGroups(bindings, currentUser?.uid || ''), [bindings, currentUser?.uid]);
   const chatPatientId = resolveFamilyGroup(bindings, currentUser?.uid || '', selectedGroup);
   const getChatToken = useCallback(async () => currentUser?.getIdToken(), [currentUser]);
@@ -93,6 +98,42 @@ export const App: React.FC = () => {
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const careOsRequest = useRef(0);
 
+  const showToast = useCallback((msg: string, type: "success" | "error" = "success") => {
+    setToastMessage(msg);
+    setToastType(type);
+    if (toastTimer.current) clearTimeout(toastTimer.current);
+    toastTimer.current = setTimeout(() => setToastMessage(null), 3500);
+  }, []);
+
+  const handleRevokeBinding = useCallback(async (binding: FamilyBinding) => {
+    if (!currentUser) return;
+    try {
+      const token = await currentUser.getIdToken();
+      const ok = await revokeFamilyBinding(binding, token);
+      if (ok) {
+        showToast(`Vínculo com ${binding.patientName || binding.caregiverName || "familiar"} revogado com sucesso`);
+        const freshBindings = await fetchFamilyBindings(currentUser.uid, token);
+        setBindings(freshBindings);
+        const remaining = familyGroups(freshBindings, currentUser.uid);
+        if (binding.patientUserId === chatPatientId) {
+          if (remaining.length > 0) {
+            setSelectedGroup(remaining[0].patientUserId);
+          } else {
+            setSelectedGroup(null);
+            setDashboard(EMPTY_CAREGIVER_STATE);
+            setHistoryRecords([]);
+          }
+        }
+        setInspectingBinding(null);
+      } else {
+        showToast("Não foi possível revogar o vínculo. Verifique sua conexão.", "error");
+      }
+    } catch (err) {
+      console.warn("Erro ao revogar vínculo:", err);
+      showToast("Erro ao revogar o vínculo", "error");
+    }
+  }, [currentUser, chatPatientId, showToast]);
+
   // Estados dos modais de diálogo
   const [showMedicationDialog, setShowMedicationDialog] = useState(false);
   const [showAppointmentDialog, setShowAppointmentDialog] = useState(false);
@@ -105,16 +146,6 @@ export const App: React.FC = () => {
   const [dailyBulletin, setDailyBulletin] = useState<DailyBulletin | null>(null);
   const [clinicalCorrelations, setClinicalCorrelations] = useState<ClinicalCorrelation[]>([]);
   const [careOsLoading, setCareOsLoading] = useState(false);
-
-  const showToast = useCallback((msg: string, type: "success" | "error" = "success") => {
-    setToastMessage(msg);
-    setToastType(type);
-    // AUD-PW(B): antes, dois toasts em <3.5s faziam o timer DO PRIMEIRO
-    // apagar o segundo — a mensagem sumia antes da hora. Ref guarda o timer
-    // atual; cada showToast limpa o anterior antes de armar o novo.
-    if (toastTimer.current) clearTimeout(toastTimer.current);
-    toastTimer.current = setTimeout(() => setToastMessage(null), 3500);
-  }, []);
 
   // Monitorar autenticação do Firebase em tempo real
   useEffect(() => {
@@ -467,7 +498,7 @@ export const App: React.FC = () => {
         onOpenProfile={() => setActiveTab("profile")}
       />
 
-      {groups.length > 1 && (
+      {activeTab === "home" && groups.length > 1 && (
         <div className="px-4 py-3">
           <label htmlFor="family-group" className="block text-sm font-semibold mb-2">Grupo da família</label>
           <select id="family-group" value={chatPatientId} onChange={event => setSelectedGroup(event.target.value)}
@@ -489,16 +520,33 @@ export const App: React.FC = () => {
       {/* Conteúdo Principal — renderizado por aba */}
       {activeTab === "chat" ? (
         <main className="flex-1 flex flex-col min-h-0 overflow-hidden">
-          <FamilyChatScreen
-            key={`${currentUser.uid}:${chatPatientId}`}
-            patientId={chatPatientId}
-            patientName={dashboard.patientName}
-            currentUserId={currentUser.uid}
-            caregiverName={dashboard.caregiverName}
-            // AUD-PW03: getter no lugar da string — token sempre fresco.
-            getIdToken={getChatToken}
-            onToast={showToast}
-          />
+          {groups.length > 1 && (showInboxList || !chatPatientId) ? (
+            <FamilyInboxList
+              groups={groups}
+              currentUserId={currentUser.uid}
+              onSelectGroup={(pid) => {
+                setSelectedGroup(pid);
+                setShowInboxList(false);
+              }}
+              onOpenProfile={(b) => setInspectingBinding(b)}
+              onConnectFamily={() => setShowConnectModal(true)}
+            />
+          ) : (
+            <FamilyChatScreen
+              key={`${currentUser.uid}:${chatPatientId}`}
+              patientId={chatPatientId}
+              patientName={dashboard.patientName}
+              currentUserId={currentUser.uid}
+              caregiverName={dashboard.caregiverName}
+              getIdToken={getChatToken}
+              onToast={showToast}
+              onBackToInbox={groups.length > 1 ? () => setShowInboxList(true) : undefined}
+              onOpenProfile={() => {
+                const b = bindings.find((x) => x.patientUserId === chatPatientId) || groups.find((x) => x.patientUserId === chatPatientId);
+                if (b) setInspectingBinding(b);
+              }}
+            />
+          )}
         </main>
       ) : activeTab === "profile" ? (
         <main className="p-4 space-y-4 flex-1 pb-24 overflow-y-auto">
@@ -515,6 +563,7 @@ export const App: React.FC = () => {
             onLogout={handleLogout}
             totpSecret={totpSecret}
             whatsappLinkedPhone={userPhone}
+            onOpenMemberProfile={(b) => setInspectingBinding(b)}
           />
         </main>
       ) : (
@@ -848,6 +897,20 @@ export const App: React.FC = () => {
           getIdToken={getChatToken}
           onClose={() => setShowDoctorReport(false)}
           onToast={showToast}
+        />
+
+        <FamilyMemberProfileModal
+          isOpen={Boolean(inspectingBinding)}
+          onClose={() => setInspectingBinding(null)}
+          binding={inspectingBinding}
+          currentUserId={currentUser?.uid || ""}
+          onRevoke={handleRevokeBinding}
+          onGoToDashboard={() => {
+            if (inspectingBinding) {
+              setSelectedGroup(inspectingBinding.patientUserId);
+              setActiveTab("home");
+            }
+          }}
         />
 
         <InstallPromptBanner />

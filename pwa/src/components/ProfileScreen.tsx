@@ -7,6 +7,7 @@ import {
   LogOut,
   Users,
   ShieldCheck,
+  ChevronRight,
 } from "lucide-react";
 import type { FamilyBinding } from "../types";
 import { WhatsAppLinkButton } from "./WhatsAppLinkButton";
@@ -26,6 +27,7 @@ interface ProfileScreenProps {
   totpSecret?: string | null;
   /** Numero de WhatsApp ja vinculado (verificado pela Meta via webhook). */
   whatsappLinkedPhone?: string | null;
+  onOpenMemberProfile?: (binding: FamilyBinding) => void;
 }
 
 export const ProfileScreen: React.FC<ProfileScreenProps> = ({
@@ -41,6 +43,7 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
   onLogout,
   totpSecret,
   whatsappLinkedPhone,
+  onOpenMemberProfile,
 }) => {
   const initials = caregiverName
     ? caregiverName
@@ -140,25 +143,43 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
           </p>
         ) : (
           <div className="space-y-2 mb-3">
-            {activeBindings.map((b) => (
-              <div
-                key={b.id}
-                className="flex items-center gap-2.5 bg-[#F8FAFC] rounded-2xl p-2.5"
-              >
-                <div className="w-8 h-8 rounded-full bg-gradient-to-b from-[#26A69A] to-[#00897B] flex items-center justify-center text-xs font-bold text-white shrink-0">
-                  {b.caregiverName?.trim()?.charAt(0)?.toUpperCase() || "F"}
+            {activeBindings.map((b) => {
+              const memberName = b.patientName || b.caregiverName || "Familiar";
+              const memberInitial = memberName.trim().charAt(0).toUpperCase() || "F";
+              return (
+                <div
+                  key={b.id}
+                  className="flex items-center gap-2.5 bg-[#F8FAFC] rounded-2xl p-2.5 hover:bg-[#F1F5F9] transition-colors"
+                >
+                  <div className="w-8 h-8 rounded-full bg-gradient-to-b from-[#26A69A] to-[#00897B] flex items-center justify-center text-xs font-bold text-white shrink-0">
+                    {memberInitial}
+                  </div>
+                  <div
+                    className="min-w-0 flex-1 cursor-pointer"
+                    onClick={() => onOpenMemberProfile?.(b)}
+                  >
+                    <p className="text-sm font-semibold text-[#1E293B] truncate">
+                      {memberName}
+                    </p>
+                    <p className="text-[12px] text-[#64748B] truncate">
+                      {b.caregiverRelation || "Familiar"}
+                    </p>
+                  </div>
+                  <span className="w-2 h-2 rounded-full bg-[#26A69A] shrink-0" title="Online no grupo" />
+                  {onOpenMemberProfile && (
+                    <button
+                      type="button"
+                      onClick={() => onOpenMemberProfile(b)}
+                      className="p-1 rounded-lg text-slate-400 hover:text-[#00897B] hover:bg-emerald-50 active:scale-95 transition-all shrink-0"
+                      title="Ver perfil e vínculo"
+                      aria-label="Ver perfil e vínculo"
+                    >
+                      <ChevronRight className="w-4 h-4" />
+                    </button>
+                  )}
                 </div>
-                <div className="min-w-0 flex-1">
-                  <p className="text-sm font-semibold text-[#1E293B] truncate">
-                    {b.caregiverName || "Familiar"}
-                  </p>
-                  <p className="text-[12px] text-[#64748B] truncate">
-                    {b.caregiverRelation || "Familiar"}
-                  </p>
-                </div>
-                <span className="w-2 h-2 rounded-full bg-[#26A69A] shrink-0" title="Online no grupo" />
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
 
