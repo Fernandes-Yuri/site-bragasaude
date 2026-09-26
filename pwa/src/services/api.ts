@@ -540,6 +540,45 @@ export async function fetchFamilyBindings(
 }
 
 /**
+ * Revoga um vínculo familiar no Gateway (D64)
+ * Endpoint oficial: POST /api/sync/family-binding com status='REVOKED'
+ */
+export async function revokeFamilyBinding(
+  binding: FamilyBinding,
+  idToken?: string
+): Promise<boolean> {
+  try {
+    const headers: Record<string, string> = { "Content-Type": "application/json" };
+    if (idToken) headers["Authorization"] = `Bearer ${idToken}`;
+
+    const body = {
+      id: binding.id,
+      patientId: binding.patientUserId || "none",
+      caregiverId: binding.caregiverUserId || undefined,
+      caregiverName: binding.caregiverName || "Cuidador",
+      caregiverRelation: binding.caregiverRelation || "Familiar",
+      connectionCode: binding.connectionCode || "00000000",
+      status: "REVOKED",
+      createdAt: new Date(binding.createdAt || Date.now()).toISOString(),
+      expiresAt: new Date(binding.expiresAt || Date.now()).toISOString(),
+      caregiverRole: "CAREGIVER_VIEWER",
+      permissions: [],
+    };
+
+    const res = await fetch(`${API_BASE_URL}/api/sync/family-binding`, {
+      method: "POST",
+      headers,
+      body: JSON.stringify(body),
+    });
+
+    return res.ok;
+  } catch (err) {
+    console.warn("Falha ao revogar vínculo familiar:", err);
+    return false;
+  }
+}
+
+/**
  * Lista as mensagens da conversa em grupo do paciente.
  * Endpoint oficial: GET /api/family/messages/{patient_id}
  *

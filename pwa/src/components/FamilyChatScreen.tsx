@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
-import { Send, Mic, Volume2 } from "lucide-react";
+import { Send, Mic, Volume2, ArrowLeft, User } from "lucide-react";
 import {
   fetchFamilyMessages,
   sendCaregiverMessage,
@@ -13,13 +13,10 @@ interface FamilyChatScreenProps {
   patientName: string;
   currentUserId: string;
   caregiverName: string;
-  // AUD-PW03: era idToken?: string — uma snapshot capturada no onAuthStateChanged.
-  // O Firebase só dispara esse callback em login/logout, NÃO na renovação
-  // silenciosa do token (~1h). O idToken em estado envelhecia, o gateway
-  // passava a rejeitar com 401 e o chat sumia sem explicação. Agora resolvemos
-  // o token fresco no instante de cada chamada.
   getIdToken?: () => Promise<string | undefined>;
   onToast?: (msg: string) => void;
+  onBackToInbox?: () => void;
+  onOpenProfile?: () => void;
 }
 
 /**
@@ -37,6 +34,8 @@ export const FamilyChatScreen: React.FC<FamilyChatScreenProps> = ({
   caregiverName,
   getIdToken,
   onToast,
+  onBackToInbox,
+  onOpenProfile,
 }) => {
   const [messages, setMessages] = useState<FamilyMessage[]>([]);
   const [input, setInput] = useState("");
@@ -236,12 +235,62 @@ export const FamilyChatScreen: React.FC<FamilyChatScreenProps> = ({
 
   return (
     <div className="flex-1 flex flex-col min-h-0">
-      {/* Header do grupo */}
-      <div className="px-4 py-2.5 border-b border-[#E5EBE8] bg-white">
-        <p className="text-sm font-bold text-[#1E293B]">Chat da família</p>
-        <p className="text-[12px] text-[#64748B]">
-          Grupo de {patientName || "paciente"} · todos os cuidadores veem esta conversa
-        </p>
+      {/* Header da conversa interativo com avatar e perfil */}
+      <div className="px-3.5 py-2.5 border-b border-[#E5EBE8] bg-white flex items-center justify-between gap-2 shrink-0">
+        <div className="flex items-center gap-2.5 min-w-0 flex-1">
+          {onBackToInbox && (
+            <button
+              type="button"
+              onClick={onBackToInbox}
+              className="w-8 h-8 rounded-full flex items-center justify-center text-[#64748B] hover:bg-slate-100 active:scale-95 transition-all shrink-0"
+              title="Voltar para conversas"
+              aria-label="Voltar para conversas"
+            >
+              <ArrowLeft className="w-5 h-5 text-[#1E293B]" />
+            </button>
+          )}
+
+          {/* Avatar com inicial */}
+          <button
+            type="button"
+            onClick={onOpenProfile}
+            disabled={!onOpenProfile}
+            className="w-10 h-10 rounded-full bg-gradient-to-b from-[#26A69A] to-[#00897B] flex items-center justify-center text-sm font-bold text-white shrink-0 shadow-xs hover:opacity-90 active:scale-95 transition-all cursor-pointer"
+            title="Ver perfil do familiar"
+            aria-label="Ver perfil do familiar"
+          >
+            {(patientName || "F").trim().charAt(0).toUpperCase() || "F"}
+          </button>
+
+          {/* Nome e subtítulo interativo */}
+          <div
+            className={`min-w-0 flex-1 ${onOpenProfile ? "cursor-pointer" : ""}`}
+            onClick={onOpenProfile}
+            title={onOpenProfile ? "Toque para ver o perfil" : undefined}
+          >
+            <p className="text-sm font-bold text-[#1E293B] truncate leading-tight">
+              {patientName || "Familiar"}
+            </p>
+            <p className="text-[11px] text-[#00897B] font-medium truncate">
+              {onOpenProfile ? "Toque para ver perfil e vínculo" : "Conversa ativa · 24h efêmera"}
+            </p>
+          </div>
+        </div>
+
+        {/* Ações do header */}
+        <div className="flex items-center gap-1 shrink-0">
+          {onOpenProfile && (
+            <button
+              type="button"
+              onClick={onOpenProfile}
+              className="w-8 h-8 rounded-xl flex items-center justify-center text-[#64748B] hover:text-[#00897B] hover:bg-[#E0F2F1] active:scale-95 transition-all"
+              title="Perfil do familiar"
+              aria-label="Perfil do familiar"
+            >
+              <User className="w-4.5 h-4.5" />
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Lista de mensagens */}
