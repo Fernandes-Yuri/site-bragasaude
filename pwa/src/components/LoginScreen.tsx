@@ -1,6 +1,6 @@
 import { BragaLogo } from "./BragaLogo";
 import React, { useState, useCallback } from "react";
-import { Lock, Mail, User, ArrowRight, ShieldAlert, ShieldCheck, AlertCircle, Clock } from "lucide-react";
+import { Lock, Mail, User, ArrowRight, ShieldAlert, ShieldCheck, AlertCircle, Clock, Smartphone } from "lucide-react";
 import {
   auth,
   googleProvider,
@@ -10,6 +10,7 @@ import {
 } from "../services/firebase";
 import { GoogleRecaptchaWidget } from "./GoogleRecaptchaWidget";
 import { API_BASE_URL } from "../services/api";
+import { sendPhoneOtp, verifyPhoneOtp } from "../services/api";
 
 interface LoginScreenProps {
   onSuccess: () => void;
@@ -26,6 +27,13 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onSuccess }) => {
   const [error, setError] = useState<string | null>(null);
   const [isIpBlocked, setIsIpBlocked] = useState(false);
   const [lgpdAccepted, setLgpdAccepted] = useState(false);
+  // AUD-PW04: OTP verification step — cadastro agora exige verificação
+  // por código OTP antes de criar a conta no Firebase Auth, espelhando
+  // o fluxo do Android (otp/send → otp/verify).
+  const [otpCode, setOtpCode] = useState("");
+  const [otpSent, setOtpSent] = useState(false);
+  const [otpSending, setOtpSending] = useState(false);
+  const [otpError, setOtpError] = useState<string | null>(null);
 
   // useCallback: sem identidade estavel, cada tecla digitada recria o
   // RecaptchaVerifier (dep [onToken]), destruindo o widget resolvido.
@@ -109,7 +117,51 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onSuccess }) => {
         console.warn("Gateway check bypass:", gatewayErr);
       }
 
-      // 2. Autenticação oficial Firebase
+      // 2. OTP verification flow (AUD-PW04) — se já enviou, verifica.
+      //    Se não enviou, manda o código agora.
+      if (mode === "signup") {
+        if (!otpSent) {
+          // Envia OTP para o e-mail
+          setOtpSending(true);
+          try {
+            const otpResult = await sendPhoneOtp(email.trim());
+            if (!otpResult.success) {
+              setOtpError(otpResult.message || "Não foi possível enviar o código OTP. Tente novamente.");
+              setIsLoading(false);
+              return;
+            }
+            setOtpSent(true);
+            setOtpError(null);
+            setError("Código OTP enviado para " + email.trim() + ". Confira e digite abaixo.");
+            setIsLoading(false);
+            return;
+          } catch (otpErr) {
+            console.warn("Falha no envio do OTP:", otpErr);
+            setOtpError("Falha ao enviar o código OTP. Verifique sua conexão.");
+            setIsLoading(false);
+            return;
+          } finally {
+            setOtpSending(false);
+          }
+        }
+        // Se otpSent, verifica o código na próxima etapa (abaixo)
+      }
+
+      // 3. Verificação do código OTP para cadastro (AUD-PW04)
+      if (mode === "signup" && otpSent) {
+        if (!otpCode.trim()) {
+          setError("Informe o código OTP recebido.");
+          return;
+        }
+        setOtpError(null);
+        const otpVerify = await verifyPhoneOtp(email.trim(), otpCode.trim());
+        if (!otpVerify.success) {
+          setOtpError("Código OTP inválido ou expirado. Tente novamente.");
+          return;
+        }
+      }
+
+      // 4. Autenticação oficial Firebase
       if (mode === "login") {
         await signInWithEmailAndPassword(auth, email.trim(), password);
       } else {
@@ -153,6 +205,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onSuccess }) => {
 
       {/* Card do Formulário */}
       <div className="bg-white rounded-3xl p-6 border border-[#E5EBE8] shadow-sm my-6">
+        {/* Erro principal */}
         {isIpBlocked ? (
           <div className="mb-4 p-4 rounded-2xl bg-[#FFF5F2] border-2 border-[#D9532F] flex flex-col gap-2 text-sm text-[#D9532F] shadow-sm">
             <div className="flex items-center gap-2 font-bold text-sm">
@@ -174,6 +227,14 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onSuccess }) => {
             <span>{error}</span>
           </div>
         ) : null}
+
+        {/* Erro OTP (AUD-PW04) */}
+        {otpError && (
+          <div className="mb-3 p-3 rounded-2xl bg-[#FFF5F2] border border-[#D9532F]/30 flex items-start gap-2.5 text-sm text-[#D9532F]">
+            <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+            <span>{otpError}</span>
+          </div>
+        )}
 
         {/* 1. Botão Oficial Google Sign-In */}
         <button
@@ -303,12 +364,56 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onSuccess }) => {
           {/* Widget Oficial Google reCAPTCHA / Firebase Captcha */}
           <GoogleRecaptchaWidget onToken={handleCaptchaToken} />
 
+          {/* AUD-PW04: Campo de verificação OTP para cadastro */}
+          {mode === "signup" && otpSent && (
+            <div className="space-y-3">
+              <div className="relative">
+                <Smartphone className="w-4 h-4 text-[#64748B] absolute left-3.5 top-3" />
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  maxLength={6}
+                  placeholder="Digite o código OTP"
+                  value={otpCode}
+                  onChange={(e) => {
+                    const v = e.target.value.replace(/\D/g, "").slice(0, 6);
+                    setOtpCode(v);
+                    setOtpError(null);
+                  }}
+                  className="w-full bg-[#FAFCFB] border border-[#CBD5E1] rounded-xl pl-10 pr-4 py-2.5 text-base text-[#1E293B] focus:border-[#00695C] outline-hidden font-medium"
+                />
+              </div>
+              <p className="text-xs text-[#64748B]">
+                Código enviado para {email.trim()}. Confira e digite os 6 dígitos.
+              </p>
+              <button
+                type="button"
+                onClick={() => { setOtpSent(false); setOtpError(null); }}
+                className="text-xs text-[#00695C] hover:underline font-medium"
+              >
+                Reenviar código
+              </button>
+            </div>
+          )}
+
           <button
             type="submit"
-            disabled={isLoading}
+            disabled={isLoading || otpSending}
             className="w-full bg-[#00695C] hover:bg-[#00695C] active:scale-98 disabled:opacity-50 text-white font-bold text-sm rounded-2xl py-3 flex items-center justify-center gap-2 transition-all shadow-md shadow-emerald-900/15"
           >
-            <span>{isLoading ? "Processando..." : mode === "login" ? "Entrar na Conta" : "Criar Conta de Cuidador"}</span>
+            <span>
+              {isLoading
+                ? "Processando..."
+                : otpSending
+                ? "Enviando código OTP..."
+                : mode === "signup" && otpSent
+                ? "Verificar e Criar Conta"
+                : mode === "signup"
+                ? "Enviar Código OTP"
+                : mode === "login"
+                ? "Entrar na Conta"
+                : "Criar Conta de Cuidador"}
+            </span>
             <ArrowRight className="w-4 h-4" />
           </button>
         </form>
@@ -319,6 +424,9 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onSuccess }) => {
             onClick={() => {
               setMode(mode === "login" ? "signup" : "login");
               setError(null);
+              setOtpCode("");
+              setOtpSent(false);
+              setOtpError(null);
             }}
             className="text-sm font-medium text-[#00695C] hover:underline"
           >

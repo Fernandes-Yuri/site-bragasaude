@@ -50,6 +50,15 @@ export const WhatsAppLinkButton: React.FC<WhatsAppLinkButtonProps> = ({
     if (!totpSecret) return;
     setLinkError(null);
     try {
+      // AUD-PW(M): verifica suporte a Web Crypto antes de tentar.
+      // Sem isso, navegadores antigos (IE, Safari < 11 em HTTP) lançam
+      // TypeError silenciosa e o botao nao responde.
+      if (typeof crypto === "undefined" || !crypto.subtle) {
+        setLinkError(
+          "Seu navegador não suporta criptografia Web Crypto, necessária para o vínculo WhatsApp. Use Chrome, Firefox ou Edge atualizados."
+        );
+        return;
+      }
       const code = await currentTotpCode(totpSecret);
       if (!code) {
         setLinkError("Não foi possível gerar o código agora. Tente novamente em instantes.");

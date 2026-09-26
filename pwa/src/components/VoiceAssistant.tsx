@@ -1,5 +1,5 @@
 import React, { useState, useRef, useCallback } from "react";
-import { X, Sparkles, Check, Calendar } from "lucide-react";
+import { X, Sparkles, Check, Calendar, Mic } from "lucide-react";
 import { askVoiceCopilot, synthesizePiperVoice, confirmVoiceDraft } from "../services/api";
 
 interface VoiceAssistantProps {
@@ -33,9 +33,9 @@ function formatarDataPt(iso: string): string {
 }
 
 /**
- * Copiloto de voz do cuidador: botão flutuante que ouve a pergunta
- * (Web Speech API / SpeechRecognition), consulta /v1/chat/completions e
- * responde em voz alta (SpeechSynthesis pt-BR).
+ * Copiloto de voz do cuidador: botão flutuante com interação
+ * HOLD-TO-TALK (igual ao Android): segura pra falar, solta pra ouvir a resposta.
+ * Segure novamente para falar de novo; solte ou toque no X pra parar.
  */
 export const VoiceAssistant: React.FC<VoiceAssistantProps> = ({
   userId,
@@ -59,21 +59,17 @@ export const VoiceAssistant: React.FC<VoiceAssistantProps> = ({
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   // AUD-PW(B): audio Piper em reprodução — ver stopSpeaking.
   const currentAudioRef = useRef<HTMLAudioElement | null>(null);
+  // Guarda o texto capturado ao soltar o dedo (hold-to-talk)
+  const pendingTranscriptRef = useRef<string>("");
 
   const speak = useCallback(
     async (text: string) => {
-      // Fala com a voz Piper do gateway (mesma do Android, padrao "faber").
-      // Se falhar (offline / navegador sem suporte), cai no SpeechSynthesis.
       try {
-        // AUD-PW03: token fresco — a voz Piper somia após ~1h com token stale.
         const token = (await getIdToken?.()) || "";
         const blob = await synthesizePiperVoice(text, token);
         if (blob && blob.size > 0) {
           const audioUrl = URL.createObjectURL(blob);
           const audio = new Audio(audioUrl);
-          // AUD-PW(B): guardamos a referencia — antes o stopSpeaking varria
-          // TODOS os <audio> da pagina com querySelectorAll e os pausava,
-          // incluindo as mensagens de voz do chat da familia.
           currentAudioRef.current = audio;
           setState("speaking");
           audio.onended = () => {
@@ -93,7 +89,6 @@ export const VoiceAssistant: React.FC<VoiceAssistantProps> = ({
         console.warn("Piper indisponível, fallback para voz do sistema:", e);
       }
 
-      // Fallback: voz do aparelho (menos fiel)
       try {
         if (!("speechSynthesis" in window)) return;
         window.speechSynthesis.cancel();
@@ -113,47 +108,29 @@ export const VoiceAssistant: React.FC<VoiceAssistantProps> = ({
   );
 
   const stopSpeaking = () => {
-    // Para áudio Piper — SÓ o nosso. AUD-PW(B): antes fazia
-    // document.querySelectorAll("audio").forEach(pause), o que calava as
-    // mensagens de voz do chat da familia que estivessem tocando.
     try {
       const a = currentAudioRef.current;
-      if (a) {
-        a.pause();
-        a.src = "";
-        currentAudioRef.current = null;
-      }
-    } catch {
-      /* noop */
-    }
-    try {
-      window.speechSynthesis?.cancel();
-    } catch {
-      /* noop */
-    }
+      if (a) { a.pause(); a.src = ""; currentAudioRef.current = null; }
+    } catch { /* noop */ }
+    try { window.speechSynthesis?.cancel(); } catch { /* noop */ }
     setState("idle");
   };
 
-  const stopListening = () => {
-    try {
-      recognitionRef.current?.stop();
-    } catch {
-      /* noop */
-    }
-    if (timeoutRef.current) {
-      clearTimeout(timeoutRef.current);
-      timeoutRef.current = null;
-    }
+  const stopListening = useCallback(() => {
+    try { recognitionRef.current?.stop(); } catch { /* noop */ }
+    if (timeoutRef.current) { clearTimeout(timeoutRef.current); timeoutRef.current = null; }
     setState("idle");
-  };
+  }, []);
 
+  /**
+   * Pergunta ao copiloto com o texto final da transcrição.
+   */
   const handleAsk = useCallback(
     async (question: string) => {
       const clean = question.trim();
       if (!clean) return;
 
       setState("thinking");
-      // AUD-PW03: token fresco — 401 após ~1h fazia o copiloto "sumir".
       const token = await (getIdToken ? getIdToken() : Promise.resolve(undefined));
       const reply = await askVoiceCopilot(clean, userId, token, {
         actingAs,
@@ -162,9 +139,7 @@ export const VoiceAssistant: React.FC<VoiceAssistantProps> = ({
       });
 
       if (!reply) {
-        setLastReply(
-          "Não consegui me conectar agora. Verifique sua conexão e tente novamente."
-        );
+        setLastReply("Não consegui me conectar agora. Verifique sua conexão e tente novamente.");
         setState("idle");
         onToast?.("Copiloto indisponível — sem conexão", "error");
         return;
@@ -173,7 +148,7 @@ export const VoiceAssistant: React.FC<VoiceAssistantProps> = ({
       setLastReply(reply.fala);
       speak(reply.fala);
 
-      // D51: rascunho de agendamento — mostra o botao Confirmar
+      // D51: rascunho de agendamento — mostra o botão Confirmar
       if (reply.acao === "AGENDAR_RASCUNHO" && reply.parametros?.id) {
         setPendingDraft({
           id: String(reply.parametros.id),
@@ -184,7 +159,7 @@ export const VoiceAssistant: React.FC<VoiceAssistantProps> = ({
         setPendingDraft(null);
       }
     },
-    [userId, getIdToken, speak, onToast]
+    [userId, getIdToken, speak, onToast, actingAs, patientId, patientName]
   );
 
   const handleConfirmDraft = useCallback(async () => {
@@ -194,7 +169,6 @@ export const VoiceAssistant: React.FC<VoiceAssistantProps> = ({
       const res = await confirmVoiceDraft(
         patientId,
         pendingDraft.id,
-        // AUD-PW03: token fresco na confirmacao do rascunho.
         await (getIdToken ? getIdToken() : Promise.resolve(undefined))
       );
       if (res.ok) {
@@ -212,7 +186,11 @@ export const VoiceAssistant: React.FC<VoiceAssistantProps> = ({
     }
   }, [pendingDraft, patientId, getIdToken, speak]);
 
-  const startListening = () => {
+  /**
+   * HOLD-TO-TALK: começa a escutar quando o usuário aperta.
+   * Funciona como o Android: segure → fale → solte → ouve a resposta.
+   */
+  const handlePressStart = useCallback(() => {
     const SpeechRecognition =
       (window as any).SpeechRecognition ||
       (window as any).webkitSpeechRecognition;
@@ -230,8 +208,6 @@ export const VoiceAssistant: React.FC<VoiceAssistantProps> = ({
       rec.continuous = false;
 
       setTranscript("");
-      setLastReply("");
-      setState("listening");
       setPanelOpen(true);
 
       rec.onstart = () => setState("listening");
@@ -241,7 +217,13 @@ export const VoiceAssistant: React.FC<VoiceAssistantProps> = ({
           clearTimeout(timeoutRef.current);
           timeoutRef.current = null;
         }
-        setState((s) => (s === "listening" ? "idle" : s));
+        // Ao soltar o dedo (onend), se houve transcrição, pergunta ao copiloto
+        const finalText = pendingTranscriptRef.current.trim();
+        if (finalText.length >= 2) {
+          handleAsk(finalText);
+        } else {
+          setState("idle");
+        }
       };
       rec.onresult = (event: any) => {
         let text = "";
@@ -249,15 +231,7 @@ export const VoiceAssistant: React.FC<VoiceAssistantProps> = ({
           text += event.results[i][0]?.transcript || "";
         }
         setTranscript(text);
-        // Ao parar de falar (resultado final), pergunta ao copiloto
-        if (event.results[event.results.length - 1]?.isFinal) {
-          const finalText = text.trim();
-          if (finalText.length >= 2) {
-            handleAsk(finalText);
-          } else {
-            setState("idle");
-          }
-        }
+        pendingTranscriptRef.current = text;
       };
 
       recognitionRef.current = rec;
@@ -265,43 +239,88 @@ export const VoiceAssistant: React.FC<VoiceAssistantProps> = ({
 
       // Trava de segurança: se o silêncio durar 8s, encerra a escuta
       timeoutRef.current = setTimeout(() => {
-        try {
-          rec.stop();
-        } catch {
-          /* noop */
-        }
+        try { rec.stop(); } catch { /* noop */ }
       }, 8000);
     } catch (e) {
       console.warn("STT indisponível:", e);
       setState("idle");
       onToast?.("Não foi possível acessar o microfone", "error");
     }
+  }, [handleAsk, onToast, stopSpeaking]);
+
+  /**
+   * SOLTAR O DEDO: para a escuta e dispara o processamento.
+   * O onend do SpeechRecognition já chama handleAsk, mas se o usuário
+   * soltar rapidamente antes de onend disparar, este método garante o processamento.
+   */
+  const handlePressEnd = useCallback(() => {
+    // Para o reconhecimento — o onend vai disparar o handleAsk
+    try { recognitionRef.current?.stop(); } catch { /* noop */ }
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+      timeoutRef.current = null;
+    }
+    // Se o reconhecimento não tinha processado ainda, processa o que tem
+    const finalText = pendingTranscriptRef.current.trim();
+    if (finalText.length >= 2 && state === "listening") {
+      handleAsk(finalText);
+    } else if (state === "listening") {
+      setState("idle");
+    }
+  }, [handleAsk, state]);
+
+  /**
+   * Segurar e falar → soltar → ouve a resposta do Braga.
+   * Enquanto está falando (state === "speaking"), pode apertar de novo pra falar.
+   */
+  const handleMainButtonDown = () => {
+    if (state === "thinking") return; // Não interromper o processamento
+    if (state === "idle") {
+      handlePressStart();
+    }
+    // Se state === "listening", o usuário já está falando — não faz nada extra
   };
 
-  const handleMainButton = () => {
+  const handleMainButtonUp = () => {
     if (state === "listening") {
-      stopListening();
+      handlePressEnd();
+    }
+    // Se state === "speaking", não faz nada — deixa terminar
+    // Se state === "thinking", não faz nada
+  };
+
+  const handleMainButtonClick = () => {
+    // Click normal (sem hold) → abre/fecha o painel se estiver idle
+    if (state === "idle") {
+      setPanelOpen((prev) => !prev);
     } else if (state === "speaking") {
       stopSpeaking();
-    } else {
-      startListening();
+    } else if (state === "thinking") {
+      // Não interromper o pensamento
     }
   };
 
   const stateLabel: Record<AssistantState, string> = {
-    idle: "Falar com o Braga",
-    listening: "Ouvindo... toque para parar",
+    idle: "Segure e fale",
+    listening: "🗣️ Falando... solte para ouvir",
     thinking: "Pensando...",
     speaking: "Falando... toque para parar",
   };
 
   const isActive = state !== "idle";
 
+  // Proteção: se não há paciente vinculado, não deixa abrir o painel
+  const hasNoPatient = !patientId || patientId === "";
+
   return (
     <>
       {/* Botão flutuante do assistente */}
       <button
-        onClick={handleMainButton}
+        onMouseDown={handleMainButtonDown}
+        onMouseUp={handleMainButtonUp}
+        onTouchStart={handleMainButtonDown}
+        onTouchEnd={handleMainButtonUp}
+        onClick={handleMainButtonClick}
         className={`fixed bottom-20 right-4 z-50 flex items-center gap-2 pl-3.5 pr-4 py-3 rounded-full font-bold text-xs shadow-lg transition-all active:scale-95 ${
           isActive
             ? "bg-[#1E293B] text-white"
@@ -309,7 +328,9 @@ export const VoiceAssistant: React.FC<VoiceAssistantProps> = ({
         }`}
         aria-label={stateLabel[state]}
       >
-        {isActive ? (
+        {state === "listening" ? (
+          <Mic className="w-4 h-4 animate-pulse" />
+        ) : isActive ? (
           <X className="w-4 h-4" />
         ) : (
           <Sparkles className="w-4 h-4" />
@@ -346,7 +367,19 @@ export const VoiceAssistant: React.FC<VoiceAssistantProps> = ({
               </button>
             </div>
 
-            {transcript && (
+            {/* Aviso quando não há paciente vinculado */}
+            {hasNoPatient && (
+              <div className="bg-[#FFF8E1] border border-[#FFE082] rounded-2xl px-3.5 py-3">
+                <p className="text-[12px] font-bold text-[#F57F17] mb-1">
+                  ⚠️ Nenhum familiar conectado
+                </p>
+                <p className="text-[12px] text-[#64748B] leading-relaxed">
+                  Conecte um familiar na aba Início para usar o copiloto de voz.
+                </p>
+              </div>
+            )}
+
+            {transcript && !hasNoPatient && (
               <div className="bg-[#F1F5F9] rounded-2xl px-3.5 py-2.5">
                 <p className="text-[12px] font-bold text-[#64748B] uppercase tracking-wide mb-0.5">
                   Você disse
@@ -355,7 +388,7 @@ export const VoiceAssistant: React.FC<VoiceAssistantProps> = ({
               </div>
             )}
 
-            {state === "thinking" && (
+            {state === "thinking" && !hasNoPatient && (
               <div className="flex items-center gap-2 px-1">
                 <div className="w-2 h-2 rounded-full bg-[#00897B] animate-bounce" style={{ animationDelay: "0ms" }} />
                 <div className="w-2 h-2 rounded-full bg-[#00897B] animate-bounce" style={{ animationDelay: "150ms" }} />
@@ -423,10 +456,16 @@ export const VoiceAssistant: React.FC<VoiceAssistantProps> = ({
               </div>
             )}
 
-            {!transcript && !lastReply && state === "idle" && (
+            {!transcript && !lastReply && state === "idle" && !hasNoPatient && (
               <p className="text-[12px] text-[#64748B] leading-relaxed">
-                Toque no botão e faça uma pergunta sobre os sinais vitais,
+                Segure o botão e fale para tirar dúvidas sobre os sinais vitais,
                 hidratação ou medicação de {patientName || "paciente"}.
+              </p>
+            )}
+
+            {!transcript && !lastReply && state === "idle" && hasNoPatient && (
+              <p className="text-[12px] text-[#64748B] leading-relaxed">
+                Conecte um familiar para habilitar o copiloto de voz.
               </p>
             )}
 

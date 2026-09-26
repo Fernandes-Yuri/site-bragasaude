@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { Send, Mic, Volume2, ArrowLeft, User } from "lucide-react";
 import {
   fetchFamilyMessages,
@@ -18,6 +18,8 @@ interface FamilyChatScreenProps {
   onBackToInbox?: () => void;
   onOpenProfile?: () => void;
 }
+
+const MAX_VISIBLE_MESSAGES = 25;
 
 /**
  * Chat em grupo da família: todos os cuidadores vinculados ao mesmo patient_id
@@ -45,6 +47,14 @@ export const FamilyChatScreen: React.FC<FamilyChatScreenProps> = ({
   const listRef = useRef<HTMLDivElement>(null);
   const recognitionRef = useRef<any>(null);
   const requestSequence = useRef(0);
+
+  // Mensagens visíveis: só as últimas MAX_VISIBLE_MESSAGES para não estourar a tela
+  const visibleMessages = useMemo(() => {
+    if (messages.length <= MAX_VISIBLE_MESSAGES) return messages;
+    return messages.slice(-MAX_VISIBLE_MESSAGES);
+  }, [messages]);
+
+  const hasMoreMessages = messages.length > MAX_VISIBLE_MESSAGES;
 
   // Carrega mensagens (e re-carrega para refrescar o grupo)
   const loadMessages = useCallback(async () => {
@@ -88,9 +98,7 @@ export const FamilyChatScreen: React.FC<FamilyChatScreenProps> = ({
   }, [messages]);
 
   const speak = async (text: string) => {
-    // Voz Piper do gateway (mesma do Android, "faber"); fallback na do aparelho
     try {
-      // AUD-PW03: token fresco — a voz somem após ~1h com token stale.
       const token = (await getIdToken?.()) || "";
       const blob = await synthesizePiperVoice(text, token);
       if (blob && blob.size > 0) {
@@ -164,7 +172,6 @@ export const FamilyChatScreen: React.FC<FamilyChatScreenProps> = ({
     setError(null);
     setIsSending(true);
 
-    // Otimismo: mostra a mensagem imediatamente
     const now = new Date().toISOString();
     const optimistic: FamilyMessage = {
       id: `pending-${Date.now()}`,
@@ -186,8 +193,6 @@ export const FamilyChatScreen: React.FC<FamilyChatScreenProps> = ({
       "LOVE",
       caregiverName,
       currentUserId,
-      // AUD-PW03: token fresco no envio — mensagem silenciosamente perdida
-      // após ~1h era sintoma do token stale.
       await (getIdToken ? getIdToken() : Promise.resolve(undefined))
     );
     if (!result.delivered) {
@@ -195,7 +200,6 @@ export const FamilyChatScreen: React.FC<FamilyChatScreenProps> = ({
       setInput(clean);
       onToast?.("Mensagem não entregue — verifique sua conexão");
     }
-    // Recarrega para alinhar com o estado real do gateway
     await loadMessages();
     } catch {
       setInput(clean);
@@ -218,20 +222,29 @@ export const FamilyChatScreen: React.FC<FamilyChatScreenProps> = ({
     }
   };
 
-  if (!patientId) {
+  // GUARDA: se não há paciente vinculado, mostra aviso em vez de crashar
+  if (!patientId || patientId === "") {
     return (
       <div className="flex-1 flex items-center justify-center p-6 text-center">
-        <div>
+        <div className="space-y-3">
+          <div className="w-16 h-16 rounded-full bg-[#E0F2F1] flex items-center justify-center mx-auto">
+            <User className="w-8 h-8 text-[#00897B]" />
+          </div>
           <p className="text-sm font-semibold text-[#1E293B] mb-1">
-            Selecione um grupo da família
+            Nenhum familiar conectado
           </p>
-          <p className="text-xs text-[#64748B]">
-            Escolha a família acima ou conecte um familiar na aba Início.
+          <p className="text-xs text-[#64748B] max-w-[240px] leading-relaxed">
+            Conecte um familiar na aba Início ou use o código de 8 dígitos
+            para começar a acompanhar a saúde dele.
           </p>
         </div>
       </div>
     );
   }
+
+  // GUARDA: se patientName é vazio, usa fallback seguro
+  const safePatientName = patientName || "Familiar";
+  const safeInitials = (safePatientName.trim().charAt(0).toUpperCase()) || "F";
 
   return (
     <div className="flex-1 flex flex-col min-h-0">
@@ -250,17 +263,22 @@ export const FamilyChatScreen: React.FC<FamilyChatScreenProps> = ({
             </button>
           )}
 
-          {/* Avatar com inicial */}
-          <button
-            type="button"
-            onClick={onOpenProfile}
-            disabled={!onOpenProfile}
-            className="w-10 h-10 rounded-full bg-gradient-to-b from-[#26A69A] to-[#00897B] flex items-center justify-center text-sm font-bold text-white shrink-0 shadow-xs hover:opacity-90 active:scale-95 transition-all cursor-pointer"
-            title="Ver perfil do familiar"
-            aria-label="Ver perfil do familiar"
-          >
-            {(patientName || "F").trim().charAt(0).toUpperCase() || "F"}
-          </button>
+          {/* Avatar com inicial — SEMPRE clicável quando onOpenProfile existe */}
+          {onOpenProfile ? (
+            <button
+              type="button"
+              onClick={onOpenProfile}
+              className="w-10 h-10 rounded-full bg-gradient-to-b from-[#26A69A] to-[#00897B] flex items-center justify-center text-sm font-bold text-white shrink-0 shadow-xs hover:opacity-90 active:scale-95 transition-all cursor-pointer"
+              title="Ver perfil do familiar"
+              aria-label="Ver perfil do familiar"
+            >
+              {safeInitials}
+            </button>
+          ) : (
+            <div className="w-10 h-10 rounded-full bg-gradient-to-b from-[#26A69A] to-[#00897B] flex items-center justify-center text-sm font-bold text-white shrink-0 shadow-xs">
+              {safeInitials}
+            </div>
+          )}
 
           {/* Nome e subtítulo interativo */}
           <div
@@ -269,7 +287,7 @@ export const FamilyChatScreen: React.FC<FamilyChatScreenProps> = ({
             title={onOpenProfile ? "Toque para ver o perfil" : undefined}
           >
             <p className="text-sm font-bold text-[#1E293B] truncate leading-tight">
-              {patientName || "Familiar"}
+              {safePatientName}
             </p>
             <p className="text-[11px] text-[#00897B] font-medium truncate">
               {onOpenProfile ? "Toque para ver perfil e vínculo" : "Conversa ativa · 24h efêmera"}
@@ -293,20 +311,26 @@ export const FamilyChatScreen: React.FC<FamilyChatScreenProps> = ({
         </div>
       </div>
 
-      {/* Lista de mensagens */}
+      {/* Lista de mensagens — só mostra as últimas para não estourar */}
       <div
         ref={listRef}
         className="flex-1 overflow-y-auto p-3.5 space-y-2.5 bg-[#F8FAFC]"
       >
-        {messages.length === 0 && (
+        {hasMoreMessages && (
+          <p className="text-center text-[12px] text-[#64748B] py-2">
+            ↓ {messages.length - MAX_VISIBLE_MESSAGES} mensagens mais antigas
+          </p>
+        )}
+
+        {visibleMessages.length === 0 && !hasMoreMessages && (
           <div className="h-full flex items-center justify-center">
             <p className="text-xs text-[#64748B] text-center max-w-[220px] leading-relaxed">
-              Nenhuma mensagem ainda. Mande um carinho para {patientName || "paciente"}
+              Nenhuma mensagem ainda. Mande um carinho para {safePatientName}
             </p>
           </div>
         )}
 
-        {messages.map((m) => {
+        {visibleMessages.map((m) => {
           const isMine = m.senderId === currentUserId;
           return (
             <div
