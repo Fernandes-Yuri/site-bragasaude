@@ -447,6 +447,9 @@ export const App: React.FC = () => {
     // quem saiu — limpa junto, senão o próximo usuário de aparelho compartilhado
     // lê (e a fila tenta entregar com o token novo = mensagem cruzada).
     clearMessageQueue().catch(() => {});
+    // Limpa preferências de UI para que o próximo usuário veja o banner
+    // de instalação do PWA (não herda o "dismiss" do usuário anterior).
+    try { localStorage.removeItem("braga_install_banner_dismissed"); } catch { /* sem localStorage: nada a limpar */ }
     setHasRealBinding(false);
     setDashboard(EMPTY_CAREGIVER_STATE);
     setGroceryItems(EMPTY_GROCERY_ITEMS);

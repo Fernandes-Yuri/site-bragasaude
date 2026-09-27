@@ -23,7 +23,7 @@ export const API_BASE_URL = "https://api.bragasaude.online";
  * codigo de um cliente ja instalado). Arquitetura temporaria, sem template.
  */
 function getOrCreateTotpSecret(userId: string): string {
-  const KEY = `braga.totp_secret.${userId}`;
+  const KEY = `braga_totp_secret_${userId}`;
   try {
     const existing = localStorage.getItem(KEY);
     if (existing) return existing;
@@ -44,7 +44,7 @@ function getOrCreateTotpSecret(userId: string): string {
  * depois lê o segredo e vincula o WhatsApp da conta a outro numero.
  */
 export function clearTotpSecret(userId: string): void {
-  const KEY = `braga.totp_secret.${userId}`;
+  const KEY = `braga_totp_secret_${userId}`;
   try {
     localStorage.removeItem(KEY);
   } catch {
@@ -63,7 +63,7 @@ export function clearTotpSecret(userId: string): void {
  * Retorna null se nao houver jeito (off-line e sem cache local).
  */
 export async function readTotpSecret(userId: string, idToken?: string): Promise<string | null> {
-  const KEY = `braga.totp_secret.${userId}`;
+  const KEY = `braga_totp_secret_${userId}`;
   try {
     const existing = localStorage.getItem(KEY);
     if (existing) return existing;
@@ -97,7 +97,7 @@ export async function readTotpSecret(userId: string, idToken?: string): Promise<
  * o gerado localmente. Retorna o segredo valido apos a sincronizacao.
  */
 export async function syncTotpSecret(userId: string, idToken?: string): Promise<string | null> {
-  const KEY = `braga.totp_secret.${userId}`;
+  const KEY = `braga_totp_secret_${userId}`;
   const local = (() => {
     try { return localStorage.getItem(KEY); } catch { return null; }
   })();

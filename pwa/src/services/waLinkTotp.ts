@@ -8,12 +8,12 @@
  * e abre o WhatsApp com a mensagem pronta. O gateway recomputa o mesmo codigo a
  * partir do segredo que guardou e vincula o numero (verificado pela Meta).
  *
- * Janela de 180s, sem tolerancia: ou esta dentro, ou o usuario volta e pega um
+ * Janela de 300s (5 minutos), sem tolerancia: ou esta dentro, ou o usuario volta e pega um
  * codigo novo.
  */
 
 const SECRET_BYTES = 20;
-export const TOTP_STEP_SECONDS = 180;
+export const TOTP_STEP_SECONDS = 300;
 
 /** Gera um segredo TOTP aleatorio em base32 (o cliente manda na sincronizacao). */
 export function generateTotpSecret(): string {
