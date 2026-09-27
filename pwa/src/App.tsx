@@ -14,7 +14,6 @@ import {
   QUICK_TEMPLATES,
   fetchFamilyBindings,
   fetchPatientVitals,
-  syncCaregiverPhone,
   readTotpSecret,
   clearTotpSecret,
   fetchMedicationStock,
@@ -290,8 +289,7 @@ export const App: React.FC = () => {
   }, [currentUser, showToast]);
 
   // Segredo TOTP do vinculo de WhatsApp: vem do backend (que agora garante um
-  // para toda conta) e e cacheado no localStorage. Antes era gerado so no
-  // syncCaregiverPhone, deixando contas existentes sem segredo nenhum.
+  // para toda conta) e e cacheado no localStorage.
   const [totpSecret, setTotpSecret] = useState<string | null>(null);
   useEffect(() => {
     if (!currentUser) {
