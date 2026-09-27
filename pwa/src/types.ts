@@ -163,6 +163,7 @@ export interface CommunityPost {
   authorRelation: string;
   content: string;
   type: "achievement" | "recipe" | "walk" | "milestone" | "tip";
+  visibility: "community" | "family";
   createdAt: number;
   expiresAt: number;
   likes: number;

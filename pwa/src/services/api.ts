@@ -841,12 +841,12 @@ export async function createMedication(patientId: string, input: MedicationCreat
 // Community Feed — "Publicações de Orgulho Familiar" (01_MODO_CUIDADOR_E_PONTE_FAMILIAR.md §4)
 import type { CommunityPost } from "../types";
 
-/** Busca as publicações do feed comunitário de um familiar. */
-export async function fetchCommunityPosts(patientId: string): Promise<CommunityPost[]> {
+/** Busca as publicações do feed comunitário (comunidade + familiares privados). */
+export async function fetchCommunityPosts(patientId: string, idToken?: string): Promise<CommunityPost[]> {
   try {
     const res = await fetch(`${API_BASE_URL}/api/community/posts/${encodeURIComponent(patientId)}`, {
       method: "GET",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", ...(idToken ? { Authorization: `Bearer ${idToken}` } : {}) },
     });
     if (!res.ok) return [];
     const data = await res.json();
@@ -857,6 +857,7 @@ export async function fetchCommunityPosts(patientId: string): Promise<CommunityP
       authorRelation: p.authorRelation || p.author?.relation || "",
       content: p.content || p.text || "",
       type: p.type || "tip",
+      visibility: p.visibility === "family" ? "family" as const : "community" as const,
       createdAt: p.createdAt || Date.now(),
       expiresAt: p.expiresAt || Date.now() + 24 * 3600000,
       likes: p.likes || 0,
@@ -867,28 +868,31 @@ export async function fetchCommunityPosts(patientId: string): Promise<CommunityP
   }
 }
 
-/** Cria uma publicação no feed comunitário. */
+/** Cria uma publicação no feed comunitário (comunidade ou familia privada). */
 export async function createCommunityPost(
   patientId: string,
   content: string,
   type: CommunityPost["type"],
-  idToken?: string
+  idToken?: string,
+  visibility: CommunityPost["visibility"] = "community",
+  authorName?: string
 ): Promise<CommunityPost | null> {
   try {
     const res = await fetch(`${API_BASE_URL}/api/community/posts`, {
       method: "POST",
       headers: { "Content-Type": "application/json", ...(idToken ? { Authorization: `Bearer ${idToken}` } : {}) },
-      body: JSON.stringify({ patientId, content, type }),
+      body: JSON.stringify({ patientId, content, type, visibility, authorName }),
     });
     if (!res.ok) return null;
     const data = await res.json();
     return {
       id: data.id,
-      authorName: data.authorName || "",
+      authorName: data.authorName || authorName || "",
       authorUserId: data.authorUserId || "",
       authorRelation: data.authorRelation || "",
       content: data.content || content,
       type: data.type || type,
+      visibility: data.visibility === "family" ? "family" : "community",
       createdAt: data.createdAt || Date.now(),
       expiresAt: data.expiresAt || Date.now() + 24 * 3600000,
       likes: 0,
@@ -899,12 +903,12 @@ export async function createCommunityPost(
   }
 }
 
-/** Curte/descurte uma publicação do feed comunitário. */
-export async function likeCommunityPost(postId: string): Promise<{ success: boolean }> {
+/** Curte uma publicação do feed comunitário (idempotente no servidor). */
+export async function likeCommunityPost(postId: string, idToken?: string): Promise<{ success: boolean }> {
   try {
     const res = await fetch(`${API_BASE_URL}/api/community/posts/${postId}/like`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", ...(idToken ? { Authorization: `Bearer ${idToken}` } : {}) },
     });
     return { success: res.ok };
   } catch {

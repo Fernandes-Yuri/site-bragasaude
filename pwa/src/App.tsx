@@ -576,6 +576,8 @@ export const App: React.FC = () => {
           <CommunityFeed
             patientId={chatPatientId}
             idToken={getChatToken}
+            authorName={dashboard.caregiverName}
+            onToast={showToast}
           />
         </main>
       ) : (
