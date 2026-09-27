@@ -1,10 +1,13 @@
 import React from "react";
 import { MessageCircle, ChevronRight, User, UserPlus, Clock } from "lucide-react";
 import type { FamilyBinding } from "../types";
+import { Avatar } from "./Avatar";
 
 interface FamilyInboxListProps {
   groups: FamilyBinding[];
   currentUserId: string;
+  /** Fotos de perfil dos membros por userId. */
+  memberPhotos?: Record<string, string>;
   onSelectGroup: (patientUserId: string) => void;
   onOpenProfile: (binding: FamilyBinding) => void;
   onConnectFamily: () => void;
@@ -13,6 +16,7 @@ interface FamilyInboxListProps {
 export const FamilyInboxList: React.FC<FamilyInboxListProps> = ({
   groups,
   currentUserId,
+  memberPhotos,
   onSelectGroup,
   onOpenProfile,
   onConnectFamily,
@@ -61,13 +65,6 @@ export const FamilyInboxList: React.FC<FamilyInboxListProps> = ({
               ? "Minha família"
               : (binding.patientName || `Familiar ${index + 1}`);
 
-            const initials = displayName
-              .trim()
-              .split(/\s+/)
-              .slice(0, 2)
-              .map((n) => n.charAt(0).toUpperCase())
-              .join("") || "F";
-
             return (
               <div
                 key={binding.patientUserId || binding.id}
@@ -77,9 +74,14 @@ export const FamilyInboxList: React.FC<FamilyInboxListProps> = ({
                 <button
                   type="button"
                   onClick={() => onSelectGroup(binding.patientUserId)}
-                  className="w-12 h-12 rounded-full bg-gradient-to-b from-[#26A69A] to-[#00897B] flex items-center justify-center text-sm font-bold text-white shrink-0 shadow-xs"
+                  className="shrink-0"
                 >
-                  {initials}
+                  <Avatar
+                    name={displayName}
+                    photoUrl={memberPhotos?.[binding.patientUserId]}
+                    className="w-12 h-12 bg-gradient-to-b from-[#26A69A] to-[#00897B] shadow-xs"
+                    textClassName="text-sm"
+                  />
                 </button>
 
                 {/* Conteúdo principal */}

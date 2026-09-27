@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useRef, useState } from "react";
 import {
   User,
   Mail,
@@ -8,9 +8,11 @@ import {
   Users,
   ShieldCheck,
   ChevronRight,
+  Camera,
 } from "lucide-react";
 import type { FamilyBinding } from "../types";
 import { WhatsAppLinkButton } from "./WhatsAppLinkButton";
+import { Avatar } from "./Avatar";
 
 interface ProfileScreenProps {
   caregiverName: string;
@@ -27,6 +29,14 @@ interface ProfileScreenProps {
   /** Numero de WhatsApp ja vinculado (verificado pela Meta via webhook). */
   whatsappLinkedPhone?: string | null;
   onOpenMemberProfile?: (binding: FamilyBinding) => void;
+  /** Foto de perfil do proprio usuario (custom ou Google) — null usa iniciais. */
+  photoUrl?: string | null;
+  /** Sobe a foto escolhida (resize + upload feitos pelo App). */
+  onUploadPhoto?: (file: File) => Promise<void>;
+  /** Remove a foto e volta ao fallback de iniciais. */
+  onRemovePhoto?: () => Promise<void>;
+  /** Fotos de perfil dos familiares por userId (grupo de cuidados). */
+  memberPhotos?: Record<string, string>;
 }
 
 export const ProfileScreen: React.FC<ProfileScreenProps> = ({
@@ -42,15 +52,35 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
   totpSecret,
   whatsappLinkedPhone,
   onOpenMemberProfile,
+  photoUrl,
+  onUploadPhoto,
+  onRemovePhoto,
+  memberPhotos,
 }) => {
-  const initials = caregiverName
-    ? caregiverName
-        .trim()
-        .split(/\s+/)
-        .slice(0, 2)
-        .map((n) => n.charAt(0).toUpperCase())
-        .join("")
-    : "C";
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const [isPhotoBusy, setIsPhotoBusy] = useState(false);
+
+  const handlePickPhoto = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    if (!file || !onUploadPhoto) return;
+    setIsPhotoBusy(true);
+    try {
+      await onUploadPhoto(file);
+    } finally {
+      setIsPhotoBusy(false);
+    }
+  };
+
+  const handleRemovePhoto = async () => {
+    if (!onRemovePhoto) return;
+    setIsPhotoBusy(true);
+    try {
+      await onRemovePhoto();
+    } finally {
+      setIsPhotoBusy(false);
+    }
+  };
 
   const activeBindings = bindings.filter((b) => b.status === "ACTIVE");
 
@@ -58,8 +88,30 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
     <div className="space-y-4">
       {/* Cabeçalho do perfil com avatar */}
       <div className="bg-white rounded-3xl shadow-2xs border border-[#E5EBE8] p-5 flex flex-col items-center gap-3">
-        <div className="w-20 h-20 rounded-full bg-gradient-to-b from-[#26A69A] to-[#00897B] flex items-center justify-center text-2xl font-bold text-white shadow-lg shadow-emerald-900/20 border-2 border-white">
-          {initials}
+        <div className="relative">
+          <Avatar
+            name={caregiverName}
+            photoUrl={photoUrl}
+            className="w-20 h-20 bg-gradient-to-b from-[#26A69A] to-[#00897B] shadow-lg shadow-emerald-900/20 border-2 border-white"
+            textClassName="text-2xl"
+          />
+          <button
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
+            disabled={isPhotoBusy}
+            title="Alterar foto de perfil"
+            aria-label="Alterar foto de perfil"
+            className="absolute -bottom-1 -right-1 w-8 h-8 rounded-full bg-[#00897B] border-2 border-white flex items-center justify-center text-white shadow-md active:scale-95 transition-all disabled:opacity-60"
+          >
+            <Camera className="w-4 h-4" />
+          </button>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/jpeg,image/png,image/webp"
+            className="hidden"
+            onChange={handlePickPhoto}
+          />
         </div>
         <div className="text-center min-w-0">
           <h2 className="text-lg font-bold text-[#1E293B] truncate">
@@ -73,6 +125,16 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
           <ShieldCheck className="w-3.5 h-3.5" />
           Conta protegida
         </span>
+        {photoUrl && onRemovePhoto && (
+          <button
+            type="button"
+            onClick={handleRemovePhoto}
+            disabled={isPhotoBusy}
+            className="text-[12px] text-[#64748B] underline underline-offset-2 disabled:opacity-60"
+          >
+            {isPhotoBusy ? "Removendo..." : "Remover foto"}
+          </button>
+        )}
       </div>
 
       {/* Dados da conta */}
@@ -142,15 +204,20 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
           <div className="space-y-2 mb-3">
             {activeBindings.map((b) => {
               const memberName = b.patientName || b.caregiverName || "Familiar";
-              const memberInitial = memberName.trim().charAt(0).toUpperCase() || "F";
+              const memberPhoto = b.patientName
+                ? memberPhotos?.[b.patientUserId]
+                : memberPhotos?.[b.caregiverUserId];
               return (
                 <div
                   key={b.id}
                   className="flex items-center gap-2.5 bg-[#F8FAFC] rounded-2xl p-2.5 hover:bg-[#F1F5F9] transition-colors"
                 >
-                  <div className="w-8 h-8 rounded-full bg-gradient-to-b from-[#26A69A] to-[#00897B] flex items-center justify-center text-xs font-bold text-white shrink-0">
-                    {memberInitial}
-                  </div>
+                  <Avatar
+                    name={memberName}
+                    photoUrl={memberPhoto}
+                    className="w-8 h-8 bg-gradient-to-b from-[#26A69A] to-[#00897B]"
+                    textClassName="text-xs"
+                  />
                   <div
                     className="min-w-0 flex-1 cursor-pointer"
                     onClick={() => onOpenMemberProfile?.(b)}

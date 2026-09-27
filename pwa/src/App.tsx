@@ -21,6 +21,11 @@ import {
   fetchDailyBulletin,
   fetchClinicalCorrelations,
   revokeFamilyBinding,
+  fetchProfilePhoto,
+  fetchMemberPhotos,
+  uploadProfileAvatar,
+  deleteProfileAvatar,
+  resizeAvatarFile,
 } from "./services/api";
 import { loadGroceryItems, persistGroceryItem, toggleGroceryItemPantry } from "./services/grocery";
 import { queueMessage, flushMessageQueue, clearMessageQueue } from "./services/messageQueue";
@@ -85,6 +90,8 @@ export const App: React.FC = () => {
   const [hasRealBinding, setHasRealBinding] = useState(false);
   const [userPhone, setUserPhone] = useState<string | null>(null);
   const [bindings, setBindings] = useState<FamilyBinding[]>([]);
+  const [profilePhotoUrl, setProfilePhotoUrl] = useState<string | null>(null);
+  const [memberPhotos, setMemberPhotos] = useState<Record<string, string>>({});
   const [selectedGroup, setSelectedGroup] = useState<string | null>(null);
   const [showInboxList, setShowInboxList] = useState(false);
   const [inspectingBinding, setInspectingBinding] = useState<FamilyBinding | null>(null);
@@ -110,6 +117,40 @@ export const App: React.FC = () => {
     // garante leitura adequada mesmo com toasts encadeados.
     toastTimer.current = setTimeout(() => setToastMessage(null), 5000);
   }, []);
+
+  // Foto de perfil: photo_url propria (gateway) > foto Google do login > iniciais.
+  const myPhotoUrl = profilePhotoUrl ?? currentUser?.photoURL ?? null;
+
+  const handleUploadPhoto = useCallback(async (file: File) => {
+    if (!currentUser) return;
+    try {
+      const blob = await resizeAvatarFile(file);
+      const token = await currentUser.getIdToken();
+      const url = await uploadProfileAvatar(currentUser.uid, blob, token);
+      setProfilePhotoUrl(url);
+      setMemberPhotos((prev) => ({ ...prev, [currentUser.uid]: url }));
+      showToast("Foto de perfil atualizada");
+    } catch (err) {
+      showToast(err instanceof Error ? err.message : "Não foi possível enviar a foto.", "error");
+    }
+  }, [currentUser, showToast]);
+
+  const handleRemovePhoto = useCallback(async () => {
+    if (!currentUser) return;
+    try {
+      const token = await currentUser.getIdToken();
+      await deleteProfileAvatar(currentUser.uid, token);
+      setProfilePhotoUrl(null);
+      setMemberPhotos((prev) => {
+        const next = { ...prev };
+        delete next[currentUser.uid];
+        return next;
+      });
+      showToast("Foto de perfil removida");
+    } catch (err) {
+      showToast(err instanceof Error ? err.message : "Não foi possível remover a foto.", "error");
+    }
+  }, [currentUser, showToast]);
 
   const handleRevokeBinding = useCallback(async (binding: FamilyBinding) => {
     if (!currentUser) return;
@@ -157,6 +198,8 @@ export const App: React.FC = () => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       setCurrentUser(user);
       setBindings([]);
+      setProfilePhotoUrl(null);
+      setMemberPhotos({});
       setSelectedGroup(null);
       setDashboard(EMPTY_CAREGIVER_STATE);
       setHistoryRecords([]);
@@ -179,6 +222,8 @@ export const App: React.FC = () => {
           const token = await user.getIdToken();
           const bindings = await fetchFamilyBindings(user.uid, token);
           setBindings(bindings);
+          const photo = await fetchProfilePhoto(user.uid, token);
+          setProfilePhotoUrl(photo);
 
         } catch (err) {
           console.warn("Erro ao sincronizar dados iniciais:", err);
@@ -211,6 +256,25 @@ export const App: React.FC = () => {
     }
     return () => { cancelled = true; };
   }, [chatPatientId, currentUser, groups]);
+
+  // Fotos de perfil dos membros da familia (grupo, inbox, modal, chat).
+  useEffect(() => {
+    let cancelled = false;
+    if (!currentUser || bindings.length === 0) return () => { cancelled = true; };
+    (async () => {
+      try {
+        const token = await currentUser.getIdToken();
+        const ids = Array.from(
+          new Set(bindings.flatMap((b) => [b.patientUserId, b.caregiverUserId]).filter(Boolean))
+        );
+        const photos = await fetchMemberPhotos(ids, token);
+        if (!cancelled) setMemberPhotos(photos);
+      } catch (err) {
+        console.warn("Erro ao buscar fotos de perfil:", err);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [currentUser, bindings]);
 
   const refreshCareOs = useCallback(async (showLoading = false, reset = false) => {
     await Promise.resolve();
@@ -500,6 +564,7 @@ export const App: React.FC = () => {
         title="Acompanhamento"
         subtitle={`Cuidador: ${dashboard.caregiverName}`}
         patientName={dashboard.patientName}
+        avatarUrl={myPhotoUrl}
         onConnectFamily={() => setShowConnectModal(true)}
                 onOpenProfile={() => setActiveTab("profile")}
       />
@@ -530,6 +595,7 @@ export const App: React.FC = () => {
             <FamilyInboxList
               groups={groups}
               currentUserId={currentUser.uid}
+              memberPhotos={memberPhotos}
               onSelectGroup={(pid) => {
                 setSelectedGroup(pid);
                 setShowInboxList(false);
@@ -542,6 +608,10 @@ export const App: React.FC = () => {
               key={`${currentUser.uid}:${chatPatientId}`}
               patientId={chatPatientId}
               patientName={dashboard.patientName}
+              patientPhotoUrl={
+                memberPhotos[chatPatientId] ??
+                (chatPatientId === currentUser.uid ? myPhotoUrl : null)
+              }
               currentUserId={currentUser.uid}
               caregiverName={dashboard.caregiverName}
               getIdToken={getChatToken}
@@ -569,6 +639,10 @@ export const App: React.FC = () => {
             totpSecret={totpSecret}
             whatsappLinkedPhone={userPhone}
             onOpenMemberProfile={(b) => setInspectingBinding(b)}
+            photoUrl={myPhotoUrl}
+            onUploadPhoto={handleUploadPhoto}
+            onRemovePhoto={handleRemovePhoto}
+            memberPhotos={memberPhotos}
           />
         </main>
       ) : activeTab === "community" ? (
@@ -577,6 +651,7 @@ export const App: React.FC = () => {
             currentUserId={currentUser?.uid || ""}
             idToken={getChatToken}
             authorName={dashboard.caregiverName}
+            authorPhotoUrl={myPhotoUrl}
             onToast={showToast}
           />
         </main>
@@ -746,16 +821,6 @@ export const App: React.FC = () => {
           <span className="text-[12px] font-bold">Família</span>
         </button>
 
-        <button
-          onClick={() => setActiveTab("profile")}
-          className={`flex flex-col items-center gap-0.5 px-5 py-1.5 rounded-xl transition-all active:scale-95 ${
-            activeTab === "profile" ? "text-[#00897B]" : "text-[#64748B]"
-          }`}
-        >
-          <UserIcon className="w-5 h-5" />
-          <span className="text-[12px] font-bold">Perfil</span>
-        </button>
-
         {/* AUD-PW04: Aba Comunidade — visível para todos os usuários do PWA */}
         <button
           onClick={() => setActiveTab("community")}
@@ -765,6 +830,17 @@ export const App: React.FC = () => {
         >
           <UserPlus className="w-5 h-5" />
           <span className="text-[12px] font-bold">Comunidade</span>
+        </button>
+
+        {/* Perfil no canto direito (mais acessivel ao polegar) */}
+        <button
+          onClick={() => setActiveTab("profile")}
+          className={`flex flex-col items-center gap-0.5 px-5 py-1.5 rounded-xl transition-all active:scale-95 ${
+            activeTab === "profile" ? "text-[#00897B]" : "text-[#64748B]"
+          }`}
+        >
+          <UserIcon className="w-5 h-5" />
+          <span className="text-[12px] font-bold">Perfil</span>
         </button>
       </nav>
 
@@ -891,6 +967,7 @@ export const App: React.FC = () => {
           onClose={() => setInspectingBinding(null)}
           binding={inspectingBinding}
           currentUserId={currentUser?.uid || ""}
+          memberPhotos={memberPhotos}
           onRevoke={handleRevokeBinding}
           onGoToDashboard={() => {
             if (inspectingBinding) {

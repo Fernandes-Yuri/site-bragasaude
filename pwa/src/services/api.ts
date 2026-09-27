@@ -884,6 +884,7 @@ export async function fetchCommunityPosts(idToken?: string): Promise<CommunityPo
       expiresAt: 0,
       likes: p.reaction_count || 0,
       isLikedByViewer: !!p.has_user_reacted,
+      photoUrl: p.photo_url ?? p.photoUrl ?? null,
     }));
   } catch {
     return [];
@@ -964,4 +965,112 @@ export async function likeCommunityPost(
   } catch {
     return { success: false };
   }
+}
+
+
+// =============================================================
+// FOTO DE PERFIL (avatar) — endpoints dedicados do gateway:
+// POST/DELETE /api/profile/{id}/avatar, GET /api/profile/{id}
+// (coluna photo_url fora do upsert — migration 024) e
+// GET /api/files/avatars/{id}/{filename}.
+// =============================================================
+
+const AVATAR_TYPES = ["image/jpeg", "image/png", "image/webp"];
+const AVATAR_MAX_DIMENSION = 512;
+
+function loadImageElement(file: File): Promise<HTMLImageElement> {
+  return new Promise((resolve, reject) => {
+    const objectUrl = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = () => {
+      URL.revokeObjectURL(objectUrl);
+      resolve(img);
+    };
+    img.onerror = () => {
+      URL.revokeObjectURL(objectUrl);
+      reject(new Error("Arquivo de imagem inválido."));
+    };
+    img.src = objectUrl;
+  });
+}
+
+/**
+ * Redimensiona a foto escolhida para no maximo 512px (canvas, sem
+ * dependencias) e devolve JPEG pronto para o upload de 5 MB do gateway.
+ */
+export async function resizeAvatarFile(file: File): Promise<Blob> {
+  if (!AVATAR_TYPES.includes(file.type)) {
+    throw new Error("Formato não suportado — use JPEG, PNG ou WebP.");
+  }
+  const img = await loadImageElement(file);
+  const scale = Math.min(1, AVATAR_MAX_DIMENSION / Math.max(img.naturalWidth, img.naturalHeight));
+  const width = Math.max(1, Math.round(img.naturalWidth * scale));
+  const height = Math.max(1, Math.round(img.naturalHeight * scale));
+  const canvas = document.createElement("canvas");
+  canvas.width = width;
+  canvas.height = height;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) throw new Error("Não foi possível processar a foto.");
+  ctx.drawImage(img, 0, 0, width, height);
+  const blob = await new Promise<Blob | null>((resolve) =>
+    canvas.toBlob(resolve, "image/jpeg", 0.85)
+  );
+  if (!blob) throw new Error("Não foi possível processar a foto.");
+  return blob;
+}
+
+/** Lê a photo_url do perfil (qualquer familiar pode ler; 404/403 → null). */
+export async function fetchProfilePhoto(userId: string, idToken?: string): Promise<string | null> {
+  try {
+    const res = await fetch(`${API_BASE_URL}/api/profile/${encodeURIComponent(userId)}`, {
+      headers: careHeaders(idToken),
+    });
+    if (!res.ok) return null;
+    const data = await res.json();
+    return data?.photo_url ?? data?.photoUrl ?? null;
+  } catch {
+    return null;
+  }
+}
+
+/** Busca as fotos de varios membros da familia (uma requisicao por id). */
+export async function fetchMemberPhotos(
+  userIds: string[],
+  idToken?: string
+): Promise<Record<string, string>> {
+  const photos: Record<string, string> = {};
+  await Promise.all(
+    userIds.map(async (id) => {
+      const url = await fetchProfilePhoto(id, idToken);
+      if (url) photos[id] = url;
+    })
+  );
+  return photos;
+}
+
+/** Envia a foto de perfil do proprio usuario (dono). Retorna a photo_url. */
+export async function uploadProfileAvatar(
+  userId: string,
+  blob: Blob,
+  idToken?: string
+): Promise<string> {
+  const form = new FormData();
+  form.append("file", blob, "avatar.jpg");
+  const res = await fetch(`${API_BASE_URL}/api/profile/${encodeURIComponent(userId)}/avatar`, {
+    method: "POST",
+    headers: careHeaders(idToken),
+    body: form,
+  });
+  await requireOk(res, "Não foi possível enviar a foto de perfil.");
+  const data = await res.json();
+  return data.photo_url as string;
+}
+
+/** Remove a foto de perfil — o cliente volta ao fallback de iniciais. */
+export async function deleteProfileAvatar(userId: string, idToken?: string): Promise<void> {
+  const res = await fetch(`${API_BASE_URL}/api/profile/${encodeURIComponent(userId)}/avatar`, {
+    method: "DELETE",
+    headers: careHeaders(idToken),
+  });
+  await requireOk(res, "Não foi possível remover a foto de perfil.");
 }

@@ -1,12 +1,15 @@
 import React, { useState } from "react";
 import { X, Shield, Clock, Trash2, AlertTriangle, UserCheck, Calendar } from "lucide-react";
 import type { FamilyBinding } from "../types";
+import { Avatar } from "./Avatar";
 
 interface FamilyMemberProfileModalProps {
   isOpen: boolean;
   onClose: () => void;
   binding: FamilyBinding | null;
   currentUserId: string;
+  /** Fotos de perfil dos membros por userId. */
+  memberPhotos?: Record<string, string>;
   onRevoke: (binding: FamilyBinding) => Promise<void>;
   onGoToDashboard?: () => void;
 }
@@ -16,6 +19,7 @@ export const FamilyMemberProfileModal: React.FC<FamilyMemberProfileModalProps> =
   onClose,
   binding,
   currentUserId,
+  memberPhotos,
   onRevoke,
   onGoToDashboard,
 }) => {
@@ -29,12 +33,9 @@ export const FamilyMemberProfileModal: React.FC<FamilyMemberProfileModalProps> =
     ? (binding.patientName || "Familiar Acompanhado")
     : (binding.caregiverName || "Familiar Cuidador");
 
-  const initials = displayName
-    .trim()
-    .split(/\s+/)
-    .slice(0, 2)
-    .map((n) => n.charAt(0).toUpperCase())
-    .join("") || "F";
+  const memberPhoto = isCaredByMe
+    ? memberPhotos?.[binding.patientUserId]
+    : memberPhotos?.[binding.caregiverUserId];
 
   const formattedDate = new Date(binding.createdAt).toLocaleDateString("pt-BR", {
     day: "2-digit",
@@ -72,9 +73,12 @@ export const FamilyMemberProfileModal: React.FC<FamilyMemberProfileModalProps> =
         <div className="p-5 overflow-y-auto space-y-4">
           {/* Avatar e Nome */}
           <div className="flex flex-col items-center text-center space-y-2 pt-2">
-            <div className="w-20 h-20 rounded-full bg-gradient-to-b from-[#26A69A] to-[#00897B] flex items-center justify-center text-2xl font-bold text-white shadow-md shadow-emerald-900/20 border-2 border-white">
-              {initials}
-            </div>
+            <Avatar
+              name={displayName}
+              photoUrl={memberPhoto}
+              className="w-20 h-20 bg-gradient-to-b from-[#26A69A] to-[#00897B] shadow-md shadow-emerald-900/20 border-2 border-white"
+              textClassName="text-2xl"
+            />
             <div>
               <h3 className="text-lg font-bold text-[#1E293B]">{displayName}</h3>
               <p className="text-xs text-[#64748B]">

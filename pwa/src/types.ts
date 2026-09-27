@@ -168,4 +168,5 @@ export interface CommunityPost {
   expiresAt: number;
   likes: number;
   isLikedByViewer: boolean;
+  photoUrl?: string | null;
 }

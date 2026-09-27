@@ -7,10 +7,13 @@ import {
   QUICK_TEMPLATES,
 } from "../services/api";
 import type { FamilyMessage } from "../types";
+import { Avatar } from "./Avatar";
 
 interface FamilyChatScreenProps {
   patientId: string;
   patientName: string;
+  /** Foto de perfil do paciente/familiar do grupo (fallback: iniciais). */
+  patientPhotoUrl?: string | null;
   currentUserId: string;
   caregiverName: string;
   getIdToken?: () => Promise<string | undefined>;
@@ -32,6 +35,7 @@ const MAX_VISIBLE_MESSAGES = 25;
 export const FamilyChatScreen: React.FC<FamilyChatScreenProps> = ({
   patientId,
   patientName,
+  patientPhotoUrl,
   currentUserId,
   caregiverName,
   getIdToken,
@@ -263,21 +267,29 @@ export const FamilyChatScreen: React.FC<FamilyChatScreenProps> = ({
             </button>
           )}
 
-          {/* Avatar com inicial — SEMPRE clicável quando onOpenProfile existe */}
+          {/* Avatar com foto — SEMPRE clicável quando onOpenProfile existe */}
           {onOpenProfile ? (
             <button
               type="button"
               onClick={onOpenProfile}
-              className="w-10 h-10 rounded-full bg-gradient-to-b from-[#26A69A] to-[#00897B] flex items-center justify-center text-sm font-bold text-white shrink-0 shadow-xs hover:opacity-90 active:scale-95 transition-all cursor-pointer"
+              className="shrink-0 hover:opacity-90 active:scale-95 transition-all cursor-pointer"
               title="Ver perfil do familiar"
               aria-label="Ver perfil do familiar"
             >
-              {safeInitials}
+              <Avatar
+                name={safeInitials}
+                photoUrl={patientPhotoUrl}
+                className="w-10 h-10 bg-gradient-to-b from-[#26A69A] to-[#00897B] shadow-xs"
+                textClassName="text-sm"
+              />
             </button>
           ) : (
-            <div className="w-10 h-10 rounded-full bg-gradient-to-b from-[#26A69A] to-[#00897B] flex items-center justify-center text-sm font-bold text-white shrink-0 shadow-xs">
-              {safeInitials}
-            </div>
+            <Avatar
+              name={safeInitials}
+              photoUrl={patientPhotoUrl}
+              className="w-10 h-10 bg-gradient-to-b from-[#26A69A] to-[#00897B] shadow-xs"
+              textClassName="text-sm"
+            />
           )}
 
           {/* Nome e subtítulo interativo */}

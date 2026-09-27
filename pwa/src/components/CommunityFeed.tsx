@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from "react";
 import { Heart, MapPin, Camera, Award, Lightbulb, Plus, Globe, Lock } from "lucide-react";
 import type { CommunityPost } from "../types";
 import { fetchCommunityPosts, createCommunityPost, likeCommunityPost } from "../services/api";
+import { Avatar } from "./Avatar";
 
 const TYPE_ICONS: Record<string, React.FC<{ className?: string }>> = {
   achievement: Award,
@@ -31,10 +32,12 @@ interface CommunityFeedProps {
   currentUserId: string;
   idToken?: () => Promise<string | undefined>;
   authorName?: string;
+  /** Foto de perfil de quem publica (para o post criado aqui mesmo). */
+  authorPhotoUrl?: string | null;
   onToast?: (msg: string, type?: "success" | "error") => void;
 }
 
-export const CommunityFeed: React.FC<CommunityFeedProps> = ({ currentUserId, idToken, authorName, onToast }) => {
+export const CommunityFeed: React.FC<CommunityFeedProps> = ({ currentUserId, idToken, authorName, authorPhotoUrl, onToast }) => {
   const [posts, setPosts] = useState<CommunityPost[]>([]);
   const [newPostContent, setNewPostContent] = useState("");
   const [newPostType, setNewPostType] = useState<CommunityPost["type"]>("achievement");
@@ -69,7 +72,7 @@ export const CommunityFeed: React.FC<CommunityFeedProps> = ({ currentUserId, idT
         currentUserId, newPostContent.trim(), newPostType, token, newPostVisibility, authorName
       );
       if (post) {
-        setPosts((prev) => [post, ...prev]);
+        setPosts((prev) => [{ ...post, photoUrl: authorPhotoUrl ?? null }, ...prev]);
         setNewPostContent("");
         setShowComposer(false);
       } else {
@@ -206,6 +209,12 @@ export const CommunityFeed: React.FC<CommunityFeedProps> = ({ currentUserId, idT
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
+                      <Avatar
+                        name={post.authorName}
+                        photoUrl={post.photoUrl}
+                        className="w-6 h-6 bg-gradient-to-b from-[#26A69A] to-[#00897B]"
+                        textClassName="text-[10px]"
+                      />
                       <span className="text-sm font-bold text-[#1E293B]">{post.authorName}</span>
                       <span className="text-xs text-[#64748B]">{post.authorRelation}</span>
                       <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${colorClass}`}>

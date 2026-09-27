@@ -1,11 +1,14 @@
 import React from "react";
 import { UserPlus } from "lucide-react";
+import { Avatar } from "./Avatar";
 
 interface EmeraldHeaderBannerProps {
   title?: string;
   subtitle?: string;
   patientName: string;
   avatarInitials?: string;
+  /** Foto de perfil do cuidador (custom ou Google) — null usa iniciais. */
+  avatarUrl?: string | null;
   onConnectFamily?: () => void;
   onOpenProfile?: () => void;
 }
@@ -15,6 +18,7 @@ export const EmeraldHeaderBanner: React.FC<EmeraldHeaderBannerProps> = ({
   subtitle = "Círculo Familiar e Cuidados",
   patientName,
   avatarInitials,
+  avatarUrl,
   onConnectFamily,
   onOpenProfile,
 }) => {
@@ -33,9 +37,12 @@ export const EmeraldHeaderBanner: React.FC<EmeraldHeaderBannerProps> = ({
           className="flex items-center gap-3 min-w-0 active:opacity-80 transition-opacity disabled:active:opacity-100"
           title="Abrir meu perfil"
         >
-          <div className="w-10 h-10 rounded-full bg-white/20 border border-white/30 flex items-center justify-center text-sm font-bold text-white shadow-inner shrink-0">
-            {initials}
-          </div>
+          <Avatar
+            name={initials}
+            photoUrl={avatarUrl}
+            className="w-10 h-10 bg-white/20 border border-white/30 shadow-inner"
+            textClassName="text-sm"
+          />
           <div className="min-w-0">
             <h1 className="text-xl font-bold tracking-tight text-white truncate">{title}</h1>
             <p className="text-xs text-emerald-100/90 font-medium truncate">{subtitle}</p>
