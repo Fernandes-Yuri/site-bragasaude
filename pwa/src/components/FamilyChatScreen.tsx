@@ -255,7 +255,7 @@ export const FamilyChatScreen: React.FC<FamilyChatScreenProps> = ({
             <button
               type="button"
               onClick={onBackToInbox}
-              className="w-8 h-8 rounded-full flex items-center justify-center text-[#64748B] hover:bg-slate-100 active:scale-95 transition-all shrink-0"
+              className="w-11 h-11 rounded-full flex items-center justify-center text-[#64748B] hover:bg-slate-100 active:scale-95 transition-all shrink-0"
               title="Voltar para conversas"
               aria-label="Voltar para conversas"
             >
@@ -301,7 +301,7 @@ export const FamilyChatScreen: React.FC<FamilyChatScreenProps> = ({
             <button
               type="button"
               onClick={onOpenProfile}
-              className="w-8 h-8 rounded-xl flex items-center justify-center text-[#64748B] hover:text-[#00897B] hover:bg-[#E0F2F1] active:scale-95 transition-all"
+              className="w-11 h-11 rounded-xl flex items-center justify-center text-[#64748B] hover:text-[#00897B] hover:bg-[#E0F2F1] active:scale-95 transition-all"
               title="Perfil do familiar"
               aria-label="Perfil do familiar"
             >

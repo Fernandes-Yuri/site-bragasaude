@@ -361,7 +361,7 @@ export const VoiceAssistant: React.FC<VoiceAssistantProps> = ({
                   setPanelOpen(false);
                 }}
                 aria-label="Fechar"
-                className="w-7 h-7 rounded-full bg-[#F1F5F9] hover:bg-[#E2E8F0] flex items-center justify-center text-[#64748B] active:scale-95 transition-all"
+                className="w-9 h-9 rounded-full bg-[#F1F5F9] hover:bg-[#E2E8F0] flex items-center justify-center text-[#64748B] active:scale-95 transition-all"
               >
                 <X className="w-4 h-4" />
               </button>

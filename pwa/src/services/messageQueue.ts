@@ -114,9 +114,8 @@ export async function flushMessageQueue(
   return deliveredCount;
 }
 
-// AUD-PW(M): getPendingMessageCount era codigo MORTO — definido mas sem
-// nenhum chamador no app. Removido (a UI de "enviando" usa o estado local
-// do componente, nao esta contagem).
+// AUD-PW(M): getPendingMessageCount era codigo MORTO — Removido.
+// A UI de "enviando" usa o estado local do componente, nao esta contagem.
 
 /**
  * Limpa a fila de mensagens do IndexedDB — deve rodar no logout.

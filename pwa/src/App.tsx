@@ -102,7 +102,10 @@ export const App: React.FC = () => {
     setToastMessage(msg);
     setToastType(type);
     if (toastTimer.current) clearTimeout(toastTimer.current);
-    toastTimer.current = setTimeout(() => setToastMessage(null), 3500);
+    // AUD-PW(B): 3500ms era curto demais — dois toasts consecutivos
+    // faziam o primeiro desaparecer antes de o usuário ler. Agora 5000ms
+    // garante leitura adequada mesmo com toasts encadeados.
+    toastTimer.current = setTimeout(() => setToastMessage(null), 5000);
   }, []);
 
   const handleRevokeBinding = useCallback(async (binding: FamilyBinding) => {
