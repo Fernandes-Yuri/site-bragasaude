@@ -62,9 +62,6 @@ const HistoryMetricsSection = React.lazy(() =>
 const FamilyConnectModal = React.lazy(() =>
   import("./components/FamilyConnectModal").then((m) => ({ default: m.FamilyConnectModal }))
 );
-const PhoneLinkDialog = React.lazy(() =>
-  import("./components/PhoneLinkDialog").then((m) => ({ default: m.PhoneLinkDialog }))
-);
 const MedicationReminderDialog = React.lazy(() =>
   import("./components/CaregiverDialogs").then((m) => ({ default: m.MedicationReminderDialog }))
 );
@@ -148,7 +145,6 @@ export const App: React.FC = () => {
   const [showAppointmentDialog, setShowAppointmentDialog] = useState(false);
   const [showCareNoteDialog, setShowCareNoteDialog] = useState(false);
   const [showConnectModal, setShowConnectModal] = useState(false);
-  const [showPhoneLinkDialog, setShowPhoneLinkDialog] = useState(false);
   const [showDoctorReport, setShowDoctorReport] = useState(false);
   const [medicationStock, setMedicationStock] = useState<MedicationStockItem[]>([]);
   const [activityFeed, setActivityFeed] = useState<ActivityFeedItem[]>([]);
@@ -503,8 +499,7 @@ export const App: React.FC = () => {
         subtitle={`Cuidador: ${dashboard.caregiverName}`}
         patientName={dashboard.patientName}
         onConnectFamily={() => setShowConnectModal(true)}
-        onLinkWhatsApp={() => setShowPhoneLinkDialog(true)}
-        onOpenProfile={() => setActiveTab("profile")}
+                onOpenProfile={() => setActiveTab("profile")}
       />
 
       {activeTab === "home" && groups.length > 1 && (
@@ -567,7 +562,6 @@ export const App: React.FC = () => {
             bindings={bindings}
             isRefreshing={dashboard.isLoading}
             onRefresh={handleRefresh}
-            onLinkWhatsApp={() => setShowPhoneLinkDialog(true)}
             onConnectFamily={() => setShowConnectModal(true)}
             onLogout={handleLogout}
             totpSecret={totpSecret}
@@ -597,7 +591,6 @@ export const App: React.FC = () => {
               </div>
             </div>
             <button
-              onClick={() => setShowPhoneLinkDialog(true)}
               className="px-3 py-1.5 rounded-xl bg-[#00897B] text-white text-xs font-bold shrink-0 active:scale-95 transition-all"
             >
               Vincular
@@ -896,23 +889,6 @@ export const App: React.FC = () => {
                   .catch((e) => console.warn("Vitais do novo vínculo pendentes:", e));
               }
               showToast(`Conectado com sucesso a ${patientName}!`);
-            }}
-          />
-        )}
-
-        {showPhoneLinkDialog && (
-          <PhoneLinkDialog
-            isOpen={showPhoneLinkDialog}
-            onClose={() => setShowPhoneLinkDialog(false)}
-            initialPhone={userPhone || ""}
-            onSuccess={async (phone) => {
-              setUserPhone(phone);
-              if (currentUser) {
-                localStorage.setItem(`braga_phone_${currentUser.uid}`, phone);
-                const tok = await currentUser.getIdToken();
-                await syncCaregiverPhone(currentUser.uid, dashboard.caregiverName, phone, tok);
-              }
-              showToast("WhatsApp vinculado com sucesso!");
             }}
           />
         )}

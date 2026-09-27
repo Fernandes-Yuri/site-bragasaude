@@ -20,7 +20,6 @@ interface ProfileScreenProps {
   bindings: FamilyBinding[];
   isRefreshing: boolean;
   onRefresh: () => void;
-  onLinkWhatsApp: () => void;
   onConnectFamily: () => void;
   onLogout: () => void;
   /** Segredo TOTP (base32) do vinculo de WhatsApp; cliente gera, gateway guarda. */
@@ -38,7 +37,6 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
   bindings,
   isRefreshing,
   onRefresh,
-  onLinkWhatsApp,
   onConnectFamily,
   onLogout,
   totpSecret,
@@ -92,7 +90,6 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
         </div>
 
         <button
-          onClick={onLinkWhatsApp}
           className="w-full px-5 py-3.5 flex items-center gap-3 active:bg-[#F8FAFC] transition-colors text-left"
         >
           <div className="w-9 h-9 rounded-xl bg-[#E0F2F1] text-[#00897B] flex items-center justify-center shrink-0">
