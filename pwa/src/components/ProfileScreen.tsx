@@ -8,7 +8,7 @@ import {
   Users,
   ShieldCheck,
   ChevronRight,
-  Camera,
+  Pencil,
 } from "lucide-react";
 import type { FamilyBinding } from "../types";
 import { WhatsAppLinkButton } from "./WhatsAppLinkButton";
@@ -89,21 +89,23 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
       {/* Cabeçalho do perfil com avatar */}
       <div className="bg-white rounded-3xl shadow-2xs border border-[#E5EBE8] p-5 flex flex-col items-center gap-3">
         <div className="relative">
-          <Avatar
-            name={caregiverName}
-            photoUrl={photoUrl}
-            className="w-20 h-20 bg-gradient-to-b from-[#26A69A] to-[#00897B] shadow-lg shadow-emerald-900/20 border-2 border-white"
-            textClassName="text-2xl"
-          />
           <button
             type="button"
             onClick={() => fileInputRef.current?.click()}
             disabled={isPhotoBusy}
-            title="Alterar foto de perfil"
-            aria-label="Alterar foto de perfil"
-            className="absolute -bottom-1 -right-1 w-8 h-8 rounded-full bg-[#00897B] border-2 border-white flex items-center justify-center text-white shadow-md active:scale-95 transition-all disabled:opacity-60"
+            title="Editar foto de perfil"
+            aria-label="Editar foto de perfil"
+            className="relative block rounded-full active:scale-98 transition-all disabled:opacity-60"
           >
-            <Camera className="w-4 h-4" />
+            <Avatar
+              name={caregiverName}
+              photoUrl={photoUrl}
+              className="w-20 h-20 bg-gradient-to-b from-[#26A69A] to-[#00897B] shadow-lg shadow-emerald-900/20 border-2 border-white"
+              textClassName="text-2xl"
+            />
+            <span className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-[#00897B] border-2 border-white flex items-center justify-center text-white shadow-sm pointer-events-none">
+              <Pencil className="w-3.5 h-3.5" />
+            </span>
           </button>
           <input
             ref={fileInputRef}
