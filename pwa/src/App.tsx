@@ -50,11 +50,12 @@ const isDevHost = typeof window !== "undefined" &&
   (window.location.hostname === "localhost" ||
    window.location.hostname === "127.0.0.1" ||
    window.location.hostname === "::1");
+const DesktopGateNull: React.FC<{ onBypassDev?: () => void }> = () => null;
 const DesktopGateModal = isDevHost
   ? React.lazy(() =>
       import("./components/DesktopGateModal").then((m) => ({ default: m.DesktopGateModal }))
     )
-  : (() => Promise.resolve({ default: () => null })) as unknown as React.LazyExoticComponent<React.FC<{onBypassDev?: () => void}>>;
+  : React.lazy(() => Promise.resolve({ default: DesktopGateNull }));
 const HistoryMetricsSection = React.lazy(() =>
   import("./components/HistoryMetricsSection").then((m) => ({ default: m.HistoryMetricsSection }))
 );

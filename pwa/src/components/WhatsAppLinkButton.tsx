@@ -28,6 +28,7 @@ export const WhatsAppLinkButton: React.FC<WhatsAppLinkButtonProps> = ({
   // malformado, contexto inseguro HTTP, navegador sem suporte). Sem try/catch
   // virava promise rejection nao tratada e o botao simplesmente nao fazia nada.
   const [linkError, setLinkError] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
 
   // Relogio decrescente da janela do codigo.
   useEffect(() => {
@@ -46,7 +47,6 @@ export const WhatsAppLinkButton: React.FC<WhatsAppLinkButtonProps> = ({
     );
   }
 
-  const [copied, setCopied] = useState(false);
   const handleLink = async () => {
     if (!totpSecret) return;
     setLinkError(null);

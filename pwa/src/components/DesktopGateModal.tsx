@@ -6,15 +6,10 @@ interface DesktopGateModalProps {
 }
 
 export const DesktopGateModal: React.FC<DesktopGateModalProps> = ({ onBypassDev }) => {
-  // AUD-PW(B): este modal é um artifact de desenvolvimento.
-  // Nunca deve aparecer em produção — o PWA é mobile-first.
-  // Só renderiza em localhost para facilitar testes do dev.
   const isDev = typeof window !== "undefined" &&
     (window.location.hostname === "localhost" ||
      window.location.hostname === "127.0.0.1" ||
      window.location.hostname === "::1");
-  if (!isDev) return null;
-
   const [isDesktop, setIsDesktop] = useState(false);
   const [bypassed, setBypassed] = useState(false);
   // AUD-PW(B): se o api.qrserver.com cair ou for bloqueado, a imagem quebra
@@ -33,6 +28,12 @@ export const DesktopGateModal: React.FC<DesktopGateModalProps> = ({ onBypassDev 
     window.addEventListener("resize", checkWidth);
     return () => window.removeEventListener("resize", checkWidth);
   }, []);
+
+  // AUD-PW(B): este modal é um artifact de desenvolvimento.
+  // Nunca deve aparecer em produção — o PWA é mobile-first.
+  // Só renderiza em localhost para facilitar testes do dev.
+  // (O return fica DEPOIS de todos os hooks — Rules of Hooks.)
+  if (!isDev) return null;
 
   if (!isDesktop || bypassed) return null;
 
