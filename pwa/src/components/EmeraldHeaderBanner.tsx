@@ -1,5 +1,5 @@
 import React from "react";
-import { UserPlus, MessageSquare, User } from "lucide-react";
+import { UserPlus } from "lucide-react";
 
 interface EmeraldHeaderBannerProps {
   title?: string;
@@ -7,7 +7,6 @@ interface EmeraldHeaderBannerProps {
   patientName: string;
   avatarInitials?: string;
   onConnectFamily?: () => void;
-  onLinkWhatsApp?: () => void;
   onOpenProfile?: () => void;
 }
 
@@ -17,7 +16,6 @@ export const EmeraldHeaderBanner: React.FC<EmeraldHeaderBannerProps> = ({
   patientName,
   avatarInitials,
   onConnectFamily,
-  onLinkWhatsApp,
   onOpenProfile,
 }) => {
   const initials =
@@ -44,18 +42,8 @@ export const EmeraldHeaderBanner: React.FC<EmeraldHeaderBannerProps> = ({
           </div>
         </button>
 
-        {/* Ações superiores — apenas 2 botões para não estourar telas estreitas */}
+        {/* Ações superiores — 1 único botão (perfil já abre pelo avatar à esquerda) */}
         <div className="flex items-center gap-1.5 shrink-0">
-          {onLinkWhatsApp && (
-            <button
-              onClick={onLinkWhatsApp}
-              className="w-9 h-9 rounded-full bg-white/15 hover:bg-white/25 active:scale-95 transition-all flex items-center justify-center text-white"
-              title="Vincular WhatsApp"
-            >
-              <MessageSquare className="w-4 h-4" />
-            </button>
-          )}
-
           {onConnectFamily && (
             <button
               onClick={onConnectFamily}
@@ -63,16 +51,6 @@ export const EmeraldHeaderBanner: React.FC<EmeraldHeaderBannerProps> = ({
               title="Conectar Familiar por Código"
             >
               <UserPlus className="w-4 h-4" />
-            </button>
-          )}
-
-          {onOpenProfile && (
-            <button
-              onClick={onOpenProfile}
-              className="w-9 h-9 rounded-full bg-white/15 hover:bg-white/25 active:scale-95 transition-all flex items-center justify-center text-white"
-              title="Meu Perfil"
-            >
-              <User className="w-4 h-4" />
             </button>
           )}
         </div>

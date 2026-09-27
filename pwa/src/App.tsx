@@ -1,6 +1,6 @@
 import { familyGroups, resolveFamilyGroup } from './services/familyGroups';
 import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
-import { PhoneCall, CheckCircle2, AlertCircle, MessageSquare, UserPlus, Home, MessageCircle, User as UserIcon, FileText } from "lucide-react";
+import { PhoneCall, CheckCircle2, AlertCircle, UserPlus, Home, MessageCircle, User as UserIcon, FileText } from "lucide-react";
 import {
   auth,
   signOut,
@@ -525,7 +525,7 @@ export const App: React.FC = () => {
 
       {/* Conteúdo Principal — renderizado por aba */}
       {activeTab === "chat" ? (
-        <main className="flex-1 flex flex-col min-h-0 overflow-hidden">
+        <main className="flex-1 flex flex-col min-h-0 overflow-hidden pb-24">
           {groups.length > 1 && (showInboxList || !chatPatientId) ? (
             <FamilyInboxList
               groups={groups}
@@ -580,26 +580,6 @@ export const App: React.FC = () => {
         </main>
       ) : (
       <main className="p-4 space-y-4 flex-1 pb-24 overflow-y-auto">
-        {/* Banner de Lembrete para Vincular WhatsApp se ainda não tiver número */}
-        {!userPhone && (
-          <div className="bg-[#FFF8E1] border border-[#FFE082] rounded-2xl p-3.5 flex items-center justify-between shadow-2xs">
-            <div className="flex items-center gap-2.5 min-w-0 pr-2">
-              <MessageSquare className="w-5 h-5 text-[#F57F17] shrink-0" />
-              <div className="min-w-0">
-                <p className="text-xs font-bold text-[#1E293B]">Vincule seu WhatsApp</p>
-                <p className="text-[12px] text-[#64748B] truncate">
-                  Receba avisos de saúde e emergência direto no WhatsApp.
-                </p>
-              </div>
-            </div>
-            <button
-              className="px-3 py-1.5 rounded-xl bg-[#00897B] text-white text-xs font-bold shrink-0 active:scale-95 transition-all"
-            >
-              Vincular
-            </button>
-          </div>
-        )}
-
         {/* Banner de Orientação se ainda não tiver familiar conectado */}
         {!hasRealBinding && (
           <div className="bg-[#E0F2F1]/50 border border-[#B2DFDB] rounded-2xl p-4 flex items-center justify-between shadow-2xs">
