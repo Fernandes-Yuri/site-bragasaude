@@ -574,7 +574,7 @@ export const App: React.FC = () => {
       ) : activeTab === "community" ? (
         <main className="p-4 space-y-4 flex-1 pb-24 overflow-y-auto">
           <CommunityFeed
-            patientId={chatPatientId}
+            currentUserId={currentUser?.uid || ""}
             idToken={getChatToken}
             authorName={dashboard.caregiverName}
             onToast={showToast}

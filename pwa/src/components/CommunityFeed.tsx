@@ -28,13 +28,13 @@ const TYPE_LABELS: Record<string, string> = {
 };
 
 interface CommunityFeedProps {
-  patientId: string;
+  currentUserId: string;
   idToken?: () => Promise<string | undefined>;
   authorName?: string;
   onToast?: (msg: string, type?: "success" | "error") => void;
 }
 
-export const CommunityFeed: React.FC<CommunityFeedProps> = ({ patientId, idToken, authorName, onToast }) => {
+export const CommunityFeed: React.FC<CommunityFeedProps> = ({ currentUserId, idToken, authorName, onToast }) => {
   const [posts, setPosts] = useState<CommunityPost[]>([]);
   const [newPostContent, setNewPostContent] = useState("");
   const [newPostType, setNewPostType] = useState<CommunityPost["type"]>("achievement");
@@ -45,12 +45,12 @@ export const CommunityFeed: React.FC<CommunityFeedProps> = ({ patientId, idToken
   const loadPosts = useCallback(async () => {
     try {
       const token = await idToken?.();
-      const data = await fetchCommunityPosts(patientId, token);
+      const data = await fetchCommunityPosts(token);
       setPosts(data);
     } catch {
       // Silencioso — feed vazio é aceitável
     }
-  }, [patientId, idToken]);
+  }, [idToken]);
 
   useEffect(() => {
     loadPosts();
@@ -58,15 +58,15 @@ export const CommunityFeed: React.FC<CommunityFeedProps> = ({ patientId, idToken
 
   const handlePost = async () => {
     if (!newPostContent.trim()) return;
-    if (!patientId) {
-      onToast?.("Conecte um familiar antes de publicar.", "error");
+    if (!currentUserId) {
+      onToast?.("Faça login antes de publicar.", "error");
       return;
     }
     setIsPosting(true);
     try {
       const token = idToken ? await idToken() : undefined;
       const post = await createCommunityPost(
-        patientId, newPostContent.trim(), newPostType, token, newPostVisibility, authorName
+        currentUserId, newPostContent.trim(), newPostType, token, newPostVisibility, authorName
       );
       if (post) {
         setPosts((prev) => [post, ...prev]);
@@ -86,7 +86,7 @@ export const CommunityFeed: React.FC<CommunityFeedProps> = ({ patientId, idToken
     if (post.isLikedByViewer) return;
     try {
       const token = idToken ? await idToken() : undefined;
-      const { success } = await likeCommunityPost(post.id, token);
+      const { success } = await likeCommunityPost(post.id, currentUserId, token);
       if (!success) {
         onToast?.("Não foi possível curtir agora.", "error");
         return;
@@ -118,7 +118,6 @@ export const CommunityFeed: React.FC<CommunityFeedProps> = ({ patientId, idToken
             Celebre conquistas, receitas e dicas do seu familiar
           </p>
         </div>
-        {patientId && (
           <button
             onClick={() => setShowComposer(!showComposer)}
             className="flex items-center gap-1.5 text-sm font-semibold text-[#00695C] hover:underline"
@@ -126,7 +125,6 @@ export const CommunityFeed: React.FC<CommunityFeedProps> = ({ patientId, idToken
             <Plus className="w-4 h-4" />
             Publicar
           </button>
-        )}
       </div>
 
       {/* Composer */}

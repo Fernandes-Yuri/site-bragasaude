@@ -838,39 +838,61 @@ export async function createMedication(patientId: string, input: MedicationCreat
 }
 
 
-// Community Feed — "Publicações de Orgulho Familiar" (01_MODO_CUIDADOR_E_PONTE_FAMILIAR.md §4)
+// Community Feed — Mural da Comunidade (endpoints sociais do gateway:
+// GET /api/social/feed, POST /api/sync/social-post, POST /api/sync/post-reaction).
+// Nota do equivoco em Contexto/02_PWA_CUIDADOR/05_NOTA_EQVOCO_COMMUNITY_POSTS_E_MURAL_SOCIAL.md
 import type { CommunityPost } from "../types";
 
-/** Busca as publicações do feed comunitário (comunidade + familiares privados). */
-export async function fetchCommunityPosts(patientId: string, idToken?: string): Promise<CommunityPost[]> {
+/** post_type do mural social (Android) → tipo do PWA. */
+function mapSocialType(postType: string): CommunityPost["type"] {
+  switch (postType) {
+    case "milestone":
+    case "family":
+      return "milestone";
+    case "recipe":
+      return "recipe";
+    case "walk":
+      return "walk";
+    case "tip":
+      return "tip";
+    case "achievement":
+      return "achievement";
+    default:
+      // streak, level_up, goal_hit, weekly_recap → conquista
+      return "achievement";
+  }
+}
+
+/** Busca o mural da comunidade (posts FAMILY só aparecem para autor/vínculos). */
+export async function fetchCommunityPosts(idToken?: string): Promise<CommunityPost[]> {
   try {
-    const res = await fetch(`${API_BASE_URL}/api/community/posts/${encodeURIComponent(patientId)}`, {
+    const res = await fetch(`${API_BASE_URL}/api/social/feed?limit=100`, {
       method: "GET",
       headers: { "Content-Type": "application/json", ...(idToken ? { Authorization: `Bearer ${idToken}` } : {}) },
     });
     if (!res.ok) return [];
     const data = await res.json();
-    return (data.posts || data).map((p: any) => ({
+    return (Array.isArray(data) ? data : []).map((p: any) => ({
       id: p.id,
-      authorName: p.authorName || p.author?.name || "Familiar",
-      authorUserId: p.authorUserId || p.author?.uid || "",
-      authorRelation: p.authorRelation || p.author?.relation || "",
-      content: p.content || p.text || "",
-      type: p.type || "tip",
-      visibility: p.visibility === "family" ? "family" as const : "community" as const,
-      createdAt: p.createdAt || Date.now(),
-      expiresAt: p.expiresAt || Date.now() + 24 * 3600000,
-      likes: p.likes || 0,
-      isLikedByViewer: p.isLikedByViewer || false,
+      authorName: p.user_name || "Usuário",
+      authorUserId: p.user_id || "",
+      authorRelation: "",
+      content: p.description ? `${p.title} — ${p.description}` : p.title || "",
+      type: mapSocialType(p.post_type),
+      visibility: p.visibility === "FAMILY" ? "family" as const : "community" as const,
+      createdAt: p.created_at ? Date.parse(p.created_at) || Date.now() : Date.now(),
+      expiresAt: 0,
+      likes: p.reaction_count || 0,
+      isLikedByViewer: !!p.has_user_reacted,
     }));
   } catch {
     return [];
   }
 }
 
-/** Cria uma publicação no feed comunitário (comunidade ou familia privada). */
+/** Publica no mural (title ≤255 + description; visibility PUBLIC/FAMILY). */
 export async function createCommunityPost(
-  patientId: string,
+  userId: string,
   content: string,
   type: CommunityPost["type"],
   idToken?: string,
@@ -878,23 +900,39 @@ export async function createCommunityPost(
   authorName?: string
 ): Promise<CommunityPost | null> {
   try {
-    const res = await fetch(`${API_BASE_URL}/api/community/posts`, {
+    let title = content;
+    let description: string | undefined;
+    if (content.length > 255) {
+      const wordCut = content.lastIndexOf(" ", 255);
+      const cut = wordCut > 0 && wordCut < 255 ? wordCut : 255;
+      title = content.slice(0, cut).trim();
+      description = content.slice(cut).trim();
+    }
+    const res = await fetch(`${API_BASE_URL}/api/sync/social-post`, {
       method: "POST",
       headers: { "Content-Type": "application/json", ...(idToken ? { Authorization: `Bearer ${idToken}` } : {}) },
-      body: JSON.stringify({ patientId, content, type, visibility, authorName }),
+      body: JSON.stringify({
+        userId,
+        postType: type,
+        title,
+        ...(description ? { description } : {}),
+        createdAt: new Date().toISOString(),
+        visibility: visibility === "family" ? "FAMILY" : "PUBLIC",
+      }),
     });
     if (!res.ok) return null;
     const data = await res.json();
+    if (data.status !== "success" || !data.id) return null;
     return {
       id: data.id,
-      authorName: data.authorName || authorName || "",
-      authorUserId: data.authorUserId || "",
-      authorRelation: data.authorRelation || "",
-      content: data.content || content,
-      type: data.type || type,
-      visibility: data.visibility === "family" ? "family" : "community",
-      createdAt: data.createdAt || Date.now(),
-      expiresAt: data.expiresAt || Date.now() + 24 * 3600000,
+      authorName: authorName || "Você",
+      authorUserId: userId,
+      authorRelation: "",
+      content,
+      type,
+      visibility,
+      createdAt: Date.now(),
+      expiresAt: 0,
       likes: 0,
       isLikedByViewer: false,
     };
@@ -903,14 +941,26 @@ export async function createCommunityPost(
   }
 }
 
-/** Curte uma publicação do feed comunitário (idempotente no servidor). */
-export async function likeCommunityPost(postId: string, idToken?: string): Promise<{ success: boolean }> {
+/** Curte um post do mural (post_reactions, idempotente no servidor). */
+export async function likeCommunityPost(
+  postId: string,
+  userId: string,
+  idToken?: string
+): Promise<{ success: boolean }> {
   try {
-    const res = await fetch(`${API_BASE_URL}/api/community/posts/${postId}/like`, {
+    const res = await fetch(`${API_BASE_URL}/api/sync/post-reaction`, {
       method: "POST",
       headers: { "Content-Type": "application/json", ...(idToken ? { Authorization: `Bearer ${idToken}` } : {}) },
+      body: JSON.stringify({
+        postId,
+        userId,
+        reactionType: "apoio",
+        createdAt: new Date().toISOString(),
+      }),
     });
-    return { success: res.ok };
+    if (!res.ok) return { success: false };
+    const data = await res.json().catch(() => null);
+    return { success: !data || data.status === "success" };
   } catch {
     return { success: false };
   }
