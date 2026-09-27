@@ -9,10 +9,13 @@ import {
   ShieldCheck,
   ChevronRight,
   Pencil,
+  Camera,
+  Image as ImageIcon,
 } from "lucide-react";
 import type { FamilyBinding } from "../types";
 import { WhatsAppLinkButton } from "./WhatsAppLinkButton";
 import { Avatar } from "./Avatar";
+import { openWhatsAppVinculo } from "../services/waLinkTotp";
 
 interface ProfileScreenProps {
   caregiverName: string;
@@ -58,7 +61,11 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
   memberPhotos,
 }) => {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const cameraInputRef = useRef<HTMLInputElement | null>(null);
   const [isPhotoBusy, setIsPhotoBusy] = useState(false);
+  // Sheet de origem da foto: tirar agora (camera) ou escolher da galeria.
+  const [showPhotoSource, setShowPhotoSource] = useState(false);
+  const [waLinkMsg, setWaLinkMsg] = useState<string | null>(null);
 
   const handlePickPhoto = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -69,6 +76,22 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
       await onUploadPhoto(file);
     } finally {
       setIsPhotoBusy(false);
+    }
+  };
+
+  // Linha "Nao vinculado — tocar para vincular": era um botao morto (sem
+  // onClick). Agora dispara o mesmo fluxo do botao verde de baixo.
+  const handleVincularWhatsApp = async () => {
+    if (!totpSecret) {
+      setWaLinkMsg("Vínculo disponível assim que seu cadastro for concluído.");
+      return;
+    }
+    setWaLinkMsg(null);
+    try {
+      await openWhatsAppVinculo(totpSecret);
+      setWaLinkMsg("WhatsApp aberto — envie a mensagem para concluir o vínculo.");
+    } catch (err) {
+      setWaLinkMsg(err instanceof Error ? err.message : "Não foi possível abrir o WhatsApp.");
     }
   };
 
@@ -91,7 +114,7 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
         <div className="relative">
           <button
             type="button"
-            onClick={() => fileInputRef.current?.click()}
+            onClick={() => setShowPhotoSource(true)}
             disabled={isPhotoBusy}
             title="Editar foto de perfil"
             aria-label="Editar foto de perfil"
@@ -111,6 +134,17 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
             ref={fileInputRef}
             type="file"
             accept="image/jpeg,image/png,image/webp"
+            className="hidden"
+            onChange={handlePickPhoto}
+          />
+          {/* capture="user" obriga o navegador mobile a abrir a camera
+              frontal direto (selfie) — era a opcao que faltava. Em desktop
+              sem camera, o navegador ignora capture e abre o seletor. */}
+          <input
+            ref={cameraInputRef}
+            type="file"
+            accept="image/*"
+            capture="user"
             className="hidden"
             onChange={handlePickPhoto}
           />
@@ -154,7 +188,10 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
         </div>
 
         <button
-          className="w-full px-5 py-3.5 flex items-center gap-3 active:bg-[#F8FAFC] transition-colors text-left"
+          type="button"
+          onClick={handleVincularWhatsApp}
+          disabled={isPhotoBusy}
+          className="w-full px-5 py-3.5 flex items-center gap-3 active:bg-[#F8FAFC] transition-colors text-left disabled:opacity-60"
         >
           <div className="w-9 h-9 rounded-xl bg-[#E0F2F1] text-[#00897B] flex items-center justify-center shrink-0">
             <Phone className="w-4.5 h-4.5" />
@@ -173,6 +210,11 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
             </span>
           )}
         </button>
+        {waLinkMsg && !phone && (
+          <p className="px-5 pb-3 text-[12px] text-[#64748B] leading-snug" role="status">
+            {waLinkMsg}
+          </p>
+        )}
       </div>
 
       {/* Vinculo WhatsApp por TOTP (temporario ate a Meta liberar template).
@@ -297,6 +339,54 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
         O Braga Saúde é uma ferramenta de autocuidado e não substitui consultas médicas.
         Em emergências, ligue para o SAMU (192).
       </p>
+
+      {/* Sheet de origem da foto: tirar agora (camera frontal) ou escolher
+          da galeria — antes so existia o seletor de arquivos. */}
+      {showPhotoSource && (
+        <div
+          className="fixed inset-0 z-50 bg-black/40 backdrop-blur-xs flex items-end justify-center"
+          onClick={() => setShowPhotoSource(false)}
+          role="presentation"
+        >
+          <div
+            className="w-full max-w-md bg-white rounded-t-3xl p-4 pb-6 space-y-2 border-t border-[#E5EBE8] animate-in slide-in-from-bottom-4"
+            onClick={(e) => e.stopPropagation()}
+            role="dialog"
+            aria-label="Escolher origem da foto"
+          >
+            <p className="text-sm font-bold text-[#1E293B] px-2 pt-1">Foto de perfil</p>
+            <button
+              type="button"
+              onClick={() => {
+                setShowPhotoSource(false);
+                cameraInputRef.current?.click();
+              }}
+              className="w-full px-4 py-3.5 flex items-center gap-3 rounded-2xl bg-[#E0F2F1] text-[#00897B] font-semibold text-sm active:scale-98 transition-all"
+            >
+              <Camera className="w-5 h-5" />
+              Tirar foto agora
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setShowPhotoSource(false);
+                fileInputRef.current?.click();
+              }}
+              className="w-full px-4 py-3.5 flex items-center gap-3 rounded-2xl bg-[#F8FAFC] border border-[#E5EBE8] text-[#1E293B] font-semibold text-sm active:scale-98 transition-all"
+            >
+              <ImageIcon className="w-5 h-5 text-[#64748B]" />
+              Escolher da galeria
+            </button>
+            <button
+              type="button"
+              onClick={() => setShowPhotoSource(false)}
+              className="w-full px-4 py-3 rounded-2xl text-[#64748B] font-semibold text-sm active:bg-[#F8FAFC] transition-colors"
+            >
+              Cancelar
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { currentTotpCode, secondsUntilRotation } from "../services/waLinkTotp";
+import { openWhatsAppVinculo, secondsUntilRotation } from "../services/waLinkTotp";
 
 /**
  * Botao de vincular WhatsApp (arquitetura TOTP temporaria).
@@ -51,31 +51,19 @@ export const WhatsAppLinkButton: React.FC<WhatsAppLinkButtonProps> = ({
     if (!totpSecret) return;
     setLinkError(null);
     try {
-      // AUD-PW(M): verifica suporte a Web Crypto antes de tentar.
-      // Sem isso, navegadores antigos (IE, Safari < 11 em HTTP) lançam
-      // TypeError silenciosa e o botao nao responde.
-      if (typeof crypto === "undefined" || !crypto.subtle) {
-        setLinkError(
-          "Seu navegador não suporta criptografia Web Crypto, necessária para o vínculo WhatsApp. Use Chrome, Firefox ou Edge atualizados."
-        );
-        return;
-      }
-      const code = await currentTotpCode(totpSecret);
-      if (!code) {
-        setLinkError("Não foi possível gerar o código agora. Tente novamente em instantes.");
-        return;
-      }
-      const text = encodeURIComponent(`Vincular Braga Saude ${code}`);
-      window.open(`https://wa.me/${businessPhone}?text=${text}`, "_blank", "noopener,noreferrer");
+      // AUD-PW(M): helper compartilhado (waLinkTotp) valida Web Crypto e
+      // gera o codigo — mesma rota usada pela linha "tocar para vincular".
+      await openWhatsAppVinculo(totpSecret, businessPhone);
       onLinkOpened?.();
       // Feedback visual: código copiado
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch (e) {
       // AUD-PW(M): falha silenciosa do crypto.subtle — agora o usuário sabe.
-      console.warn("Falha ao gerar TOTP do vínculo", e);
       setLinkError(
-        "Não conseguimos gerar o código de vínculo. Recarregue a página e tente novamente."
+        e instanceof Error
+          ? e.message
+          : "Não conseguimos gerar o código de vínculo. Recarregue a página e tente novamente."
       );
     }
   };

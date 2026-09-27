@@ -37,6 +37,40 @@ export function secondsUntilRotation(atMs: number = Date.now()): number {
   return TOTP_STEP_SECONDS - (nowSec % TOTP_STEP_SECONDS);
 }
 
+/**
+ * Abre o WhatsApp com a mensagem de vinculo e o codigo TOTP ATUAL prontos.
+ *
+ * Compartilhado pelo botao verde "Vincular meu WhatsApp" e pela linha
+ * "Nao vinculado — tocar para vincular" do Perfil (antes era um botao
+ * morto, sem onClick). Lanca Error com mensagem pronta para exibir ao
+ * usuario — o chamador decide onde mostrar.
+ */
+export async function openWhatsAppVinculo(
+  totpSecret: string,
+  businessPhone = "5511967808252"
+): Promise<void> {
+  // AUD-PW(M): verifica suporte a Web Crypto antes de tentar.
+  if (typeof crypto === "undefined" || !crypto.subtle) {
+    throw new Error(
+      "Seu navegador não suporta criptografia Web Crypto, necessária para o vínculo WhatsApp. Use Chrome, Firefox ou Edge atualizados."
+    );
+  }
+  let code: string;
+  try {
+    code = await currentTotpCode(totpSecret);
+  } catch (e) {
+    console.warn("Falha ao gerar TOTP do vínculo", e);
+    throw new Error(
+      "Não conseguimos gerar o código de vínculo. Recarregue a página e tente novamente."
+    );
+  }
+  if (!code) {
+    throw new Error("Não foi possível gerar o código agora. Tente novamente em instantes.");
+  }
+  const text = encodeURIComponent(`Vincular Braga Saude ${code}`);
+  window.open(`https://wa.me/${businessPhone}?text=${text}`, "_blank", "noopener,noreferrer");
+}
+
 async function hotp(secretBase32: string, counter: number): Promise<string> {
   const key = base32Decode(secretBase32);
   // SubtleCrypto exige ArrayBuffer estrito (nao Uint8Array<ArrayBufferLike>).
