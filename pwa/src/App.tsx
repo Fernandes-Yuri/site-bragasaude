@@ -47,9 +47,17 @@ import { DoctorReportModal } from "./components/DoctorReportModal";
 const LoginScreen = React.lazy(() =>
   import("./components/LoginScreen").then((m) => ({ default: m.LoginScreen }))
 );
-const DesktopGateModal = React.lazy(() =>
-  import("./components/DesktopGateModal").then((m) => ({ default: m.DesktopGateModal }))
-);
+// AUD-PW(B): DesktopGateModal é artifact de dev — só carrega em localhost.
+// Em produção (braga-saude.web.app), retorna null e evita o chunk desnecessário.
+const isDevHost = typeof window !== "undefined" &&
+  (window.location.hostname === "localhost" ||
+   window.location.hostname === "127.0.0.1" ||
+   window.location.hostname === "::1");
+const DesktopGateModal = isDevHost
+  ? React.lazy(() =>
+      import("./components/DesktopGateModal").then((m) => ({ default: m.DesktopGateModal }))
+    )
+  : (() => Promise.resolve({ default: () => null })) as unknown as React.LazyExoticComponent<React.FC<{onBypassDev?: () => void}>>;
 const HistoryMetricsSection = React.lazy(() =>
   import("./components/HistoryMetricsSection").then((m) => ({ default: m.HistoryMetricsSection }))
 );

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { X, QrCode, Camera, Users, CheckCircle2, AlertCircle } from "lucide-react";
 import { Html5QrcodeScanner } from "html5-qrcode";
 import { acceptFamilyBinding } from "../services/api";
@@ -21,11 +21,99 @@ export const FamilyConnectModal: React.FC<FamilyConnectModalProps> = ({
   getIdToken,
 }) => {
   const [mode, setMode] = useState<"code" | "camera">("code");
+  // AUD-PW(B): detecta se o dispositivo tem câmera antes de oferecer o modo scanner.
+  // Em PWA instalada via "Adicionar à Tela Inicial" (especialmente iOS Safari),
+  // a câmera pode não estar disponível e o scan travaria.
+  const [hasCamera, setHasCamera] = useState(true);
+  const scannerRef = useRef<Html5QrcodeScanner | null>(null);
+  const isMountedRef = useRef(true);
+  const handleConnectWithCodeRef = useRef<((code: string) => void)>(() => {});
   const [code, setCode] = useState("");
   const [relation, setRelation] = useState("Filho");
   const [caregiverName, setCaregiverName] = useState(defaultCaregiverName);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Detecta câmera disponível no mount
+  useEffect(() => {
+    const checkCamera = async () => {
+      try {
+        if (!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia)) {
+          setHasCamera(false);
+          setMode("code");
+          return;
+        }
+        const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
+        stream.getTracks().forEach((t) => t.stop());
+        setHasCamera(true);
+      } catch {
+        setHasCamera(false);
+        setMode("code");
+      }
+    };
+    checkCamera();
+  }, []);
+
+  // Cleanup: garante scanner.clear() e flag de montagem
+  useEffect(() => {
+    return () => {
+      isMountedRef.current = false;
+      if (scannerRef.current) {
+        scannerRef.current.clear().catch(() => {});
+        scannerRef.current = null;
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!isOpen || mode !== "camera" || !hasCamera) return;
+
+    const timer = setTimeout(() => {
+      if (!isMountedRef.current) return;
+      try {
+        const scanner = new Html5QrcodeScanner(
+          "qr-scanner-view",
+          { fps: 10, qrbox: { width: 220, height: 220 } },
+          false
+        );
+        scannerRef.current = scanner;
+        scanner.render(
+          (text) => {
+            scannerRef.current?.clear().catch(() => {});
+            scannerRef.current = null;
+            if (isMountedRef.current) {
+              handleConnectWithCodeRef.current(text.trim().toUpperCase());
+            }
+          },
+          (err) => {
+            if (isMountedRef.current) {
+              console.warn("QR scanner error", err);
+              setError(
+                "Não consegui acessar a câmera. Verifique a permissão no navegador ou digite o código manualmente."
+              );
+              setMode("code");
+            }
+          }
+        );
+      } catch (e) {
+        if (isMountedRef.current) {
+          console.warn("Scanner failed to start", e);
+          setError(
+            "Câmera indisponível neste dispositivo. Digite o código de conexão manualmente."
+          );
+          setMode("code");
+        }
+      }
+    }, 250);
+
+    return () => {
+      clearTimeout(timer);
+      if (scannerRef.current) {
+        scannerRef.current.clear().catch(() => {});
+        scannerRef.current = null;
+      }
+    };
+  }, [isOpen, mode, hasCamera]);
 
   useEffect(() => {
     if (defaultCaregiverName) {
@@ -66,6 +154,7 @@ export const FamilyConnectModal: React.FC<FamilyConnectModalProps> = ({
     },
     [caregiverName, relation, getIdToken, onSuccessPair, onClose]
   );
+  handleConnectWithCodeRef.current = handleConnectWithCode;
 
   useEffect(() => {
     if (!isOpen || mode !== "camera") return;
@@ -81,7 +170,7 @@ export const FamilyConnectModal: React.FC<FamilyConnectModalProps> = ({
         scanner.render(
           (text) => {
             scanner?.clear();
-            handleConnectWithCode(text.trim().toUpperCase());
+            handleConnectWithCodeRef.current(text.trim().toUpperCase());
           },
           // AUD-PW(M): antes era () => {} — se o usuário negou permissão da
           // câmera ou o html5-qrcode falhava, a div ficava PRETA e nada
