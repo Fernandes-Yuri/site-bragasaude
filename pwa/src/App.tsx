@@ -42,13 +42,11 @@ import { DailyBulletinCard } from "./components/DailyBulletinCard";
 import { ActivityFeedTimeline } from "./components/ActivityFeedTimeline";
 import { ClinicalCorrelationsAlert } from "./components/ClinicalCorrelationsAlert";
 import { DoctorReportModal } from "./components/DoctorReportModal";
+import { CommunityFeed } from "./components/CommunityFeed";
+import { LoginScreen } from "./components/LoginScreen";
 
 // Code-Splitting: componentes pesados carregados sob demanda
-const LoginScreen = React.lazy(() =>
-  import("./components/LoginScreen").then((m) => ({ default: m.LoginScreen }))
-);
-// AUD-PW(B): DesktopGateModal é artifact de dev — só carrega em localhost.
-// Em produção (braga-saude.web.app), retorna null e evita o chunk desnecessário.
+// (exceto LoginScreen que é importado diretamente para suportar Role Selection)
 const isDevHost = typeof window !== "undefined" &&
   (window.location.hostname === "localhost" ||
    window.location.hostname === "127.0.0.1" ||
@@ -96,7 +94,9 @@ export const App: React.FC = () => {
   const groups = useMemo(() => familyGroups(bindings, currentUser?.uid || ''), [bindings, currentUser?.uid]);
   const chatPatientId = resolveFamilyGroup(bindings, currentUser?.uid || '', selectedGroup);
   const getChatToken = useCallback(async () => currentUser?.getIdToken(), [currentUser]);
-  const [activeTab, setActiveTab] = useState<"home" | "chat" | "profile">("home");
+  const [activeTab, setActiveTab] = useState<"home" | "chat" | "profile" | "community">("home");
+  // AUD-PW04: Papel do usuário (Titular vs Cuidador) — lido do localStorage.
+  const [userRole, setUserRole] = useState<"caregiver" | "titular">("caregiver");
   // AUD-PW03: removido o estado idToken — era uma snapshot stale. Consumidores
   // agora recebem um getter que resolve o token fresco no instante da chamada.
 
@@ -170,6 +170,13 @@ export const App: React.FC = () => {
       setIsAuthLoading(false);
 
       if (user) {
+        // AUD-PW04: Lê o papel do usuário do localStorage
+        const savedRole = localStorage.getItem(`braga_role_${user.email}`);
+        if (savedRole === "titular" || savedRole === "caregiver") {
+          setUserRole(savedRole as "titular" | "caregiver");
+        } else {
+          setUserRole("caregiver"); // default: o PWA é voltado para cuidadores
+        }
         const displayName = user.displayName || user.email?.split("@")[0] || "Cuidador";
         setDashboard((prev) => ({
           ...prev,
@@ -577,6 +584,13 @@ export const App: React.FC = () => {
             onOpenMemberProfile={(b) => setInspectingBinding(b)}
           />
         </main>
+      ) : activeTab === "community" ? (
+        <main className="p-4 space-y-4 flex-1 pb-24 overflow-y-auto">
+          <CommunityFeed
+            patientId={chatPatientId}
+            idToken={getChatToken}
+          />
+        </main>
       ) : (
       <main className="p-4 space-y-4 flex-1 pb-24 overflow-y-auto">
         {/* Banner de Lembrete para Vincular WhatsApp se ainda não tiver número */}
@@ -773,6 +787,19 @@ export const App: React.FC = () => {
           <UserIcon className="w-5 h-5" />
           <span className="text-[12px] font-bold">Perfil</span>
         </button>
+
+        {/* AUD-PW04: Aba Comunidade — visível para cuidadores */}
+        {userRole === "caregiver" && (
+          <button
+            onClick={() => setActiveTab("community")}
+            className={`flex flex-col items-center gap-0.5 px-5 py-1.5 rounded-xl transition-all active:scale-95 ${
+              activeTab === "community" ? "text-[#00897B]" : "text-[#64748B]"
+            }`}
+          >
+            <UserPlus className="w-5 h-5" />
+            <span className="text-[12px] font-bold">Comunidade</span>
+          </button>
+        )}
       </nav>
 
       {/* Toast Feedback */}

@@ -837,3 +837,77 @@ export async function createMedication(patientId: string, input: MedicationCreat
   await requireOk(response, "Não foi possível cadastrar o medicamento.");
 }
 
+
+// Community Feed — "Publicações de Orgulho Familiar" (01_MODO_CUIDADOR_E_PONTE_FAMILIAR.md §4)
+import type { CommunityPost } from "../types";
+
+/** Busca as publicações do feed comunitário de um familiar. */
+export async function fetchCommunityPosts(patientId: string): Promise<CommunityPost[]> {
+  try {
+    const res = await fetch(`${API_BASE_URL}/api/community/posts/${encodeURIComponent(patientId)}`, {
+      method: "GET",
+      headers: { "Content-Type": "application/json" },
+    });
+    if (!res.ok) return [];
+    const data = await res.json();
+    return (data.posts || data).map((p: any) => ({
+      id: p.id,
+      authorName: p.authorName || p.author?.name || "Familiar",
+      authorUserId: p.authorUserId || p.author?.uid || "",
+      authorRelation: p.authorRelation || p.author?.relation || "",
+      content: p.content || p.text || "",
+      type: p.type || "tip",
+      createdAt: p.createdAt || Date.now(),
+      expiresAt: p.expiresAt || Date.now() + 24 * 3600000,
+      likes: p.likes || 0,
+      isLikedByViewer: p.isLikedByViewer || false,
+    }));
+  } catch {
+    return [];
+  }
+}
+
+/** Cria uma publicação no feed comunitário. */
+export async function createCommunityPost(
+  patientId: string,
+  content: string,
+  type: CommunityPost["type"],
+  idToken?: string
+): Promise<CommunityPost | null> {
+  try {
+    const res = await fetch(`${API_BASE_URL}/api/community/posts`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", ...(idToken ? { Authorization: `Bearer ${idToken}` } : {}) },
+      body: JSON.stringify({ patientId, content, type }),
+    });
+    if (!res.ok) return null;
+    const data = await res.json();
+    return {
+      id: data.id,
+      authorName: data.authorName || "",
+      authorUserId: data.authorUserId || "",
+      authorRelation: data.authorRelation || "",
+      content: data.content || content,
+      type: data.type || type,
+      createdAt: data.createdAt || Date.now(),
+      expiresAt: data.expiresAt || Date.now() + 24 * 3600000,
+      likes: 0,
+      isLikedByViewer: false,
+    };
+  } catch {
+    return null;
+  }
+}
+
+/** Curte/descurte uma publicação do feed comunitário. */
+export async function likeCommunityPost(postId: string): Promise<{ success: boolean }> {
+  try {
+    const res = await fetch(`${API_BASE_URL}/api/community/posts/${postId}/like`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+    });
+    return { success: res.ok };
+  } catch {
+    return { success: false };
+  }
+}

@@ -150,3 +150,21 @@ export interface MedicationCreateInput {
   confirmedWithPrescription: boolean;
 }
 
+
+/**
+ * Tipos para o Feed Comunitário ("Publicações de Orgulho Familiar").
+ * Documento 01_MODO_CUIDADOR_E_PONTE_FAMILIAR.md §4.
+ */
+
+export interface CommunityPost {
+  id: string;
+  authorName: string;
+  authorUserId: string;
+  authorRelation: string;
+  content: string;
+  type: "achievement" | "recipe" | "walk" | "milestone" | "tip";
+  createdAt: number;
+  expiresAt: number;
+  likes: number;
+  isLikedByViewer: boolean;
+}
