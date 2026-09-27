@@ -34,9 +34,6 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onSuccess }) => {
   const [otpSent, setOtpSent] = useState(false);
   const [otpSending, setOtpSending] = useState(false);
   const [otpError, setOtpError] = useState<string | null>(null);
-  // AUD-PW04: Seleção de papel (Titular vs Cuidador) — determina
-  // a interface e dashboard inicial após o login.
-  const [userRole, setUserRole] = useState<"caregiver" | "titular" | "">("");
 
   // useCallback: sem identidade estavel, cada tecla digitada recria o
   // RecaptchaVerifier (dep [onToken]), destruindo o widget resolvido.
@@ -169,10 +166,6 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onSuccess }) => {
         await signInWithEmailAndPassword(auth, email.trim(), password);
       } else {
         await createUserWithEmailAndPassword(auth, email.trim(), password);
-      }
-      // AUD-PW04: Salva o papel selecionado para roteamento pós-login
-      if (userRole) {
-        try { localStorage.setItem(`braga_role_${email.trim()}`, userRole); } catch { /* silencioso */ }
       }
       onSuccess();
     } catch (err: any) {
@@ -370,51 +363,6 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onSuccess }) => {
 
           {/* Widget Oficial Google reCAPTCHA / Firebase Captcha */}
           <GoogleRecaptchaWidget onToken={handleCaptchaToken} />
-
-          {/* AUD-PW04: Seleção de papel (Titular vs Cuidador) */}
-          {mode === "signup" && (
-            <div className="space-y-3">
-              <p className="text-sm font-semibold text-[#1E293B]">
-                Como você deseja usar o Braga Saúde?
-              </p>
-              <div className="grid grid-cols-2 gap-3">
-                <button
-                  type="button"
-                  onClick={() => setUserRole("caregiver")}
-                  className={`rounded-2xl p-4 border-2 text-center transition-all ${
-                    userRole === "caregiver"
-                      ? "border-[#00695C] bg-[#E0F2F1]"
-                      : "border-[#CBD5E1] bg-white hover:border-[#00897B]"
-                  }`}
-                >
-                  <div className="text-2xl mb-1">👨‍👩‍👧‍👦</div>
-                  <p className="text-sm font-bold text-[#1E293B]">
-                    Sou Cuidador(a)
-                  </p>
-                  <p className="text-xs text-[#64748B]">
-                    Acompanho a saúde de um familiar
-                  </p>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setUserRole("titular")}
-                  className={`rounded-2xl p-4 border-2 text-center transition-all ${
-                    userRole === "titular"
-                      ? "border-[#00695C] bg-[#E0F2F1]"
-                      : "border-[#CBD5E1] bg-white hover:border-[#00897B]"
-                  }`}
-                >
-                  <div className="text-2xl mb-1">👤</div>
-                  <p className="text-sm font-bold text-[#1E293B]">
-                    Sou Titular
-                  </p>
-                  <p className="text-xs text-[#64748B]">
-                    Gerencio minha própria saúde
-                  </p>
-                </button>
-              </div>
-            </div>
-          )}
 
           {/* AUD-PW04: Campo de verificação OTP para cadastro */}
           {mode === "signup" && otpSent && (

@@ -95,8 +95,6 @@ export const App: React.FC = () => {
   const chatPatientId = resolveFamilyGroup(bindings, currentUser?.uid || '', selectedGroup);
   const getChatToken = useCallback(async () => currentUser?.getIdToken(), [currentUser]);
   const [activeTab, setActiveTab] = useState<"home" | "chat" | "profile" | "community">("home");
-  // AUD-PW04: Papel do usuário (Titular vs Cuidador) — lido do localStorage.
-  const [userRole, setUserRole] = useState<"caregiver" | "titular">("caregiver");
   // AUD-PW03: removido o estado idToken — era uma snapshot stale. Consumidores
   // agora recebem um getter que resolve o token fresco no instante da chamada.
 
@@ -170,13 +168,6 @@ export const App: React.FC = () => {
       setIsAuthLoading(false);
 
       if (user) {
-        // AUD-PW04: Lê o papel do usuário do localStorage
-        const savedRole = localStorage.getItem(`braga_role_${user.email}`);
-        if (savedRole === "titular" || savedRole === "caregiver") {
-          setUserRole(savedRole as "titular" | "caregiver");
-        } else {
-          setUserRole("caregiver"); // default: o PWA é voltado para cuidadores
-        }
         const displayName = user.displayName || user.email?.split("@")[0] || "Cuidador";
         setDashboard((prev) => ({
           ...prev,
@@ -788,18 +779,16 @@ export const App: React.FC = () => {
           <span className="text-[12px] font-bold">Perfil</span>
         </button>
 
-        {/* AUD-PW04: Aba Comunidade — visível para cuidadores */}
-        {userRole === "caregiver" && (
-          <button
-            onClick={() => setActiveTab("community")}
-            className={`flex flex-col items-center gap-0.5 px-5 py-1.5 rounded-xl transition-all active:scale-95 ${
-              activeTab === "community" ? "text-[#00897B]" : "text-[#64748B]"
-            }`}
-          >
-            <UserPlus className="w-5 h-5" />
-            <span className="text-[12px] font-bold">Comunidade</span>
-          </button>
-        )}
+        {/* AUD-PW04: Aba Comunidade — visível para todos os usuários do PWA */}
+        <button
+          onClick={() => setActiveTab("community")}
+          className={`flex flex-col items-center gap-0.5 px-5 py-1.5 rounded-xl transition-all active:scale-95 ${
+            activeTab === "community" ? "text-[#00897B]" : "text-[#64748B]"
+          }`}
+        >
+          <UserPlus className="w-5 h-5" />
+          <span className="text-[12px] font-bold">Comunidade</span>
+        </button>
       </nav>
 
       {/* Toast Feedback */}
