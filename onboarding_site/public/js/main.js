@@ -562,9 +562,9 @@
         if (typeof gtag === 'function') {
           gtag('event', 'download_apk', {
             event_category: 'conversion',
-            // AUD-PW(B): versão hardcoded defasada — dizia v1.2.0 enquanto o
-            // app já está em 1.2.5. Analítica de conversão inútil até hoje.
-            event_label: 'BragaSaude.apk (v1.2.5)',
+            // AUD-PW(B): versao hardcoded — manter em sincronia com o
+            // versionName em app/build.gradle.kts a cada release.
+            event_label: 'BragaSaude.apk (v1.2.9)',
             value: 1
           });
         }
