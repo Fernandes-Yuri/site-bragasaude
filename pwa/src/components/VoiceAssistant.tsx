@@ -1,6 +1,7 @@
 import React, { useState, useRef, useCallback } from "react";
 import { X, Sparkles, Check, Calendar, Mic } from "lucide-react";
-import { askVoiceCopilot, synthesizePiperVoice, confirmVoiceDraft } from "../services/api";
+import { askVoiceCopilot, confirmVoiceDraft } from "../services/api";
+import { speakText, stopSpeaking as stopNativeSpeaking } from "../services/nativeSpeech";
 
 interface VoiceAssistantProps {
   userId: string;
@@ -57,62 +58,27 @@ export const VoiceAssistant: React.FC<VoiceAssistantProps> = ({
   const [isConfirming, setIsConfirming] = useState(false);
   const recognitionRef = useRef<any>(null);
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  // AUD-PW(B): audio Piper em reprodução — ver stopSpeaking.
-  const currentAudioRef = useRef<HTMLAudioElement | null>(null);
   // Guarda o texto capturado ao soltar o dedo (hold-to-talk)
   const pendingTranscriptRef = useRef<string>("");
 
-  const speak = useCallback(
-    async (text: string) => {
-      try {
-        const token = (await getIdToken?.()) || "";
-        const blob = await synthesizePiperVoice(text, token);
-        if (blob && blob.size > 0) {
-          const audioUrl = URL.createObjectURL(blob);
-          const audio = new Audio(audioUrl);
-          currentAudioRef.current = audio;
-          setState("speaking");
-          audio.onended = () => {
-            setState("idle");
-            URL.revokeObjectURL(audioUrl);
-            currentAudioRef.current = null;
-          };
-          audio.onerror = () => {
-            URL.revokeObjectURL(audioUrl);
-            setState("idle");
-            currentAudioRef.current = null;
-          };
-          await audio.play();
-          return;
-        }
-      } catch (e) {
-        console.warn("Piper indisponível, fallback para voz do sistema:", e);
-      }
-
-      try {
-        if (!("speechSynthesis" in window)) return;
-        window.speechSynthesis.cancel();
-        const utter = new SpeechSynthesisUtterance(text);
-        utter.lang = "pt-BR";
-        utter.rate = 1.02;
-        utter.onend = () => setState("idle");
-        utter.onerror = () => setState("idle");
-        setState("speaking");
-        window.speechSynthesis.speak(utter);
-      } catch (e) {
-        console.warn("TTS indisponível:", e);
+  const speak = useCallback((text: string) => {
+    setState("speaking");
+    const started = speakText(text, {
+      onStart: () => setState("speaking"),
+      onEnd: () => setState("idle"),
+      onError: (e) => {
+        console.warn("Erro na síntese de voz nativa:", e);
         setState("idle");
-      }
-    },
-    [getIdToken]
-  );
+      },
+      rate: 1.02,
+    });
+    if (!started) {
+      setState("idle");
+    }
+  }, []);
 
   const stopSpeaking = () => {
-    try {
-      const a = currentAudioRef.current;
-      if (a) { a.pause(); a.src = ""; currentAudioRef.current = null; }
-    } catch { /* noop */ }
-    try { window.speechSynthesis?.cancel(); } catch { /* noop */ }
+    stopNativeSpeaking();
     setState("idle");
   };
 

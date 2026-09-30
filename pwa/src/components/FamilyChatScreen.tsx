@@ -3,9 +3,9 @@ import { Send, Mic, Volume2, ArrowLeft, User } from "lucide-react";
 import {
   fetchFamilyMessages,
   sendCaregiverMessage,
-  synthesizePiperVoice,
   QUICK_TEMPLATES,
 } from "../services/api";
+import { speakText } from "../services/nativeSpeech";
 import type { FamilyMessage } from "../types";
 import { Avatar } from "./Avatar";
 
@@ -101,33 +101,16 @@ export const FamilyChatScreen: React.FC<FamilyChatScreenProps> = ({
     }
   }, [messages]);
 
-  const speak = async (text: string) => {
-    try {
-      const token = (await getIdToken?.()) || "";
-      const blob = await synthesizePiperVoice(text, token);
-      if (blob && blob.size > 0) {
-        const url = URL.createObjectURL(blob);
-        const audio = new Audio(url);
-        audio.onended = () => URL.revokeObjectURL(url);
-        audio.onerror = () => URL.revokeObjectURL(url);
-        await audio.play();
-        return;
-      }
-    } catch (e) {
-      console.warn("Piper indisponível, fallback na voz do sistema:", e);
-    }
-    try {
-      if (!("speechSynthesis" in window)) {
+  const speak = (text: string) => {
+    const started = speakText(text, {
+      onError: (err) => {
+        console.warn("Falha na síntese nativa de voz:", err);
         onToast?.("Seu navegador não suporta leitura por voz");
-        return;
-      }
-      window.speechSynthesis.cancel();
-      const utter = new SpeechSynthesisUtterance(text);
-      utter.lang = "pt-BR";
-      utter.rate = 1;
-      window.speechSynthesis.speak(utter);
-    } catch (e) {
-      console.warn("TTS indisponível:", e);
+      },
+      rate: 1.0,
+    });
+    if (!started) {
+      onToast?.("Seu navegador não suporta leitura por voz");
     }
   };
 
