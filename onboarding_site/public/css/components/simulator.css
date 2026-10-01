@@ -413,7 +413,80 @@
   align-items: center;
   gap: 4px;
   cursor: pointer;
+  border: 0;
+  padding: 2px;
+  min-height: 52px;
+  min-width: 0;
+  background: transparent;
+  font: inherit;
 }
+
+.sim-nav-item:focus-visible,
+.sim-back-btn:focus-visible,
+.sim-demo-button:focus-visible {
+  outline: 2px solid #00897B;
+  outline-offset: 2px;
+  border-radius: 8px;
+}
+
+.sim-back-btn {
+  display: block;
+  width: 100%;
+  min-height: 44px;
+  padding: 10px 16px;
+  background: #FAFCFB;
+  color: #00695C;
+  border: 0;
+  text-align: left;
+  font: inherit;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.sim-demo-note {
+  padding: 12px 16px 0;
+  color: #64748B;
+  font-size: 0.75rem;
+}
+
+.sim-demo-card {
+  margin: 12px;
+  padding: 16px;
+  background: #FFFFFF;
+  border: 1px solid #E5EBE8;
+  border-radius: 16px;
+}
+
+.sim-demo-card h3 { font-size: 0.9375rem; color: #1E293B; }
+.sim-demo-card p { margin-top: 8px; font-size: 0.8125rem; color: #64748B; }
+
+.sim-demo-button {
+  width: 100%;
+  margin-top: 14px;
+  min-height: 44px;
+  border: 0;
+  border-radius: 10px;
+  padding: 10px;
+  background: #E0F2F1;
+  color: #00695C;
+  font: inherit;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.sim-exam-values { margin-top: 16px; font-size: 0.8125rem; }
+.sim-exam-values > div {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 6px;
+  padding: 10px 0;
+  border-bottom: 1px solid #E5EBE8;
+}
+.sim-exam-values dd { font-weight: 600; color: #00695C; }
+.sim-med-taken-btn[aria-pressed="true"] { background: #00897B; color: #FFFFFF; }
 
 .sim-nav-circle {
   width: 40px;
@@ -431,7 +504,7 @@
   transform: scale(1.05);
 }
 
-.sim-nav-item span {
+.sim-nav-item > span:not(.sim-nav-circle) {
   font-size: 0.6rem;
   font-weight: 600;
   color: #64748B;

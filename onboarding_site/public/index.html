@@ -68,7 +68,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
   <!-- External Stylesheet -->
-  <link rel="stylesheet" href="css/style.css?v=1.3.1">
+  <link rel="stylesheet" href="css/style.css?v=1.3.2">
   <link rel="stylesheet" href="css/components/install-guide.css">
 
   <style>
@@ -226,7 +226,7 @@
        inútil (e enganoso) em toda visita. -->
 
   <!-- External JavaScript -->
-  <script src="js/main.js?v=1.3.1" defer></script>
+  <script src="js/main.js?v=1.3.2" defer></script>
 
   <!-- Schema.org / JSON-LD (Dados Estruturados para o Google) -->
   <script type="application/ld+json" id="braga-ldjson">
@@ -541,26 +541,26 @@
 
                     <!-- Quick Nav Shortcuts -->
                     <div class="sim-quick-nav">
-                      <div class="sim-nav-item">
-                        <div class="sim-nav-circle"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#00897B" stroke-width="2"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg></div>
+                      <button type="button" class="sim-nav-item" data-sim-go="hydration" aria-controls="sim-hydration">
+                        <span class="sim-nav-circle"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#00897B" stroke-width="2"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg></span>
                         <span>Água</span>
-                      </div>
-                      <div class="sim-nav-item">
-                        <div class="sim-nav-circle"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#00897B" stroke-width="2"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg></div>
+                      </button>
+                      <button type="button" class="sim-nav-item" data-sim-go="vitals" aria-controls="sim-vitals">
+                        <span class="sim-nav-circle"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#00897B" stroke-width="2"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg></span>
                         <span>Pressão</span>
-                      </div>
-                      <div class="sim-nav-item">
-                        <div class="sim-nav-circle"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#00897B" stroke-width="2"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg></div>
+                      </button>
+                      <button type="button" class="sim-nav-item" data-sim-go="reminders" aria-controls="sim-reminders">
+                        <span class="sim-nav-circle"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#00897B" stroke-width="2"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg></span>
                         <span>Lembretes</span>
-                      </div>
-                      <div class="sim-nav-item">
-                        <div class="sim-nav-circle"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#00897B" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
+                      </button>
+                      <button type="button" class="sim-nav-item" data-sim-go="family" aria-controls="sim-family">
+                        <span class="sim-nav-circle"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#00897B" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span>
                         <span>Família</span>
-                      </div>
-                      <div class="sim-nav-item">
-                        <div class="sim-nav-circle"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#00897B" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
+                      </button>
+                      <button type="button" class="sim-nav-item" data-sim-go="exams" aria-controls="sim-exams">
+                        <span class="sim-nav-circle"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#00897B" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></span>
                         <span>Exames</span>
-                      </div>
+                      </button>
                     </div>
 
                     <!-- Highlight Metrics Row -->
@@ -585,10 +585,10 @@
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#00897B" stroke-width="2"><path d="m10.5 20.5 10-10a4.95 4.95 0 1 0-7-7l-10 10a4.95 4.95 0 1 0 7 7Z"/><path d="m8.5 8.5 7 7"/></svg>
                       </div>
                       <div class="sim-med-alert-info">
-                        <div class="sim-med-alert-label">Próximo lembrete</div>
+                        <div class="sim-med-alert-label" data-sim-dose-status>Próximo lembrete</div>
                         <div class="sim-med-alert-text">Losartana 50mg as 14h</div>
                       </div>
-                      <button class="sim-med-taken-btn" onclick="this.textContent='Tomado ✓'; this.style.background='#10B981'; this.style.color='#FFF'">Já tomei</button>
+                      <button class="sim-med-taken-btn" type="button" data-sim-dose aria-pressed="false">Já tomei</button>
                     </div>
 
                     <!-- Vital Signs Row -->
@@ -630,6 +630,7 @@
                   <!-- 2. TELA: SINAIS VITAIS (fiel ao VitalSignsScreen) -->
                   <!-- ═══════════════════════════════════════════ -->
                   <div id="sim-vitals" class="sim-screen">
+                    <button type="button" class="sim-back-btn" data-sim-go="home" aria-controls="sim-home">Voltar ao início</button>
                     
                     <!-- Header -->
                     <div class="sim-emerald-header sim-emerald-header-small">
@@ -732,6 +733,7 @@
                   <!-- 3. TELA: HIDRATAÇÃO (fiel ao HydrationScreen) -->
                   <!-- ═══════════════════════════════════════════ -->
                   <div id="sim-hydration" class="sim-screen">
+                    <button type="button" class="sim-back-btn" data-sim-go="home" aria-controls="sim-home">Voltar ao início</button>
                     
                     <!-- Header -->
                     <div class="sim-emerald-header sim-emerald-header-small">
@@ -817,6 +819,7 @@
                   <!-- 4. TELA: FAMÍLIA (fiel ao FamilyBridge) -->
                   <!-- ═══════════════════════════════════════════ -->
                   <div id="sim-family" class="sim-screen">
+                    <button type="button" class="sim-back-btn" data-sim-go="home" aria-controls="sim-home">Voltar ao início</button>
                     
                     <!-- Header -->
                     <div class="sim-emerald-header sim-emerald-header-small">
@@ -879,6 +882,55 @@
                         <div class="sim-qr-title">Conectar Familiar</div>
                         <div class="sim-qr-desc">Compartilhe o QR Code ou código de 8 dígitos</div>
                         <div class="sim-qr-code-text">A1B2C3D4</div>
+                      </div>
+                    </div>
+                  </div>
+
+
+                  <!-- Rotina e laudo de exemplo: dados locais da demonstração. -->
+                  <div id="sim-reminders" class="sim-screen">
+                    <button type="button" class="sim-back-btn" data-sim-go="home" aria-controls="sim-home">Voltar ao início</button>
+                    <div class="sim-emerald-header sim-emerald-header-small">
+                      <div class="sim-emerald-header-content">
+                        <div class="sim-greeting">Lembretes</div>
+                        <div class="sim-header-status">Sua rotina de hoje</div>
+                      </div>
+                    </div>
+                    <p class="sim-demo-note">Rotina de exemplo, sem notificações reais.</p>
+                    <div class="sim-med-alert">
+                      <div class="sim-med-alert-info">
+                        <div class="sim-med-alert-label" data-sim-dose-status>Próximo lembrete</div>
+                        <div class="sim-med-alert-text">Losartana 50mg às 14h</div>
+                      </div>
+                      <button type="button" class="sim-med-taken-btn" data-sim-dose aria-pressed="false">Já tomei</button>
+                    </div>
+                    <div class="sim-demo-card">
+                      <h3>Hidratação</h3>
+                      <p>Confira a meta e registre um copo de água.</p>
+                      <button type="button" class="sim-demo-button" data-sim-go="hydration" aria-controls="sim-hydration">Registrar água</button>
+                    </div>
+                  </div>
+
+                  <div id="sim-exams" class="sim-screen">
+                    <button type="button" class="sim-back-btn" data-sim-go="home" aria-controls="sim-home">Voltar ao início</button>
+                    <div class="sim-emerald-header sim-emerald-header-small">
+                      <div class="sim-emerald-header-content">
+                        <div class="sim-greeting">Meus exames</div>
+                        <div class="sim-header-status">Resultados organizados em um só lugar</div>
+                      </div>
+                    </div>
+                    <p class="sim-demo-note">Demonstração com dados fictícios.</p>
+                    <div class="sim-demo-card">
+                      <h3>Hemograma</h3>
+                      <p>Laudo de exemplo · PDF</p>
+                      <button type="button" id="sim-exam-open" class="sim-demo-button" aria-expanded="false" aria-controls="sim-exam-detail">Ver resultado de exemplo</button>
+                      <div id="sim-exam-detail" hidden>
+                        <dl class="sim-exam-values">
+                          <div><dt>Hemoglobina</dt><dd>14,0 g/dL</dd></div>
+                          <div><dt>Leucócitos</dt><dd>6.500 /µL</dd></div>
+                          <div><dt>Plaquetas</dt><dd>250.000 /µL</dd></div>
+                        </dl>
+                        <p>Leve seus resultados ao profissional que acompanha você.</p>
                       </div>
                     </div>
                   </div>
