@@ -14,9 +14,11 @@
   let simAutoplayTimer = null;
   let isAutoplayPaused = false;
   let manualPauseUntil = 0;
+  let manualNavigation = false;
   const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
 
   function switchSimScreen(screenName) {
+    if (!document.getElementById('sim-' + screenName)) return;
     const screens = document.querySelectorAll('.sim-screen');
     const buttons = document.querySelectorAll('.phone-tab-btn');
 
@@ -30,7 +32,8 @@
       btn.setAttribute('aria-pressed', String(active));
     });
 
-    currentSimIndex = simScreens.indexOf(screenName);
+    const autoplayIndex = simScreens.indexOf(screenName);
+    if (autoplayIndex >= 0) currentSimIndex = autoplayIndex;
     const content = document.querySelector('.phone-app-content');
     if (content) content.scrollTop = 0;
   }
@@ -38,7 +41,7 @@
   function startSimAutoplay() {
     if (simAutoplayTimer) clearInterval(simAutoplayTimer);
     simAutoplayTimer = setInterval(() => {
-      if (isAutoplayPaused || Date.now() < manualPauseUntil || reducedMotion.matches || document.hidden) return;
+      if (manualNavigation || isAutoplayPaused || Date.now() < manualPauseUntil || reducedMotion.matches || document.hidden) return;
       currentSimIndex = (currentSimIndex + 1) % simScreens.length;
       switchSimScreen(simScreens[currentSimIndex]);
     }, 5500);
@@ -50,12 +53,49 @@
       btn.addEventListener('click', () => {
         const screenName = btn.getAttribute('data-sim');
         if (screenName) {
+          manualNavigation = true;
           switchSimScreen(screenName);
           // Pausa temporária quando o usuário interage voluntariamente
           manualPauseUntil = Date.now() + 12000;
         }
       });
     });
+
+    document.querySelectorAll('[data-sim-go]').forEach(button => {
+      button.addEventListener('click', () => {
+        const screenName = button.dataset.simGo;
+        const screen = document.getElementById('sim-' + screenName);
+        if (!screen) return;
+        manualNavigation = true;
+        if (screenName === 'vitals') window.switchVitalsTab(0);
+        switchSimScreen(screenName);
+        const focusTarget = screen.querySelector('.sim-back-btn, .sim-nav-item');
+        if (focusTarget) focusTarget.focus({ preventScroll: true });
+      });
+    });
+
+    document.querySelectorAll('[data-sim-dose]').forEach(button => {
+      button.addEventListener('click', () => {
+        const taken = button.getAttribute('aria-pressed') !== 'true';
+        document.querySelectorAll('[data-sim-dose]').forEach(control => {
+          control.setAttribute('aria-pressed', String(taken));
+          control.textContent = taken ? 'Desfazer' : 'Já tomei';
+        });
+        document.querySelectorAll('[data-sim-dose-status]').forEach(label => {
+          label.textContent = taken ? 'Dose confirmada' : 'Próximo lembrete';
+        });
+      });
+    });
+
+    const examButton = document.getElementById('sim-exam-open');
+    const examDetail = document.getElementById('sim-exam-detail');
+    if (examButton && examDetail) {
+      examButton.addEventListener('click', () => {
+        examDetail.hidden = !examDetail.hidden;
+        examButton.setAttribute('aria-expanded', String(!examDetail.hidden));
+        examButton.textContent = examDetail.hidden ? 'Ver resultado de exemplo' : 'Fechar resultado';
+      });
+    }
 
     const phoneFrame = document.querySelector('.phone-frame');
     if (phoneFrame) {
