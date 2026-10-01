@@ -4,6 +4,7 @@ import { Lock, Mail, User, ArrowRight, ShieldAlert, ShieldCheck, AlertCircle, Cl
 import {
   auth,
   googleProvider,
+  browserPopupRedirectResolver,
   signInWithPopup,
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
@@ -45,7 +46,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onSuccess }) => {
     setIsLoading(true);
     setError(null);
     try {
-      await signInWithPopup(auth, googleProvider);
+      await signInWithPopup(auth, googleProvider, browserPopupRedirectResolver);
       onSuccess();
     } catch (err: any) {
       console.warn("Falha no login com Google:", err);

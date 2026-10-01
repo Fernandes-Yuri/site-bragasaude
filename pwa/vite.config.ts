@@ -8,7 +8,7 @@ export default defineConfig({
   base: '/app/',
   build: {
     outDir: '../onboarding_site/public/app',
-    emptyOutDir: true,
+    emptyOutDir: false,
     rollupOptions: {
       output: {
         manualChunks(id: string) {

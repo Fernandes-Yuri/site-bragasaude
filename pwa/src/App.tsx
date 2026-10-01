@@ -48,8 +48,10 @@ import { ClinicalCorrelationsAlert } from "./components/ClinicalCorrelationsAler
 import { DoctorReportModal } from "./components/DoctorReportModal";
 import { CommunityFeed } from "./components/CommunityFeed";
 import { LoginScreen } from "./components/LoginScreen";
+import { ErrorBoundary } from "./components/ErrorBoundary";
+import { lazyWithRetry } from "./utils/lazyWithRetry";
 
-// Code-Splitting: componentes pesados carregados sob demanda
+// Code-Splitting: componentes pesados carregados sob demanda com auto-recuperação
 // (exceto LoginScreen que é importado diretamente para suportar Role Selection)
 const isDevHost = typeof window !== "undefined" &&
   (window.location.hostname === "localhost" ||
@@ -57,26 +59,26 @@ const isDevHost = typeof window !== "undefined" &&
    window.location.hostname === "::1");
 const DesktopGateNull: React.FC<{ onBypassDev?: () => void }> = () => null;
 const DesktopGateModal = isDevHost
-  ? React.lazy(() =>
+  ? lazyWithRetry(() =>
       import("./components/DesktopGateModal").then((m) => ({ default: m.DesktopGateModal }))
     )
-  : React.lazy(() => Promise.resolve({ default: DesktopGateNull }));
-const HistoryMetricsSection = React.lazy(() =>
+  : lazyWithRetry(() => Promise.resolve({ default: DesktopGateNull }));
+const HistoryMetricsSection = lazyWithRetry(() =>
   import("./components/HistoryMetricsSection").then((m) => ({ default: m.HistoryMetricsSection }))
 );
-const FamilyConnectModal = React.lazy(() =>
+const FamilyConnectModal = lazyWithRetry(() =>
   import("./components/FamilyConnectModal").then((m) => ({ default: m.FamilyConnectModal }))
 );
-const MedicationReminderDialog = React.lazy(() =>
+const MedicationReminderDialog = lazyWithRetry(() =>
   import("./components/CaregiverDialogs").then((m) => ({ default: m.MedicationReminderDialog }))
 );
-const AppointmentDialog = React.lazy(() =>
+const AppointmentDialog = lazyWithRetry(() =>
   import("./components/CaregiverDialogs").then((m) => ({ default: m.AppointmentDialog }))
 );
-const CareNoteDialog = React.lazy(() =>
+const CareNoteDialog = lazyWithRetry(() =>
   import("./components/CaregiverDialogs").then((m) => ({ default: m.CareNoteDialog }))
 );
-const InstallPromptBanner = React.lazy(() =>
+const InstallPromptBanner = lazyWithRetry(() =>
   import("./components/InstallPromptBanner").then((m) => ({ default: m.InstallPromptBanner }))
 );
 
@@ -739,17 +741,19 @@ export const App: React.FC = () => {
           onFamilyPost={() => showToast("Publicação compartilhada com a família")}
         />
 
-        {/* Histórico e Tendências (7d / 30d) com dados reais (Lazy Loaded) */}
-        <React.Suspense
-          fallback={
-            <div className="bg-white rounded-3xl p-5 border border-[#E5EBE8] shadow-xs my-2 animate-pulse">
-              <div className="h-4 w-36 bg-slate-200 rounded-md mb-3" />
-              <div className="h-40 bg-slate-100 rounded-2xl" />
-            </div>
-          }
-        >
-          <HistoryMetricsSection history7d={historyRecords} />
-        </React.Suspense>
+        {/* Histórico e Tendências (7d / 30d) com dados reais (Lazy Loaded com Proteção) */}
+        <ErrorBoundary>
+          <React.Suspense
+            fallback={
+              <div className="bg-white rounded-3xl p-5 border border-[#E5EBE8] shadow-xs my-2 animate-pulse">
+                <div className="h-4 w-36 bg-slate-200 rounded-md mb-3" />
+                <div className="h-40 bg-slate-100 rounded-2xl" />
+              </div>
+            }
+          >
+            <HistoryMetricsSection history7d={historyRecords} />
+          </React.Suspense>
+        </ErrorBoundary>
 
         {/* Lista de Compras Compartilhada da Semana */}
         <SharedGroceryListCard
