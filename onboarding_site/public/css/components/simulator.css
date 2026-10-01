@@ -9,6 +9,7 @@
   display: flex;
   flex-direction: column;
   align-items: center;
+  isolation: isolate;
 }
 
 .phone-tabs-selector {
@@ -17,7 +18,7 @@
   border: 1px solid var(--border-light);
   border-radius: 999px;
   padding: 4px;
-  margin-bottom: 20px;
+  margin-bottom: 30px;
   box-shadow: var(--shadow-sm);
   backdrop-filter: blur(8px);
   gap: 4px;
@@ -29,7 +30,7 @@
   background: none;
   border: none;
   padding: 8px 12px;
-  font-size: 0.72rem;
+  font-size: 0.875rem;
   font-weight: 700;
   color: var(--text-muted);
   border-radius: 999px;
@@ -39,6 +40,7 @@
   display: flex;
   align-items: center;
   gap: 5px;
+  min-height: 44px;
 }
 
 .phone-tab-btn.active {
@@ -47,26 +49,150 @@
   box-shadow: 0 2px 10px rgba(0, 137, 123, 0.3);
 }
 
-/* ── Phone Frame ── */
+/* ── Aparelho: alumínio usinado, borda polida e vidro ── */
+.phone-stage {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  padding: 10px 16px 42px;
+  perspective: 1400px;
+}
+
+.phone-stage::before,
+.phone-stage::after {
+  content: '';
+  position: absolute;
+  pointer-events: none;
+  z-index: -1;
+}
+
+.phone-stage::before {
+  inset: 8% -10% 5%;
+  background: radial-gradient(ellipse, rgba(0, 168, 132, 0.16), transparent 68%);
+}
+
+.phone-stage::after {
+  bottom: 12px;
+  width: min(78%, 310px);
+  height: 30px;
+  border-radius: 50%;
+  background: radial-gradient(ellipse, rgba(14, 38, 31, 0.24), transparent 70%);
+  filter: blur(9px);
+}
+
 .phone-frame {
+  --phone-rotate-x: 2deg;
+  --phone-rotate-y: -9deg;
+  --phone-light-x: 28%;
   width: 320px;
   height: 640px;
-  background: #1A1A1A;
-  border-radius: 40px;
-  padding: 12px;
-  box-shadow: 
-    0 25px 50px -12px rgba(0, 0, 0, 0.35),
-    inset 0 0 0 2px rgba(255, 255, 255, 0.1);
+  flex-shrink: 0;
+  border-radius: 46px;
+  padding: 10px;
+  border: 1px solid #8e9d9b;
+  background: linear-gradient(110deg, #dce3e1 0%, #778582 2%, #202a28 4%,
+    #111816 48%, #34413e 94%, #b3bfbc 98%, #eef3f0 100%);
+  box-shadow:
+    1px 1px 0 #dfe6e3,
+    3px 2px 0 #7b8b85,
+    6px 3px 0 #3a4843,
+    8px 4px 0 #677770,
+    18px 22px 30px -16px rgba(6, 25, 17, 0.38),
+    28px 45px 65px -22px rgba(6, 25, 17, 0.28),
+    inset 0 0 0 2px rgba(239, 247, 242, 0.48),
+    inset 0 0 0 5px #111816;
   position: relative;
+  transform: rotateX(var(--phone-rotate-x)) rotateY(var(--phone-rotate-y));
+  transition: transform 550ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.phone-frame::before {
+  content: '';
+  position: absolute;
+  inset: 5px;
+  border: 1px solid rgba(216, 230, 222, 0.3);
+  border-radius: 40px;
+  pointer-events: none;
+}
+
+.phone-hardware {
+  pointer-events: none;
+}
+
+.phone-key {
+  position: absolute;
+  width: 4px;
+  border-radius: 3px;
+  background: linear-gradient(90deg, #3b4b44, #d5ddd8 45%, #6b7b72);
+  box-shadow: inset 0 1px 1px #eff6f1, 0 1px 2px rgba(0, 0, 0, 0.35);
+}
+
+.phone-key-volume-up { left: -4px; top: 126px; height: 42px; }
+.phone-key-volume-down { left: -4px; top: 182px; height: 42px; }
+.phone-key-power { right: -10px; top: 157px; height: 65px; }
+
+.phone-antenna {
+  position: absolute;
+  left: -1px;
+  right: -7px;
+  height: 3px;
+  border-left: 4px solid #26372f;
+  border-right: 4px solid #26372f;
+}
+
+.phone-antenna-top { top: 68px; }
+.phone-antenna-bottom { bottom: 68px; }
+
+.phone-earpiece {
+  position: absolute;
+  top: 5px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 44px;
+  height: 2px;
+  border-radius: 2px;
+  background: repeating-linear-gradient(90deg, #070c09 0 2px, #66766d 2px 3px);
 }
 
 .phone-screen {
   width: 100%;
   height: 100%;
   background: #FAFCFB;
-  border-radius: 30px;
+  border-radius: 36px;
   overflow: hidden;
   position: relative;
+  border: 1px solid #050a07;
+  box-shadow: 0 0 0 2px #050a07, inset 0 0 0 1px rgba(255, 255, 255, 0.4);
+  /* O recorte mantém o brilho dentro do vidro, sem cobrir os controles. */
+  isolation: isolate;
+}
+
+.phone-glass {
+  position: absolute;
+  inset: 0;
+  z-index: 30;
+  border-radius: inherit;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse at var(--phone-light-x) 0%, rgba(255, 255, 255, 0.18), transparent 52%),
+    linear-gradient(118deg, rgba(255, 255, 255, 0.08), transparent 32%,
+      transparent 72%, rgba(255, 255, 255, 0.1));
+  box-shadow: inset 1px 0 1px rgba(255, 255, 255, 0.55),
+    inset -1px 0 1px rgba(0, 0, 0, 0.2);
+}
+
+.phone-home-indicator {
+  position: absolute;
+  bottom: 7px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 92px;
+  height: 4px;
+  border-radius: 4px;
+  background: #18231d;
+  z-index: 31;
+  pointer-events: none;
 }
 
 .phone-island {
@@ -100,6 +226,42 @@
   background: #1a1a2e;
 }
 
+/* Escopo da demonstração: o tutorial de instalação tem seu próprio aparelho. */
+.phone-frame .phone-island {
+  top: 10px;
+  width: 84px;
+  height: 25px;
+  background: linear-gradient(180deg, #131a17, #030605);
+  box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.14), 0 1px 1px rgba(0, 0, 0, 0.15);
+}
+
+.phone-frame .phone-camera {
+  width: 11px;
+  height: 11px;
+  border: 2px solid #17221e;
+  background: radial-gradient(circle at 35% 30%, #6594b4 0%, #203d52 18%, #080f17 45%, #14232c 65%, #050809 100%);
+  box-shadow: 0 0 0 1px #020604;
+}
+
+.phone-frame .phone-sensor {
+  background: radial-gradient(circle at 35% 30%, #354a42, #070b09 70%);
+  border: 1px solid #142019;
+}
+
+.phone-frame:focus-within {
+  --phone-rotate-x: 0deg !important;
+  --phone-rotate-y: 0deg !important;
+}
+
+@media (max-width: 900px), (hover: none), (pointer: coarse) {
+  .phone-frame { transform: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .phone-frame { transform: none; transition: none; }
+  .phone-frame .sim-screen.active { animation: none; }
+}
+
 .phone-status-bar {
   position: absolute;
   top: 0;
@@ -127,7 +289,7 @@
   top: 44px;
   left: 0;
   right: 0;
-  bottom: 0;
+  bottom: 20px;
   overflow-y: auto;
   overflow-x: hidden;
   -webkit-overflow-scrolling: touch;
