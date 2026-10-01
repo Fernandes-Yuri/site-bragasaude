@@ -13,6 +13,8 @@
   let currentSimIndex = 0;
   let simAutoplayTimer = null;
   let isAutoplayPaused = false;
+  let manualPauseUntil = 0;
+  const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
 
   function switchSimScreen(screenName) {
     const screens = document.querySelectorAll('.sim-screen');
@@ -23,16 +25,20 @@
     });
 
     buttons.forEach(btn => {
-      btn.classList.toggle('active', btn.getAttribute('data-sim') === screenName);
+      const active = btn.getAttribute('data-sim') === screenName;
+      btn.classList.toggle('active', active);
+      btn.setAttribute('aria-pressed', String(active));
     });
 
     currentSimIndex = simScreens.indexOf(screenName);
+    const content = document.querySelector('.phone-app-content');
+    if (content) content.scrollTop = 0;
   }
 
   function startSimAutoplay() {
     if (simAutoplayTimer) clearInterval(simAutoplayTimer);
     simAutoplayTimer = setInterval(() => {
-      if (isAutoplayPaused) return;
+      if (isAutoplayPaused || Date.now() < manualPauseUntil || reducedMotion.matches || document.hidden) return;
       currentSimIndex = (currentSimIndex + 1) % simScreens.length;
       switchSimScreen(simScreens[currentSimIndex]);
     }, 5500);
@@ -46,19 +52,64 @@
         if (screenName) {
           switchSimScreen(screenName);
           // Pausa temporária quando o usuário interage voluntariamente
-          isAutoplayPaused = true;
-          setTimeout(() => { isAutoplayPaused = false; }, 12000);
+          manualPauseUntil = Date.now() + 12000;
         }
       });
     });
 
     const phoneFrame = document.querySelector('.phone-frame');
     if (phoneFrame) {
-      phoneFrame.addEventListener('mouseenter', () => { isAutoplayPaused = true; });
-      phoneFrame.addEventListener('mouseleave', () => { isAutoplayPaused = false; });
+      const simulator = document.getElementById('demonstracao');
+      let hovered = false;
+      function updatePause() {
+        isAutoplayPaused = hovered || simulator.contains(document.activeElement);
+      }
+      simulator.addEventListener('mouseenter', () => { hovered = true; updatePause(); });
+      simulator.addEventListener('mouseleave', () => { hovered = false; updatePause(); });
+      simulator.addEventListener('focusin', updatePause);
+      simulator.addEventListener('focusout', () => { requestAnimationFrame(updatePause); });
+      phoneFrame.addEventListener('pointerdown', () => { manualPauseUntil = Date.now() + 12000; });
+      phoneFrame.addEventListener('wheel', () => { manualPauseUntil = Date.now() + 12000; }, { passive: true });
+      setupPhonePerspective(phoneFrame);
     }
 
+    switchSimScreen(simScreens[currentSimIndex]);
     startSimAutoplay();
+  }
+
+  // Inclinação discreta, sem renderização contínua ou dependências 3D pesadas.
+  function setupPhonePerspective(phoneFrame) {
+    const stage = phoneFrame.closest('.phone-stage');
+    const desktopPointer = window.matchMedia('(min-width: 901px) and (hover: hover) and (pointer: fine)');
+    if (!stage) return;
+    let pendingFrame = null;
+    let pointerX = 0.5;
+    let pointerY = 0.5;
+
+    function resetPerspective() {
+      if (pendingFrame !== null) cancelAnimationFrame(pendingFrame);
+      pendingFrame = null;
+      phoneFrame.style.removeProperty('--phone-rotate-x');
+      phoneFrame.style.removeProperty('--phone-rotate-y');
+      phoneFrame.style.removeProperty('--phone-light-x');
+    }
+
+    stage.addEventListener('pointermove', event => {
+      if (!desktopPointer.matches || reducedMotion.matches || event.pointerType !== 'mouse') return;
+      const bounds = stage.getBoundingClientRect();
+      pointerX = Math.max(0, Math.min(1, (event.clientX - bounds.left) / bounds.width));
+      pointerY = Math.max(0, Math.min(1, (event.clientY - bounds.top) / bounds.height));
+      if (pendingFrame !== null) return;
+      pendingFrame = requestAnimationFrame(() => {
+        phoneFrame.style.setProperty('--phone-rotate-x', (2 + (0.5 - pointerY) * 6) + 'deg');
+        phoneFrame.style.setProperty('--phone-rotate-y', (-7 + (pointerX - 0.5) * 10) + 'deg');
+        phoneFrame.style.setProperty('--phone-light-x', (20 + pointerX * 60) + '%');
+        pendingFrame = null;
+      });
+    });
+    stage.addEventListener('pointerleave', resetPerspective);
+    desktopPointer.addEventListener('change', resetPerspective);
+    reducedMotion.addEventListener('change', resetPerspective);
   }
 
   // ── 1b. Orb Assistente — Tutorial Interativo ──

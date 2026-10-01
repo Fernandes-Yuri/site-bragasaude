@@ -68,7 +68,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
   <!-- External Stylesheet -->
-  <link rel="stylesheet" href="css/style.css?v=1.3.0">
+  <link rel="stylesheet" href="css/style.css?v=1.3.1">
   <link rel="stylesheet" href="css/components/install-guide.css">
 
   <style>
@@ -226,7 +226,7 @@
        inútil (e enganoso) em toda visita. -->
 
   <!-- External JavaScript -->
-  <script src="js/main.js?v=1.3.0" defer></script>
+  <script src="js/main.js?v=1.3.1" defer></script>
 
   <!-- Schema.org / JSON-LD (Dados Estruturados para o Google) -->
   <script type="application/ld+json" id="braga-ldjson">
@@ -485,8 +485,17 @@
               </button>
             </div>
 
-            <!-- Phone Frame -->
+            <!-- Corpo do aparelho; a tela continua sendo a demonstração interativa. -->
+            <div class="phone-stage">
             <div class="phone-frame">
+              <div class="phone-hardware" aria-hidden="true">
+                <span class="phone-key phone-key-volume-up"></span>
+                <span class="phone-key phone-key-volume-down"></span>
+                <span class="phone-key phone-key-power"></span>
+                <span class="phone-antenna phone-antenna-top"></span>
+                <span class="phone-antenna phone-antenna-bottom"></span>
+                <span class="phone-earpiece"></span>
+              </div>
               <div class="phone-screen">
                 
                 <!-- Notch Island -->
@@ -890,7 +899,10 @@
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#00A884" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
                   <span>Dados preenchidos! Confirme acima.</span>
                 </div>
+                <div class="phone-glass" aria-hidden="true"></div>
+                <div class="phone-home-indicator" aria-hidden="true"></div>
               </div>
+            </div>
             </div>
           </div>
 
