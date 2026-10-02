@@ -551,7 +551,7 @@
         e.preventDefault();
         e.stopPropagation();
         const hashText = code.textContent.trim();
-        if (!hashText || hashText.includes('...')) return;
+        if (!/^[a-f0-9]{64}$/i.test(hashText)) return;
         navigator.clipboard.writeText(hashText).then(() => {
           const original = label ? label.textContent : '';
           if (label) label.textContent = 'Copiado!';
