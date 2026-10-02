@@ -25,11 +25,7 @@ export interface QueuedMessage {
 }
 const databases = new Map<string, BragaSaudeDatabase>();
 let legacyCleanup: Promise<void> | undefined;
-export async function getDatabase(scope: LocalScope): Promise<BragaSaudeDatabase> {
-  if (!scope.ownerId || !scope.patientId) throw new Error("Conta e paciente são obrigatórios para armazenamento local.");
-  // O banco antigo não registra o dono das compras: não atribuir dados a quem entrar agora.
-  legacyCleanup ??= Dexie.delete("braga-saude-cuidador");
-  await legacyCleanup;
+async function scopedDatabase(scope: LocalScope): Promise<BragaSaudeDatabase> {
   const name = PREFIX + scopeKey(scope);
   let database = databases.get(name);
   if (!database) {
@@ -39,7 +35,39 @@ export async function getDatabase(scope: LocalScope): Promise<BragaSaudeDatabase
   if (!database.isOpen()) await database.open();
   return database;
 }
+async function migrateLegacy(): Promise<void> {
+  const legacyName = "braga-saude-cuidador";
+  if (!await Dexie.exists(legacyName)) return;
+  const legacy = new Dexie(legacyName);
+  try {
+    await legacy.open();
+    if (legacy.tables.some(table => table.name === "messageQueue")) {
+      const entries = await legacy.table<QueuedMessage, string>("messageQueue").toArray();
+      for (const entry of entries) {
+        const message = entry.message;
+        if (!message || typeof message.senderId !== "string" || !message.senderId ||
+            typeof message.patientId !== "string" || !message.patientId ||
+            typeof message.id !== "string" || message.id !== entry.id ||
+            !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(message.id) ||
+            !Number.isFinite(Date.parse(message.expiresAt)) || Date.parse(message.expiresAt) <= Date.now()) continue;
+        const target = await scopedDatabase({ ownerId: message.senderId, patientId: message.patientId });
+        // Repetir a migração após uma falha não reinicia prazo nem tentativas.
+        if (!await target.messageQueue.get(entry.id)) await target.messageQueue.put(entry);
+      }
+    }
+  } finally { legacy.close(); }
+  // Compras sem dono não são atribuídas a quem entra agora. Fila válida já foi particionada.
+  await Dexie.delete(legacyName);
+}
+export async function getDatabase(scope: LocalScope): Promise<BragaSaudeDatabase> {
+  if (!scope.ownerId || !scope.patientId) throw new Error("Conta e paciente são obrigatórios para armazenamento local.");
+  legacyCleanup ??= migrateLegacy();
+  await legacyCleanup;
+  return scopedDatabase(scope);
+}
 export async function clearAccountData(ownerId: string): Promise<void> {
+  legacyCleanup ??= migrateLegacy();
+  await legacyCleanup;
   const prefix = PREFIX + encodeURIComponent(ownerId) + ":";
   const names = new Set([...await Dexie.getDatabaseNames(), ...databases.keys()]);
   for (const name of names) {

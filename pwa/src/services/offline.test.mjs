@@ -23,10 +23,15 @@ afterEach(async () => {
 
 test('dados legados sem dono são expurgados sem atribuição à conta atual', async () => {
   const legacy = new Dexie('braga-saude-cuidador');
-  legacy.version(1).stores({ groceryItems:'id' });
+  legacy.version(1).stores({ groceryItems:'id',messageQueue:'id' });
   await legacy.table('groceryItems').put({id:'med-legado',foodName:'Medicamento privado'});
+  const payload = message();
+  await legacy.table('messageQueue').put({id:payload.id,message:payload,status:'pending',queuedAt:Date.now(),attempts:2});
   legacy.close();
   assert.deepEqual(await loadGroceryItems(a),[]);
+  assert.deepEqual((await (await getDatabase(a)).messageQueue.get(payload.id)).message,payload);
+  assert.equal((await (await getDatabase(a)).messageQueue.get(payload.id)).attempts,2);
+  assert.equal(await (await getDatabase(b)).messageQueue.count(),0);
   assert.equal(await Dexie.exists('braga-saude-cuidador'),false);
 });
 test('recarga, troca de conta e de paciente preservam isolamento das compras', async () => {
