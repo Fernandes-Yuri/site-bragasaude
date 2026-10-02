@@ -1,134 +1,63 @@
-import { db } from "./db";
+import { getDatabase, type LocalScope, type BragaSaudeDatabase } from "./db";
 import { sendCaregiverMessage } from "./api";
 import type { FamilyMessage } from "../types";
 
-/**
- * Enfileira uma mensagem familiar para entrega persistente.
- *
- * 1. Grava no IndexedDB imediatamente (garante que não se perde)
- * 2. Tenta entregar ao Gateway na hora
- * 3. Se falhar, fica na fila ate a conexao voltar
- *
- * Referencia: 02_PWA_ARQUITETURA_DO_CUIDADOR.md, fluxo offline
- */
-
 const MAX_ATTEMPTS = 5;
-
-/**
- * Getter de token injetavel. Tokens do Firebase expiram em ~1h, e a fila
- * pode sobreviver a quedas longas, entao NAO persistimos o token: buscamos
- * uma versao fresca a cada entrega. Sem isso o POST sai sem Authorization
- * e a mensagem queima todas as tentativas.
- */
 export type TokenGetter = () => Promise<string | undefined>;
+const expired = (message: FamilyMessage) => !Number.isFinite(Date.parse(message.expiresAt)) || Date.parse(message.expiresAt) <= Date.now();
+const scopeFor = (message: FamilyMessage): LocalScope => ({ ownerId: message.senderId, patientId: message.patientId });
 
-export async function queueMessage(
-  message: FamilyMessage,
-  idToken?: string
-): Promise<{ delivered: boolean; queued: boolean }> {
+export async function queueMessage(message: FamilyMessage, idToken?: string): Promise<{ delivered: boolean; queued: boolean }> {
+  if (expired(message)) return { delivered: false, queued: false };
+  let database: BragaSaudeDatabase | undefined;
+  let queued = false;
   try {
-    await db.messageQueue.put({
-      id: message.id,
-      message,
-      status: "pending",
-      queuedAt: Date.now(),
-      attempts: 0,
-    });
-  } catch (err) {
-    console.warn("Falha ao enfileirar mensagem:", err);
-  }
-
-  const delivered = await tryDeliver(message, idToken);
-  return { delivered, queued: true };
+    database = await getDatabase(scopeFor(message));
+    await database.messageQueue.put({ id: message.id, message, status: "pending", queuedAt: Date.now(), attempts: 0 });
+    queued = true;
+  } catch { /* A UI deve distinguir indisponibilidade de armazenamento e fila real. */ }
+  const delivered = await tryDeliver(message, database, idToken);
+  return { delivered, queued: queued && !delivered };
 }
 
-async function tryDeliver(
-  message: FamilyMessage,
-  idToken?: string
-): Promise<boolean> {
-  try {
-    const result = await sendCaregiverMessage(
-      message.patientId,
-      message.messageText,
-      message.iconType,
-      message.senderName,
-      message.senderId,
-      idToken
-    );
-
-    if (result.delivered) {
-      await db.messageQueue.delete(message.id).catch(() => {});
-      return true;
-    }
-
-    // Mantem na fila para retry posterior
-    await bumpAttempts(message.id);
-    return false;
-  } catch (err) {
-    console.warn("Entrega falhou, mensagem permanece na fila:", err);
-    await bumpAttempts(message.id);
+async function tryDeliver(message: FamilyMessage, database?: BragaSaudeDatabase, idToken?: string): Promise<boolean> {
+  if (expired(message)) {
+    await database?.messageQueue.delete(message.id);
     return false;
   }
-}
-
-async function bumpAttempts(id: string): Promise<void> {
-  try {
-    const entry = await db.messageQueue.get(id);
-    if (!entry) return;
-    await db.messageQueue.update(id, {
+  if (!idToken) return false; // Não consome tentativas enquanto a sessão estiver ausente.
+  const result = await sendCaregiverMessage(message, idToken);
+  if (result.delivered) {
+    await database?.messageQueue.delete(message.id);
+    return true;
+  }
+  if (database) {
+    const entry = await database.messageQueue.get(message.id);
+    if (entry) await database.messageQueue.update(message.id, {
       attempts: entry.attempts + 1,
       status: entry.attempts + 1 >= MAX_ATTEMPTS ? "failed" : "pending",
     });
-  } catch (err) {
-    console.warn("Falha ao atualizar tentativas:", err);
   }
+  return false;
 }
 
-/**
- * Processa a fila de mensagens pendentes.
- * Chamado quando a conexao retorna (evento online) ou no pull-to-refresh.
- *
- * `getToken` e obrigatorio: sem um token fresco o Gateway rejeita a entrega
- * e as mensagens queimam todas as tentativas.
- */
-export async function flushMessageQueue(
-  getToken: TokenGetter
-): Promise<number> {
-  let deliveredCount = 0;
-
-  try {
-    const pending = await db.messageQueue
-      .where("status")
-      .equals("pending")
-      .toArray();
-
-    for (const entry of pending) {
-      const idToken = await getToken().catch(() => undefined);
-      const ok = await tryDeliver(entry.message, idToken);
-      if (ok) deliveredCount++;
+export async function flushMessageQueue(scope: LocalScope, getToken: TokenGetter, retryFailed = false) {
+  const database = await getDatabase(scope);
+  let delivered = 0;
+  let expiredCount = 0;
+  const entries = await database.messageQueue.toArray();
+  for (const entry of entries) {
+    // Defesa extra contra registro corrompido ou importado de outro escopo.
+    if (entry.message.senderId !== scope.ownerId || entry.message.patientId !== scope.patientId || expired(entry.message)) {
+      await database.messageQueue.delete(entry.id);
+      expiredCount++;
+      continue;
     }
-  } catch (err) {
-    console.warn("Falha ao processar fila de mensagens:", err);
+    if (entry.status === "failed" && !retryFailed) continue;
+    if (entry.status === "failed") await database.messageQueue.update(entry.id, { attempts: 0, status: "pending" });
+    const token = await getToken().catch(() => undefined);
+    if (!token) break;
+    if (await tryDeliver(entry.message, database, token)) delivered++;
   }
-
-  return deliveredCount;
-}
-
-// AUD-PW(M): getPendingMessageCount era codigo MORTO — Removido.
-// A UI de "enviando" usa o estado local do componente, nao esta contagem.
-
-/**
- * Limpa a fila de mensagens do IndexedDB — deve rodar no logout.
- *
- * AUD-PW02: a fila é persistida no IndexedDB e continha textos de mensagens
- * familiares de quem saiu. Em aparelho compartilhado, o próximo usuário via
- * o conteúdo na fila (e ela tentava entregar com o token novo — mensagem
- * cruzada entre contas).
- */
-export async function clearMessageQueue(): Promise<void> {
-  try {
-    await db.messageQueue.clear();
-  } catch (err) {
-    console.warn("Falha ao limpar fila de mensagens:", err);
-  }
+  return { delivered, expired: expiredCount, failed: await database.messageQueue.where("status").equals("failed").count() };
 }

@@ -1,5 +1,5 @@
 import { familyGroups, resolveFamilyGroup } from './services/familyGroups';
-import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import React, { useState, useEffect, useLayoutEffect, useRef, useCallback, useMemo } from "react";
 import { PhoneCall, CheckCircle2, AlertCircle, UserPlus, Home, MessageCircle, User as UserIcon, FileText } from "lucide-react";
 import {
   auth,
@@ -28,7 +28,8 @@ import {
   resizeAvatarFile,
 } from "./services/api";
 import { loadGroceryItems, persistGroceryItem, toggleGroceryItemPantry } from "./services/grocery";
-import { queueMessage, flushMessageQueue, clearMessageQueue } from "./services/messageQueue";
+import { queueMessage, flushMessageQueue } from "./services/messageQueue";
+import { clearAccountData, scopeKey } from "./services/db";
 import type { CaregiverDashboardState, GroceryItem, VitalHistoryRecord, FamilyBinding, MedicationStockItem, ActivityFeedItem, DailyBulletin, ClinicalCorrelation } from "./types";
 import { EmeraldHeaderBanner } from "./components/EmeraldHeaderBanner";
 import { PatientHeaderCard } from "./components/PatientHeaderCard";
@@ -99,7 +100,17 @@ export const App: React.FC = () => {
   const [inspectingBinding, setInspectingBinding] = useState<FamilyBinding | null>(null);
   const groups = useMemo(() => familyGroups(bindings, currentUser?.uid || ''), [bindings, currentUser?.uid]);
   const chatPatientId = resolveFamilyGroup(bindings, currentUser?.uid || '', selectedGroup);
-  const getChatToken = useCallback(async () => currentUser?.getIdToken(), [currentUser]);
+  const getChatToken = useCallback(async () => {
+    if (!currentUser || auth.currentUser?.uid !== currentUser.uid) return undefined;
+    const token = await currentUser.getIdToken();
+    return auth.currentUser?.uid === currentUser.uid ? token : undefined;
+  }, [currentUser]);
+  const localScope = useMemo(() => ({ ownerId: currentUser?.uid || "", patientId: chatPatientId }), [currentUser?.uid, chatPatientId]);
+  const localScopeRef = useRef(scopeKey(localScope));
+  useLayoutEffect(() => { localScopeRef.current = scopeKey(localScope); }, [localScope]);
+  const [groceryScope, setGroceryScope] = useState("");
+  const visibleGroceryItems = groceryScope === scopeKey(localScope) ? groceryItems : [];
+
   const [activeTab, setActiveTab] = useState<"home" | "chat" | "profile" | "community">("home");
   // AUD-PW03: removido o estado idToken — era uma snapshot stale. Consumidores
   // agora recebem um getter que resolve o token fresco no instante da chamada.
@@ -328,32 +339,33 @@ export const App: React.FC = () => {
     };
   }, [chatPatientId, currentUser, refreshCareOs]);
 
-  // Carregar lista de compras persistida localmente (offline-first)
   useEffect(() => {
-    loadGroceryItems().then((items) => {
-      if (items.length > 0) setGroceryItems(items);
-    });
-  }, []);
+    let active = true;
+    if (localScope.ownerId && localScope.patientId) {
+      loadGroceryItems(localScope).then((items) => {
+        if (active) { setGroceryItems(items); setGroceryScope(scopeKey(localScope)); }
+      }).catch(() => { if (active) showToast("Não foi possível ler a lista local de compras.", "error"); });
+    }
+    return () => { active = false; };
+  }, [localScope, showToast]);
 
-  // Processar fila de mensagens quando a conexao retornar
+  const processMessageQueue = useCallback(async (retryFailed = false) => {
+    if (!localScope.ownerId || !localScope.patientId) return;
+    try {
+      const result = await flushMessageQueue(localScope, getChatToken, retryFailed);
+      if (auth.currentUser?.uid !== localScope.ownerId || localScopeRef.current !== scopeKey(localScope)) return;
+      if (result.delivered) showToast(`${result.delivered} mensagem(ns) entregue(s).`);
+      if (result.failed) showToast(`${result.failed} mensagem(ns) sem entrega. Atualize para tentar novamente.`, "error");
+      if (result.expired) showToast(`${result.expired} mensagem(ns) vencida(s) removida(s).`, "error");
+    } catch { showToast("Não foi possível processar as mensagens salvas.", "error"); }
+  }, [localScope, getChatToken, showToast]);
+
   useEffect(() => {
-    const getToken = async () =>
-      currentUser ? currentUser.getIdToken() : undefined;
-
-    const handleOnline = async () => {
-      const delivered = await flushMessageQueue(getToken);
-      if (delivered > 0) {
-        showToast(`${delivered} mensagem(ns) pendente(s) entregue(s) com sucesso`);
-      }
-    };
-
+    const handleOnline = () => void processMessageQueue();
     window.addEventListener("online", handleOnline);
-
-    // Processa pendencias existentes ao abrir (caso tenha voltado antes)
-    flushMessageQueue(getToken);
-
-    return () => window.removeEventListener("online", handleOnline);
-  }, [currentUser, showToast]);
+    const timer = window.setTimeout(() => void processMessageQueue(), 0);
+    return () => { window.clearTimeout(timer); window.removeEventListener("online", handleOnline); };
+  }, [processMessageQueue]);
 
   // Segredo TOTP do vinculo de WhatsApp: vem do backend (que agora garante um
   // para toda conta) e e cacheado no localStorage.
@@ -372,34 +384,30 @@ export const App: React.FC = () => {
     return () => { cancelado = true; };
   }, [currentUser]);
 
-  const handleToggleGrocery = (id: string) => {
-    setGroceryItems((prev) => {
-      const updated = prev.map((item) =>
-        item.id === id ? { ...item, isCheckedInPantry: !item.isCheckedInPantry } : item
-      );
-      // Persiste a alteracao localmente (offline-first)
-      const item = updated.find((i) => i.id === id);
-      if (item) toggleGroceryItemPantry(id, item.isCheckedInPantry);
-      return updated;
-    });
+  const handleToggleGrocery = async (id: string) => {
+    const item = visibleGroceryItems.find((entry) => entry.id === id);
+    if (!item) return;
+    try {
+      await toggleGroceryItemPantry(localScope, id, !item.isCheckedInPantry);
+      if (auth.currentUser?.uid === localScope.ownerId && localScopeRef.current === scopeKey(localScope)) setGroceryItems((items) => items.map((entry) => entry.id === id ? { ...entry, isCheckedInPantry: !item.isCheckedInPantry } : entry));
+    } catch { showToast("A alteração não foi salva na lista de compras.", "error"); }
   };
 
-  const handleAddMedicationToShoppingList = (medication: MedicationStockItem) => {
+  const handleAddMedicationToShoppingList = async (medication: MedicationStockItem) => {
+    if (!localScope.ownerId || !localScope.patientId) return;
     const itemId = `med-${medication.id}`;
-    if (groceryItems.some((item) => item.id === itemId)) {
+    if (visibleGroceryItems.some((item) => item.id === itemId)) {
       showToast(`${medication.name} já está na lista de compras.`);
       return;
     }
-    const item: GroceryItem = {
-      id: itemId,
-      foodName: medication.name,
-      purchaseUnitText: "1 embalagem",
-      category: "Farmácia",
-      isCheckedInPantry: false,
-    };
-    setGroceryItems((current) => [...current, item]);
-    void persistGroceryItem(item);
-    showToast(`${medication.name} adicionado à lista de compras.`);
+    const item: GroceryItem = { id: itemId, foodName: medication.name, purchaseUnitText: "1 embalagem", category: "Farmácia", isCheckedInPantry: false };
+    try {
+      await persistGroceryItem(localScope, item);
+      if (auth.currentUser?.uid !== localScope.ownerId || localScopeRef.current !== scopeKey(localScope)) return;
+      setGroceryScope(scopeKey(localScope));
+      setGroceryItems((items) => [...items, item]);
+      showToast(`${medication.name} adicionado à lista de compras.`);
+    } catch { showToast("O medicamento não foi salvo na lista de compras.", "error"); }
   };
 
   const handleSendMessage = async (
@@ -416,7 +424,7 @@ export const App: React.FC = () => {
       const now = new Date();
       const result = await queueMessage(
         {
-          id: crypto.randomUUID ? crypto.randomUUID() : `msg-${Date.now()}`,
+          id: crypto.randomUUID(),
           patientId: dashboard.patientUserId,
           senderId: currentUser.uid,
           senderName: dashboard.caregiverName,
@@ -428,7 +436,7 @@ export const App: React.FC = () => {
         tok
       );
       if (!result.delivered) {
-        showToast("Sem conexão — mensagem salva e será enviada depois.", "error");
+        showToast(result.queued ? "Mensagem salva e aguardando entrega." : "Mensagem não entregue nem salva. Tente novamente.", "error");
       }
       return result.delivered;
     } catch (err) {
@@ -462,6 +470,7 @@ export const App: React.FC = () => {
   };
 
   const handleRefresh = async () => {
+    await processMessageQueue(true);
     setDashboard((prev) => ({ ...prev, isLoading: true }));
     let succeeded = false;
     try {
@@ -513,7 +522,7 @@ export const App: React.FC = () => {
     // AUD-PW02: a fila de mensagens no IndexedDB continua textos familiares de
     // quem saiu — limpa junto, senão o próximo usuário de aparelho compartilhado
     // lê (e a fila tenta entregar com o token novo = mensagem cruzada).
-    clearMessageQueue().catch(() => {});
+    if (uid) await clearAccountData(uid).catch(() => showToast("Não foi possível apagar todo o armazenamento local da conta.", "error"));
     // Limpa preferências de UI para que o próximo usuário veja o banner
     // de instalação do PWA (não herda o "dismiss" do usuário anterior).
     try { localStorage.removeItem("braga_install_banner_dismissed"); } catch { /* sem localStorage: nada a limpar */ }
@@ -757,7 +766,7 @@ export const App: React.FC = () => {
 
         {/* Lista de Compras Compartilhada da Semana */}
         <SharedGroceryListCard
-          items={groceryItems}
+          items={visibleGroceryItems}
           patientName={dashboard.patientName}
           onToggle={handleToggleGrocery}
         />

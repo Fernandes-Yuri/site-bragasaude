@@ -1,8 +1,8 @@
+import { queueMessage, flushMessageQueue } from "../services/messageQueue";
 import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
-import { Send, Mic, Volume2, ArrowLeft, User } from "lucide-react";
+import { Send, Mic, Volume2, ArrowLeft, User, RefreshCw } from "lucide-react";
 import {
   fetchFamilyMessages,
-  sendCaregiverMessage,
   QUICK_TEMPLATES,
 } from "../services/api";
 import { speakText } from "../services/nativeSpeech";
@@ -161,7 +161,7 @@ export const FamilyChatScreen: React.FC<FamilyChatScreenProps> = ({
 
     const now = new Date().toISOString();
     const optimistic: FamilyMessage = {
-      id: `pending-${Date.now()}`,
+      id: crypto.randomUUID(),
       patientId,
       senderId: currentUserId,
       senderName: caregiverName,
@@ -174,18 +174,11 @@ export const FamilyChatScreen: React.FC<FamilyChatScreenProps> = ({
     setInput("");
 
     try {
-    const result = await sendCaregiverMessage(
-      patientId,
-      clean,
-      "LOVE",
-      caregiverName,
-      currentUserId,
-      await (getIdToken ? getIdToken() : Promise.resolve(undefined))
-    );
+    const result = await queueMessage(optimistic, await (getIdToken ? getIdToken() : Promise.resolve(undefined)));
     if (!result.delivered) {
-      setError("Mensagem não entregue. Tente enviar novamente.");
-      setInput(clean);
-      onToast?.("Mensagem não entregue — verifique sua conexão");
+      setError(result.queued ? "Mensagem salva para entrega. Atualize a conversa para tentar novamente." : "Mensagem não entregue nem salva. Tente novamente.");
+      if (!result.queued) setInput(clean);
+      onToast?.(result.queued ? "Mensagem aguardando entrega" : "Mensagem não entregue nem salva");
     }
     await loadMessages();
     } catch {
@@ -292,6 +285,16 @@ export const FamilyChatScreen: React.FC<FamilyChatScreenProps> = ({
 
         {/* Ações do header */}
         <div className="flex items-center gap-1 shrink-0">
+          <button type="button" aria-label="Atualizar conversa e tentar entregar mensagens salvas"
+            className="w-11 h-11 rounded-xl flex items-center justify-center text-[#64748B] hover:bg-[#E0F2F1]"
+            onClick={async () => {
+              try {
+                const result = await flushMessageQueue({ ownerId: currentUserId, patientId }, async () => getIdToken?.(), true);
+                await loadMessages();
+                if (result.failed) setError(`${result.failed} mensagem(ns) ainda aguardando entrega.`);
+                if (result.delivered) onToast?.(`${result.delivered} mensagem(ns) entregue(s).`);
+              } catch { setError("Não foi possível atualizar as mensagens salvas."); }
+            }}><RefreshCw className="w-4.5 h-4.5" /></button>
           {onOpenProfile && (
             <button
               type="button"

@@ -359,28 +359,12 @@ export interface SendMessageResult {
  * O chamador DEVE avisar o usuário — nunca reportar sucesso sem confirmação.
  */
 export async function sendCaregiverMessage(
-  patientId: string,
-  text: string,
-  iconType: "LOVE" | "MEDICATION" | "WATER" | "WALK" | "APPOINTMENT",
-  senderName: string,
-  senderId?: string,
+  payload: FamilyMessage,
   idToken?: string
 ): Promise<SendMessageResult> {
-  const now = new Date();
-  const expires = new Date(now.getTime() + 24 * 60 * 60 * 1000);
-  const realSenderId = senderId || "caregiver-pwa";
-
-  const payload: FamilyMessage = {
-    id: crypto.randomUUID ? crypto.randomUUID() : `msg-${Date.now()}`,
-    patientId,
-    senderId: realSenderId,
-    senderName,
-    messageText: text,
-    iconType,
-    sentAt: now.toISOString(),
-    expiresAt: expires.toISOString(),
-  };
-
+  if (!idToken || !Number.isFinite(Date.parse(payload.expiresAt)) || Date.parse(payload.expiresAt) <= Date.now()) {
+    return { delivered: false, message: payload };
+  }
   const headers: Record<string, string> = { "Content-Type": "application/json" };
   if (idToken) headers["Authorization"] = `Bearer ${idToken}`;
 
@@ -391,7 +375,8 @@ export async function sendCaregiverMessage(
       body: JSON.stringify(payload),
     });
     if (res.ok) {
-      return { delivered: true, message: payload };
+      const confirmation = await res.json();
+      return { delivered: confirmation.status === "success" && confirmation.id === payload.id, message: payload };
     }
     const err = await res.json().catch(() => ({}));
     console.warn("Gateway rejeitou a mensagem:", err);
