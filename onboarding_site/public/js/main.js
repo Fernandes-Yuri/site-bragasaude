@@ -516,6 +516,7 @@
 
     function openSecurityModal() {
       if (securityModal) {
+        document.dispatchEvent(new Event('braga:refresh-release'));
         securityModal.classList.add('active');
         document.body.style.overflow = 'hidden';
       }
