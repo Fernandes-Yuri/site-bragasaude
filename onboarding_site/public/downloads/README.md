@@ -1,6 +1,5 @@
-# Downloads
+# Download do aplicativo Android
 
-Coloque o arquivo APK nesta pasta com o nome `braga-saude.apk`.
+A landing page usa o [download oficial pelo gateway](https://api.bragasaude.online/api/app/download). Os metadados da versão estão em /api/app/latest no mesmo gateway.
 
-O Firebase Hosting servirá o arquivo automaticamente em:
-`https://braga-saude.web.app/downloads/braga-saude.apk`
+Não coloque APKs nesta pasta nem os versione neste repositório. As versões de release e debug são geradas pelo GitHub Actions do repositório Android; releases oficiais são publicadas pelo fluxo de distribuição correspondente.

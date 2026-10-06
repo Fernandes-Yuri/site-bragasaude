@@ -1,32 +1,17 @@
-# React + TypeScript + Vite
+# Braga Saúde — PWA Cuidador
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+Aplicativo web para familiares e cuidadores, desenvolvido com React, TypeScript e Vite. A documentação geral está no [README do repositório](../README.md).
 
-Currently, two official plugins are available:
+Execute os comandos nesta pasta:
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
-
-## React Compiler
-
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the Oxlint configuration
-
-If you are developing a production application, we recommend enabling type-aware lint rules by installing `oxlint-tsgolint` and editing `.oxlintrc.json`:
-
-```json
-{
-  "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "typescript", "oxc"],
-  "options": {
-    "typeAware": true
-  },
-  "rules": {
-    "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
-}
+```bash
+npm ci
+npm run dev
+npm run lint
+npm test
+npm run build
 ```
 
-See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
+O build gera ../onboarding_site/public/app, servido sob /app/ pelo Firebase Hosting. Essa saída é ignorada pelo Git e deve ser regenerada antes da publicação. npm run preview permite conferir o build localmente.
+
+APKs Android são distribuídos pelo gateway e pelo GitHub Actions/Releases do repositório Android; não devem ser adicionados a este repositório.

@@ -18,3 +18,7 @@ onboarding_site/.firebase/
 # `firebase deploy --only hosting` (na pasta onboarding_site/), não com git.
 onboarding_site/public/app/
 
+
+# APKs são distribuídos pelo gateway e GitHub Actions/Releases
+*.apk
+*.aab

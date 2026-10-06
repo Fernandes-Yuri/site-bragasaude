@@ -24,7 +24,7 @@ bragasaude-site-pwa/
 │   ├── .firebaserc           # Projeto Firebase (braga-saude)
 │   └── public/
 │       ├── index.html        # Landing page (bragasaude.online)
-│       ├── downloads/        # APKs Android oficiais
+│       ├── downloads/        # Instruções; APK servido pelo gateway
 │       └── app/              # Build estático gerado do PWA Modo Cuidador
 │
 └── pwa/                      # Código-fonte do PWA React 19 + TypeScript
@@ -64,7 +64,7 @@ npm run build
 ## 🌍 Deploy para o Firebase Hosting
 
 O deploy é unificado e atende aos dois domínios configurados:
-- **Landing Page & APKs:** `https://bragasaude.online`
+- **Landing Page:** `https://bragasaude.online`
 - **PWA Modo Cuidador:** `https://braga-saude.web.app` (e `https://bragasaude.online/app/`)
 
 Para realizar o deploy do hosting:
