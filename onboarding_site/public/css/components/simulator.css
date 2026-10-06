@@ -18,7 +18,7 @@
   border: 1px solid var(--border-light);
   border-radius: 999px;
   padding: 4px;
-  margin-bottom: 30px;
+  margin-bottom: 14px;
   box-shadow: var(--shadow-sm);
   backdrop-filter: blur(8px);
   gap: 4px;
@@ -55,7 +55,7 @@
   display: flex;
   justify-content: center;
   width: 100%;
-  padding: 10px 16px 42px;
+  padding: 10px 16px 20px;
   perspective: 1400px;
 }
 
@@ -85,8 +85,11 @@
   --phone-rotate-x: 2deg;
   --phone-rotate-y: -9deg;
   --phone-light-x: 28%;
-  width: 320px;
-  height: 640px;
+  width: min(320px, 78vw, calc(max(360px, 100vh - 220px) * 9 / 18.5));
+  width: min(320px, 78vw, calc(max(360px, 100dvh - 220px) * 9 / 18.5));
+  max-width: 100%;
+  height: auto;
+  aspect-ratio: 9 / 18.5;
   flex-shrink: 0;
   border-radius: 46px;
   padding: 10px;
@@ -1321,8 +1324,6 @@
 /* ── Responsive ── */
 @media (max-width: 480px) {
   .phone-frame {
-    width: 280px;
-    height: 560px;
     border-radius: 32px;
     padding: 10px;
   }
@@ -1368,5 +1369,13 @@
   
   .sim-hydration-buttons {
     grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* Em telas baixas, a rolagem preserva a leitura dos controles da demonstração. */
+@media (max-width: 960px) {
+  .phone-frame {
+    width: min(320px, 78vw, calc(max(440px, 100vh - 220px) * 9 / 18.5));
+    width: min(320px, 78vw, calc(max(440px, 100dvh - 220px) * 9 / 18.5));
   }
 }
