@@ -133,11 +133,6 @@
 }
 
 .hero-copy { min-width: 0; }
-.hero-contact { margin-top: 18px; color: var(--text-muted); font-size: 0.85rem; }
-.hero-whatsapp-link { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; color: var(--primary-dark); text-underline-offset: 4px; }
-.hero-whatsapp-link svg { flex-shrink: 0; width: 16px; height: 16px; }
-.hero-whatsapp-link:hover { text-decoration-thickness: 2px; }
-.hero-whatsapp-link:focus-visible { outline: 2px solid var(--primary-dark); outline-offset: 4px; border-radius: 4px; }
 @media (min-width: 961px) {
   .hero-section .mockup-container { position: sticky; top: 96px; }
 }
