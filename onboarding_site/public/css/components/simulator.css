@@ -3,7 +3,10 @@
    Design System fiel ao app real (Jetpack Compose / Material 3)
    ========================================================================== */
 
-/* ── Container & Tabs ── */
+/* ── Container ──
+   O seletor externo (Início/Sinais/Água/Família) foi removido: a navegação
+   inteira da demonstração acontece dentro da tela (atalhos em sim-home e
+   "Voltar ao início" nas demais telas), então o topo do aparelho fica livre. */
 .mockup-container {
   position: relative;
   display: flex;
@@ -12,89 +15,14 @@
   isolation: isolate;
 }
 
-.phone-tabs-selector {
-  display: flex;
-  background: rgba(255, 255, 255, 0.85);
-  border: 1px solid var(--border-light);
-  border-radius: 999px;
-  padding: 4px;
-  margin-bottom: 14px;
-  box-shadow: var(--shadow-sm);
-  backdrop-filter: blur(8px);
-  gap: 4px;
-  max-width: 100%;
-  overflow-x: auto;
-}
-
-.phone-tab-btn {
-  background: none;
-  border: none;
-  padding: 8px 12px;
-  font-size: 0.875rem;
-  font-weight: 700;
-  color: var(--text-muted);
-  border-radius: 999px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  white-space: nowrap;
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  min-height: 44px;
-}
-
-.phone-tab-btn.active {
-  background: #00897B;
-  color: #FFFFFF;
-  box-shadow: 0 2px 10px rgba(0, 137, 123, 0.3);
-}
-
-/* ── Trilho lateral (≥ 1140px): o seletor sai do topo e o aparelho sobe ~68px ──
-   Breakpoint calculado: trilho (~104px) + vão de 12px + palco (320px) precisa
-   caber na coluna direita do hero-grid, que mede ~445px em 1140px de viewport. */
-@media (min-width: 1140px) {
-  .mockup-container {
-    flex-direction: row;
-    align-items: flex-start;
-    justify-content: center;
-    gap: 12px;
-  }
-
-  .phone-tabs-selector {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 4px;
-    /* Alinha o topo do trilho ao topo do aparelho (palco tem padding-top 10px). */
-    margin-top: 10px;
-    margin-bottom: 0;
-    padding: 6px;
-    border-radius: 26px;
-    max-width: none;
-    overflow: visible;
-    flex-shrink: 0;
-  }
-
-  .phone-tab-btn {
-    justify-content: flex-start;
-    gap: 8px;
-    padding: 8px 14px;
-  }
-
-  /* O trilho ocupa a vaga que o palco usava como respiro horizontal. */
-  .phone-stage {
-    width: auto;
-    padding-left: 0;
-    padding-right: 0;
-  }
-}
-
 /* ── Aparelho: alumínio usinado, borda polida e vidro ── */
 .phone-stage {
   position: relative;
   display: flex;
   justify-content: center;
   width: 100%;
-  padding: 10px 16px 20px;
+  /* 4px no topo: sem o seletor externo, cada pixel conta para o aparelho caber na dobra. */
+  padding: 4px 16px 20px;
   perspective: 1400px;
 }
 
@@ -125,9 +53,10 @@
   --phone-rotate-y: -9deg;
   --phone-light-x: 28%;
   /* Largura = legibilidade: nunca depende da altura da viewport.
-     Invariante: moldura ≥ 300px ⇒ vidro ≥ 279px ⇒ --sim-unit ≥ 0,93 (corpo ≥ 12,6px).
-     320px é o desenho de projeto (vidro ≈ 298px, --sim-unit ≈ 1). */
-  --phone-width: min(320px, 94vw);
+     308,8px = desenho original de 320px × 0,965 (−3,5%): vidro 287,5px ⇒
+     --sim-unit 0,958 ⇒ corpo 13,0px. Piso de legibilidade: moldura ≥ 296px
+     (corpo ≥ 12,5px) — abaixo disso o --sim-unit cai junto com a legibilidade. */
+  --phone-width: min(308.8px, 94vw);
   width: var(--phone-width);
   max-width: 100%;
   /* Altura absorve o espaço vertical (entre 9/16 e 9/18.5) em vez de estreitar a tela. */

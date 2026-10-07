@@ -3,7 +3,7 @@
    ========================================================================== */
 
 .hero-section {
-  padding: clamp(24px, 4vh, 48px) 0 40px;
+  padding: clamp(16px, 3vh, 40px) 0 40px;
   position: relative;
   overflow: clip;
   background: radial-gradient(circle at 80% 20%, rgba(176, 239, 224, 0.45) 0%, rgba(246, 250, 248, 0) 65%);
