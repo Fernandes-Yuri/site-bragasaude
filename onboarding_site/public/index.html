@@ -68,7 +68,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
   <!-- External Stylesheet -->
-  <link rel="stylesheet" href="css/style.css?v=1.3.8">
+  <link rel="stylesheet" href="css/style.css?v=1.3.9">
   <link rel="stylesheet" href="css/components/install-guide.css">
 
   <style>
@@ -226,7 +226,7 @@
        inútil (e enganoso) em toda visita. -->
 
   <!-- External JavaScript -->
-  <script src="js/main.js?v=release-refresh-20261005b" defer></script>
+  <script src="js/main.js?v=release-refresh-20261007a" defer></script>
 
   <!-- Schema.org / JSON-LD (Dados Estruturados para o Google) -->
   <script type="application/ld+json" id="braga-ldjson">
@@ -477,7 +477,7 @@
 
                 <!-- Status Bar -->
                 <div class="phone-status-bar">
-                  <span>09:41</span>
+                  <span id="sim-status-time">09:41</span>
                   <div class="phone-status-indicators">
                     <span>5G</span>
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><rect x="1" y="6" width="18" height="12" rx="2" ry="2" fill="none" stroke="currentColor" stroke-width="2"/><rect x="3" y="8" width="12" height="8" rx="1" fill="currentColor"/><path d="M21 10v4a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1z"/></svg>
@@ -496,10 +496,10 @@
                     <div class="sim-emerald-header">
                       <div class="sim-emerald-header-content">
                         <div class="sim-user-row">
-                          <div class="sim-avatar">YL</div>
+                          <div class="sim-avatar" id="sim-avatar">M</div>
                           <div>
-                            <div class="sim-greeting">Bom dia,</div>
-                            <div class="sim-user-name">Yuri!</div>
+                            <div class="sim-greeting" id="sim-greeting">Bom dia,</div>
+                            <div class="sim-user-name" id="sim-user-name">Maria!</div>
                           </div>
                         </div>
                         <div class="sim-header-status">Tudo em dia <svg width="14" height="14" viewBox="0 0 24 24" fill="#FFFFFF" style="vertical-align:middle"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg></div>
@@ -887,13 +887,43 @@
                     <div class="sim-emerald-header sim-emerald-header-small">
                       <div class="sim-emerald-header-content">
                         <div class="sim-greeting">Meus exames</div>
-                        <div class="sim-header-status">Resultados organizados em um só lugar</div>
+                        <div class="sim-header-status">Seu cofre de exames</div>
                       </div>
                     </div>
                     <p class="sim-demo-note">Demonstração com dados fictícios.</p>
+
+                    <!-- Cofre: a nuvem é opcional — o usuário escolhe onde guardar -->
+                    <div class="sim-demo-card sim-vault-card">
+                      <div class="sim-vault-head">
+                        <div class="sim-vault-icon" aria-hidden="true">
+                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#00897B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 16.2A4.5 4.5 0 0 0 17.5 8h-1.8A7 7 0 1 0 4 14.9"/><path d="M12 12v9"/><path d="m8 17 4 4 4-4"/></svg>
+                        </div>
+                        <div class="sim-vault-body">
+                          <h3>Nuvem opcional — você escolhe</h3>
+                          <p>Sincronize de qualquer aparelho ou guarde tudo apenas no seu celular.</p>
+                        </div>
+                      </div>
+                      <div class="sim-vault-toggle" role="group" aria-label="Onde guardar os exames">
+                        <button type="button" class="sim-vault-option active" data-vault="cloud" aria-pressed="true">
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/></svg>
+                          Guardar na nuvem
+                        </button>
+                        <button type="button" class="sim-vault-option" data-vault="local" aria-pressed="false">
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect width="14" height="20" x="5" y="2" rx="2"/><path d="M12 18h.01"/></svg>
+                          Só neste aparelho
+                        </button>
+                      </div>
+                      <p class="sim-vault-status" data-vault-status>Sincronizado com a nuvem criptografada</p>
+                    </div>
+
                     <div class="sim-demo-card">
-                      <h3>Hemograma</h3>
-                      <p>Laudo de exemplo · PDF</p>
+                      <div class="sim-exam-head">
+                        <div>
+                          <h3>Hemograma</h3>
+                          <p>Laudo de exemplo · PDF</p>
+                        </div>
+                        <span class="sim-exam-badge" data-vault-badge><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/></svg> Na nuvem</span>
+                      </div>
                       <button type="button" id="sim-exam-open" class="sim-demo-button" aria-expanded="false" aria-controls="sim-exam-detail">Ver resultado de exemplo</button>
                       <div id="sim-exam-detail" hidden>
                         <dl class="sim-exam-values">
