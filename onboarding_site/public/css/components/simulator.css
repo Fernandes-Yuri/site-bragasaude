@@ -85,12 +85,24 @@
   --phone-rotate-x: 2deg;
   --phone-rotate-y: -9deg;
   --phone-light-x: 28%;
-  --phone-width: min(320px, 78vw, calc(max(360px, 100vh - 220px) * 9 / 18.5));
-  --phone-width: min(320px, 78vw, calc(max(360px, 100dvh - 220px) * 9 / 18.5));
+  /* Largura = legibilidade: nunca depende da altura da viewport.
+     Invariante: moldura ≥ 300px ⇒ vidro ≥ 279px ⇒ --sim-unit ≥ 0,93 (corpo ≥ 12,6px).
+     320px é o desenho de projeto (vidro ≈ 298px, --sim-unit ≈ 1). */
+  --phone-width: min(320px, 94vw);
   width: var(--phone-width);
   max-width: 100%;
-  height: auto;
-  aspect-ratio: 9 / 18.5;
+  /* Altura absorve o espaço vertical (entre 9/16 e 9/18.5) em vez de estreitar a tela. */
+  aspect-ratio: auto;
+  height: clamp(
+    calc(var(--phone-width) * 16 / 9),
+    calc(var(--phone-width) * 18.5 / 9),
+    calc(100vh - 190px)
+  );
+  height: clamp(
+    calc(var(--phone-width) * 16 / 9),
+    calc(var(--phone-width) * 18.5 / 9),
+    calc(100dvh - 190px)
+  );
   flex-shrink: 0;
   border-radius: calc(var(--phone-width) * 46 / 320);
   padding: calc(var(--phone-width) * 10 / 320);
@@ -1342,14 +1354,6 @@
 .sim-orb-toast.visible {
   opacity: 1;
   transform: translateY(0);
-}
-
-/* Em telas baixas, a rolagem preserva a leitura dos controles da demonstração. */
-@media (max-width: 960px) {
-  .phone-frame {
-    --phone-width: min(320px, 78vw, calc(max(440px, 100vh - 220px) * 9 / 18.5));
-    --phone-width: min(320px, 78vw, calc(max(440px, 100dvh - 220px) * 9 / 18.5));
-  }
 }
 
 /* Recorte, sensores e indicador usam a mesma escala da interface. */
