@@ -49,6 +49,45 @@
   box-shadow: 0 2px 10px rgba(0, 137, 123, 0.3);
 }
 
+/* ── Trilho lateral (≥ 1140px): o seletor sai do topo e o aparelho sobe ~68px ──
+   Breakpoint calculado: trilho (~104px) + vão de 12px + palco (320px) precisa
+   caber na coluna direita do hero-grid, que mede ~445px em 1140px de viewport. */
+@media (min-width: 1140px) {
+  .mockup-container {
+    flex-direction: row;
+    align-items: flex-start;
+    justify-content: center;
+    gap: 12px;
+  }
+
+  .phone-tabs-selector {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 4px;
+    /* Alinha o topo do trilho ao topo do aparelho (palco tem padding-top 10px). */
+    margin-top: 10px;
+    margin-bottom: 0;
+    padding: 6px;
+    border-radius: 26px;
+    max-width: none;
+    overflow: visible;
+    flex-shrink: 0;
+  }
+
+  .phone-tab-btn {
+    justify-content: flex-start;
+    gap: 8px;
+    padding: 8px 14px;
+  }
+
+  /* O trilho ocupa a vaga que o palco usava como respiro horizontal. */
+  .phone-stage {
+    width: auto;
+    padding-left: 0;
+    padding-right: 0;
+  }
+}
+
 /* ── Aparelho: alumínio usinado, borda polida e vidro ── */
 .phone-stage {
   position: relative;
