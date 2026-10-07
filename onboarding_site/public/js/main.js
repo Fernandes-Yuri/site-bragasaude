@@ -744,9 +744,111 @@
     }
   }
 
+  // ── Identidade fictícia da demonstração: Maria / José ──
+  // 1. Preferência explícita em `braga_demo_genero` ('f'/'m' — pode ser gravada
+  //    pelo app/perfil); 2. perfil Firebase persistido na mesma origem (o PWA
+  //    roda em /app/ do mesmo domínio) → infere gênero do primeiro nome;
+  // 3. sem identificação → o nome gira ao longo do dia (a cada 4h, alternando
+  //    também entre dias) para a demo nunca parecer estática.
+  const NOMES_DEMO = { f: 'Maria', m: 'José' };
+  const INICIAIS_DEMO = { f: 'M', m: 'J' };
+
+  function inferirGeneroPorNome(bruto) {
+    const nome = String(bruto || '')
+      .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+      .toLowerCase().trim().split(/[\s._-]+/)[0].replace(/[^a-z]/g, '');
+    if (!nome) return null;
+    // Exceções: femininos que não terminam em 'a' e masculinos terminados em 'a'.
+    if (['alice', 'beatriz', 'luz', 'rose', 'solange', 'marie', 'anne', 'simone',
+         'cristiane', 'christiane', 'nicole', 'danielle', 'michele', 'jacqueline',
+         'grace', 'julie'].includes(nome)) return 'f';
+    if (/(a|as)$/.test(nome)) return 'f';        // Maria, Ana, Fernanda, Gabriela…
+    if (/(o|os|es|e|l|r|z|s|u)$/.test(nome)) return 'm'; // João, José, André, Lucas, Miguel…
+    return null;
+  }
+
+  function lerNomeDePerfilPersistido() {
+    try {
+      for (let i = 0; i < localStorage.length; i++) {
+        const chave = localStorage.key(i);
+        if (chave && chave.indexOf('firebase:authUser:') === 0) {
+          const usuario = JSON.parse(localStorage.getItem(chave));
+          const nome = usuario && (usuario.displayName || (usuario.email || '').split('@')[0]);
+          if (nome) return nome;
+        }
+      }
+    } catch (e) { /* storage/JSON indisponível (modo privado): ignora */ }
+    return null;
+  }
+
+  function resolverGeneroDemo() {
+    try {
+      const explicito = (localStorage.getItem('braga_demo_genero') || '').toLowerCase();
+      if (['f', 'fem', 'feminino', 'mulher'].includes(explicito)) return 'f';
+      if (['m', 'masc', 'masculino', 'homem'].includes(explicito)) return 'm';
+    } catch (e) { /* sem storage */ }
+    const genero = inferirGeneroPorNome(lerNomeDePerfilPersistido());
+    if (genero) return genero;
+    // Fallback rotativo: 6 blocos de 4h por dia + paridade do dia.
+    const agora = new Date();
+    const inicio = new Date(agora.getFullYear(), 0, 0);
+    const diaDoAno = Math.floor((agora - inicio) / 86400000);
+    return (Math.floor(agora.getHours() / 4) + diaDoAno) % 2 === 0 ? 'f' : 'm';
+  }
+
+  function aplicarIdentidadeDemo() {
+    const genero = resolverGeneroDemo();
+    const elNome = document.getElementById('sim-user-name');
+    const elAvatar = document.getElementById('sim-avatar');
+    const elSaudacao = document.getElementById('sim-greeting');
+    const elRelogio = document.getElementById('sim-status-time');
+    if (elNome) elNome.textContent = NOMES_DEMO[genero] + '!';
+    if (elAvatar) elAvatar.textContent = INICIAIS_DEMO[genero] || 'M';
+    const agora = new Date();
+    const hora = agora.getHours();
+    if (elSaudacao) elSaudacao.textContent = hora < 12 ? 'Bom dia,' : hora < 18 ? 'Boa tarde,' : 'Boa noite,';
+    if (elRelogio) {
+      elRelogio.textContent = String(hora).padStart(2, '0') + ':' + String(agora.getMinutes()).padStart(2, '0');
+    }
+  }
+
+  function setupDemoIdentity() {
+    aplicarIdentidadeDemo();
+    // Relógio/saudação vivos e rotação de nome (quando não há gênero definido).
+    setInterval(aplicarIdentidadeDemo, 30000);
+  }
+
+  // ── Cofre de exames: nuvem opcional vs. somente no aparelho ──
+  function setupVaultToggle() {
+    const botoes = document.querySelectorAll('[data-vault]');
+    if (!botoes.length) return;
+    const status = document.querySelector('[data-vault-status]');
+    const badge = document.querySelector('[data-vault-badge]');
+    const ICONEM_NUVEM = '<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/></svg>';
+    const ICONEM_APARELHO = '<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect width="14" height="20" x="5" y="2" rx="2"/><path d="M12 18h.01"/></svg>';
+    const TEXTOS = {
+      cloud: { status: 'Sincronizado com a nuvem criptografada', badge: 'Na nuvem' },
+      local: { status: 'Guardado apenas neste aparelho — sem nuvem', badge: 'No aparelho' }
+    };
+    botoes.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const modo = btn.getAttribute('data-vault');
+        botoes.forEach(outro => {
+          const ativo = outro === btn;
+          outro.classList.toggle('active', ativo);
+          outro.setAttribute('aria-pressed', String(ativo));
+        });
+        if (status) status.textContent = TEXTOS[modo].status;
+        if (badge) badge.innerHTML = (modo === 'cloud' ? ICONEM_NUVEM : ICONEM_APARELHO) + ' ' + TEXTOS[modo].badge;
+      });
+    });
+  }
+
   // ── Inicialização Geral ──
   window.addEventListener('DOMContentLoaded', () => {
     setupSimulator();
+    setupDemoIdentity();
+    setupVaultToggle();
     setupOrb();
     setupLegalNavigation();
     setupDeviceDetection();

@@ -467,6 +467,99 @@
 .sim-demo-card h3 { font-size: calc(15 * var(--sim-unit)); color: #1E293B; }
 .sim-demo-card p { margin-top: calc(8 * var(--sim-unit)); font-size: calc(13 * var(--sim-unit)); color: #64748B; }
 
+/* ── Cofre de exames: nuvem opcional vs. só no aparelho ── */
+.sim-vault-card {
+  display: flex;
+  flex-direction: column;
+  background: linear-gradient(135deg, #F0FAF8, #FFFFFF 55%);
+  border-color: #C9E8E2;
+}
+
+.sim-vault-head {
+  display: flex;
+  gap: calc(12 * var(--sim-unit));
+  align-items: flex-start;
+}
+
+.sim-vault-icon {
+  width: calc(36 * var(--sim-unit));
+  height: calc(36 * var(--sim-unit));
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: calc(12 * var(--sim-unit));
+  background: #E0F2F1;
+}
+
+.sim-vault-body { min-width: 0; }
+
+.sim-vault-toggle {
+  display: flex;
+  flex-direction: column;
+  gap: calc(6 * var(--sim-unit));
+  margin-top: calc(12 * var(--sim-unit));
+}
+
+.sim-vault-option {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: calc(5 * var(--sim-unit));
+  min-height: calc(38 * var(--sim-unit));
+  padding: calc(7 * var(--sim-unit)) calc(6 * var(--sim-unit));
+  border: calc(1 * var(--sim-unit)) solid #E5EBE8;
+  border-radius: calc(10 * var(--sim-unit));
+  background: #FFFFFF;
+  color: #64748B;
+  font: inherit;
+  font-size: calc(11.2 * var(--sim-unit));
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.sim-vault-option.active {
+  background: #00897B;
+  border-color: #00897B;
+  color: #FFFFFF;
+  box-shadow: 0 calc(2 * var(--sim-unit)) calc(8 * var(--sim-unit)) rgba(0, 137, 123, 0.28);
+}
+
+.sim-vault-status {
+  margin-top: calc(10 * var(--sim-unit)) !important;
+  font-size: calc(11.2 * var(--sim-unit)) !important;
+  color: #00695C !important;
+  font-weight: 600;
+}
+
+/* Cabeçalho do card do laudo com badge de localização */
+.sim-exam-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: calc(8 * var(--sim-unit));
+}
+.sim-exam-head h3 { margin: 0; }
+.sim-exam-head p { margin-top: calc(6 * var(--sim-unit)) !important; }
+
+.sim-exam-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: calc(4 * var(--sim-unit));
+  flex-shrink: 0;
+  padding: calc(4 * var(--sim-unit)) calc(8 * var(--sim-unit));
+  border-radius: 999px;
+  background: #E0F2F1;
+  color: #00695C;
+  font-size: calc(10.4 * var(--sim-unit));
+  font-weight: 700;
+  white-space: nowrap;
+}
+
 .sim-demo-button {
   width: 100%;
   margin-top: calc(14 * var(--sim-unit));
