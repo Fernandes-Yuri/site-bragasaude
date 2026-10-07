@@ -4,12 +4,13 @@
    ========================================================================== */
 
 .hero-download-group {
-  margin-bottom: 28px;
+  margin-bottom: 18px;
 }
 
 .hero-download-row {
   display: flex;
   flex-wrap: wrap;
+  justify-content: flex-start;
   gap: 12px;
   margin-bottom: 10px;
 }
@@ -18,7 +19,9 @@
   display: inline-flex;
   align-items: center;
   gap: 10px;
-  padding: 14px 24px;
+  padding: 14px 18px;
+  min-height: 48px;
+  justify-content: center;
   border-radius: 14px;
   font-size: 0.95rem;
   font-weight: 700;
@@ -58,20 +61,17 @@
   font-size: 0.82rem;
   color: var(--text-muted);
   line-height: 1.5;
-  padding: 10px 14px;
-  background: rgba(234, 179, 8, 0.08);
-  border: 1px solid rgba(234, 179, 8, 0.2);
-  border-radius: 10px;
+  padding: 0;
 }
 
 .hero-download-note svg {
   flex-shrink: 0;
-  color: #D97706;
+  color: var(--text-muted);
   margin-top: 2px;
 }
 
 .hero-download-note-text strong {
-  color: #92400E;
+  color: var(--text-main);
 }
 
 /* ── Mobile ── */
@@ -93,9 +93,6 @@
   background: rgba(0, 168, 132, 0.05);
   border: 1px solid rgba(0, 168, 132, 0.2);
   border-radius: 10px;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
   font-size: 0.8rem;
 }
 
@@ -103,7 +100,7 @@
   display: flex;
   align-items: center;
   gap: 6px;
-  color: #00A884;
+  color: var(--primary-dark);
   font-weight: 600;
 }
 
@@ -261,3 +258,10 @@
 .download-modal-btn-primary:hover {
   background: #008769;
 }
+
+.hero-download-integrity summary { cursor: pointer; min-height: 28px; }
+.hero-download-integrity summary::before { content: '+'; font-size: 1rem; }
+.hero-download-integrity[open] summary::before { content: '−'; }
+.hero-download-integrity[open] .integrity-hash-box { margin-top: 10px; }
+.hero-download-btn:focus-visible, .hero-download-integrity summary:focus-visible { outline: 2px solid var(--primary-dark); outline-offset: 4px; }
+@media (max-width: 960px) { .hero-download-row { justify-content: center; } }
