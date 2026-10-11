@@ -6,11 +6,5 @@ service cloud.firestore {
     match /{document=**} {
       allow read, write: if false;
     }
-
-    // ── Coleção vip-signups ──
-    match /vip-signups/{docId} {
-      // Waitlist now uses FastAPI/PostgreSQL. Admin SDK can export legacy entries.
-      allow read, write: if false;
-    }
   }
 }
