@@ -6,7 +6,7 @@
       var h = window.location.hostname;
       if (h === 'braga-saude.web.app' || h === 'braga-saude.firebaseapp.com') {
         if (window.location.pathname === '/' || window.location.pathname === '') {
-          window.location.replace('/app/');
+          window.location.replace('/app-download.html');
         }
       }
     })();
@@ -356,7 +356,7 @@
           <li><a href="#recursos" data-nav="landing">Recursos</a></li>
           <li><a href="#como-instalar" data-nav="landing">Como Instalar</a></li>
           <li><a href="#duvidas" data-nav="landing">Dúvidas</a></li>
-          <li><a href="/app/" class="nav-link-app">📱 App Cuidador</a></li>
+          <li><a href="/app-download.html" class="nav-link-app">📱 Baixar aplicativo</a></li>
         </ul>
       </nav>
 
@@ -411,14 +411,10 @@
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 16V9a7 7 0 0 1 14 0v7"/><path d="M12 16V9"/><path d="M8 16V9"/><path d="M16 16V9"/><rect x="3" y="16" width="18" height="4" rx="1"/></svg>
                   Baixar para Android
                 </a>
-                <a href="https://braga-saude.web.app/app/" target="_blank" rel="noopener" class="hero-download-btn hero-download-ios" id="btn-install-pwa" title="Modo Cuidador — abrir e instalar como aplicativo">
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" x2="12.01" y1="18" y2="18"/></svg>
-                  iPhone / Web (PWA)
-                </a>
               </div>
               <p class="hero-download-note">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="16" y2="12"/><line x1="12" x2="12.01" y1="8" y2="8"/></svg>
-                <span class="hero-download-note-text">Android: <strong>APK oficial <span data-braga-version>versão atual</span></strong>. iPhone/Web: <strong>Modo Cuidador</strong>.</span>
+                <span class="hero-download-note-text">Android: <strong>APK oficial <span data-braga-version>versão atual</span></strong>.</span>
               </p>
               <!-- Card de Integridade & Hash SHA-256 Oficial (Pré-Download) -->
               <details class="hero-download-integrity" id="apk-integrity-container">
@@ -1326,7 +1322,7 @@
       <div class="legal-card">
         <h2>1. Aceitação e Canais Oficiais de Acesso</h2>
         <h3>Condições Gerais de Uso</h3>
-        <p>Ao instalar, acessar ou utilizar o aplicativo <strong>Braga Saúde</strong> para Android, a plataforma web PWA para Cuidadores (<code>/app/</code>) ou o canal oficial no WhatsApp, você declara que leu, compreendeu e concorda expressamente com estes Termos de Uso. Caso discorde de qualquer cláusula, solicitamos que não continue a utilização dos serviços.</p>
+        <p>Ao instalar, acessar ou utilizar o aplicativo <strong>Braga Saúde</strong> para Android, o canal oficial no WhatsApp, você declara que leu, compreendeu e concorda expressamente com estes Termos de Uso. Caso discorde de qualquer cláusula, solicitamos que não continue a utilização dos serviços.</p>
         <p>O ecossistema Braga Saúde destina-se a pessoas maiores de 18 anos, familiares que buscam automonitoramento preventivo de sua rotina, bem como cuidadores e filhos vinculados através da Ponte Familiar mediante consentimento livre e esclarecido.</p>
       </div>
 
@@ -1358,7 +1354,7 @@
       <div class="legal-card">
         <h2>4. Ponte Familiar, Modo Cuidador & Mensagens Efêmeras</h2>
         <h3>Conexão Segura e Recados de 24 Horas</h3>
-        <p>A funcionalidade <strong>Ponte Familiar</strong> permite o acompanhamento em tempo real de sinais vitais e rotinas de medicamentos entre titulares e seus familiares autorizados (via app Android ou PWA Web Cuidador).</p>
+        <p>A funcionalidade <strong>Ponte Familiar</strong> permite o acompanhamento em tempo real de sinais vitais e rotinas de medicamentos entre titulares e seus familiares autorizados (via app Android).</p>
         <ul>
           <li><strong>Pareamento por Código Exclusivo:</strong> O vínculo exige que o titular gere um código alfanumérico aleatório de 8 dígitos ou QR Code com validade temporal de 7 dias e uso único.</li>
           <li><strong>Consentimento do Cuidador (LGPD Art. 11):</strong> Familiares e cuidadores fornecem consentimento explícito no cadastro para acessar dados sensíveis de saúde estritamente com a finalidade de apoio e acompanhamento familiar.</li>
@@ -1423,7 +1419,7 @@
         <p>A segurança da informação do Braga Saúde adota os mais avançados protocolos da indústria:</p>
         <ul>
           <li><strong>Banco de Dados PostgreSQL Dedicado (AWS RDS):</strong> Hospedado em nuvem corporativa de alta disponibilidade na Amazon Web Services (AWS), com criptografia em repouso e isolamento estrito multi-tenant (Zero-Trust) para que nenhum usuário acesse dados de terceiros.</li>
-          <li><strong>Criptografia em Trânsito (TLS 1.3 / HTTPS):</strong> Toda a comunicação entre os aplicativos (Android e PWA Web), servidores e canais de mensageria é blindada com certificados criptográficos modernos.</li>
+          <li><strong>Criptografia em Trânsito (TLS 1.3 / HTTPS):</strong> Toda a comunicação entre os aplicativos (Android), servidores e canais de mensageria é blindada com certificados criptográficos modernos.</li>
           <li><strong>Borda e Defesa Perimetral (Cloudflare Zero Trust):</strong> Camada de proteção com firewall de aplicações web (WAF), mitigação contra ataques de negação de serviço (DDoS) e limitação de taxa (rate limiting).</li>
           <li><strong>Armazenamento Privado de Exames:</strong> Arquivos de exames ficam em diretório autenticado exclusivo na nuvem, inacessíveis à web pública.</li>
           <li><strong>Backups Automatizados Criptografados:</strong> Rotinas diárias de backup protegidas e isoladas para garantia de resiliência e recuperação.</li>
@@ -1630,5 +1626,6 @@
     </div>
   </div>
 
+  <script src="/js/clear-browser-cache.js"></script>
 </body>
 </html>

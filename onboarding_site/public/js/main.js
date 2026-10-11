@@ -490,20 +490,10 @@
     const isIOS = /iPad|iPhone|iPod/.test(userAgent) && !window.MSStream;
     
     const btnDownloadAPK = document.getElementById('btn-download-apk');
-    const btnInstallPWA = document.getElementById('btn-install-pwa');
+
     
-    if (!btnDownloadAPK && !btnInstallPWA) return;
-    
-    // Detecta se é PWA (instalado) — esconde os botões de download
-    const isPWA = window.matchMedia('(display-mode: standalone)').matches || 
-                  window.navigator.standalone === true;
-    
-    if (isPWA) {
-      const downloadGroup = document.querySelector('.hero-download-group');
-      if (downloadGroup) downloadGroup.style.display = 'none';
-      return;
-    }
-    
+    if (!btnDownloadAPK) return;
+
     // Esconde o botão Android se estiver no iOS
     if (isIOS && btnDownloadAPK) {
       btnDownloadAPK.style.display = 'none';
@@ -582,13 +572,7 @@
       });
     }
     
-    // Botão de instalação PWA — leva ao PWA, que oferece o atalho na tela inicial
-    // (beforeinstallprompt no Android/Chrome; guia "Adicionar à Tela de Início" no iOS).
-    if (btnInstallPWA) {
-      btnInstallPWA.addEventListener('click', () => {
-        console.log('[Braga Saúde] Abrindo PWA Modo Cuidador para instalação');
-      });
-    }
+
   }
 
   // ── 8. Animações de scroll (IntersectionObserver) ──
@@ -657,19 +641,6 @@
             // AUD-PW(B): versao hardcoded — manter em sincronia com o
             // versionName em app/build.gradle.kts a cada release.
             event_label: 'BragaSaude.apk (v1.2.9)',
-            value: 1
-          });
-        }
-      });
-    });
-
-    const pwaBtns = document.querySelectorAll('#btn-install-pwa');
-    pwaBtns.forEach(btn => {
-      btn.addEventListener('click', () => {
-        if (typeof gtag === 'function') {
-          gtag('event', 'open_pwa_cuidador', {
-            event_category: 'engagement',
-            event_label: 'PWA Modo Cuidador (iPhone/Web)',
             value: 1
           });
         }
@@ -746,8 +717,7 @@
 
   // ── Identidade fictícia da demonstração: Maria / José ──
   // 1. Preferência explícita em `braga_demo_genero` ('f'/'m' — pode ser gravada
-  //    pelo app/perfil); 2. perfil Firebase persistido na mesma origem (o PWA
-  //    roda em /app/ do mesmo domínio) → infere gênero do primeiro nome;
+  //    pelo app/perfil); 2. perfil Firebase persistido na mesma origem → infere gênero do primeiro nome;
   // 3. sem identificação → o nome gira ao longo do dia (a cada 4h, alternando
   //    também entre dias) para a demo nunca parecer estática.
   const NOMES_DEMO = { f: 'Maria', m: 'José' };

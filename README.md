@@ -1,95 +1,14 @@
-# Braga Saúde — Site & PWA Cuidador (`bragasaude-site-pwa`)
+# Site Braga Saúde
 
-Repositório unificado contendo o site institucional/landing page e o aplicativo web progressivo (**PWA Modo Cuidador**) do ecossistema Braga Saúde, otimizado para iOS (Safari) e navegadores modernos.
+Site oficial e página de download do aplicativo Android.
 
----
+## Estrutura
 
-## 📱 Visão Geral do PWA Cuidador
+- `onboarding_site/public`: páginas e arquivos estáticos.
+- `onboarding_site/firebase.json`: configuração do Firebase Hosting.
 
-O **PWA Modo Cuidador** foi projetado especificamente para familiares e cuidadores acompanharem em tempo real a saúde do paciente:
-- **Zero fricção de instalação:** Roda diretamente via Safari no iOS ("Adicionar à Tela de Início") com experiência nativa (Safe Area, status bar translúcida, ícones de alta resolução e funcionamento offline via Service Worker).
-- **Modo Cuidador (`VIEWER_ONLY` / `HYBRID`):** Foco em monitoramento de sinais vitais (pressão arterial, frequência cardíaca, glicemia, saturação), checagem de medicamentos administrados no dia, progresso de hidratação e envio de mensagens de carinho.
-- **Gráficos e Histórico:** Visualização de tendências semanais com Recharts.
-- **Pareamento Ágil:** Scanner de QR Code integrado via câmera e inserção manual do **código de 8 dígitos** gerado no app do paciente (`FamilyConnectModal`). Não confundir com o código **OTP de 6 dígitos** usado no vínculo por WhatsApp (`PhoneLinkDialog`).
-- **Botão de Emergência Rápido:** Acesso direto de discagem ao SAMU 192 ou contato de emergência.
+## Publicação
 
----
+Na pasta `onboarding_site`, execute `firebase deploy --only hosting`.
 
-## 🏗️ Estrutura do Projeto
-
-```
-bragasaude-site-pwa/
-├── onboarding_site/          # Landing page institucional & configuração Firebase
-│   ├── firebase.json         # Regras de Hosting, rewrites para /app/** e headers de cache
-│   ├── .firebaserc           # Projeto Firebase (braga-saude)
-│   └── public/
-│       ├── index.html        # Landing page (bragasaude.online)
-│       ├── downloads/        # Instruções; APK servido pelo gateway
-│       └── app/              # Build estático gerado do PWA Modo Cuidador
-│
-└── pwa/                      # Código-fonte do PWA React 19 + TypeScript
-    ├── src/
-    │   ├── components/       # TodayVitalsCard, PatientHeaderCard, FamilyChatScreen,
-    │   │                    #   VoiceAssistant, SharedGroceryListCard, ... (19 componentes)
-    │   ├── services/         # api.ts, db.ts (Dexie), firebase.ts, grocery.ts,
-    │   │                    #   messageQueue.ts (fila offline), waLinkTotp.ts
-    │   ├── types.ts          # Definições tipadas do cuidador e métricas
-    │   ├── App.tsx           # Dashboard mobile do cuidador
-    │   └── main.tsx          # Entrypoint React
-    ├── public/               # Ícones PWA (192px, 512px, apple-touch-icon)
-    ├── vite.config.ts        # Vite + VitePWA (manifest, service worker)
-    └── package.json
-```
-
----
-
-## 🚀 Desenvolvimento Local
-
-### 1. PWA (Modo Cuidador)
-```bash
-cd pwa
-npm install
-npm run dev      # Executa o servidor de desenvolvimento Vite
-```
-
-### 2. Build do PWA para Produção
-O comando compila e exporta os arquivos otimizados diretamente para `../onboarding_site/public/app`:
-```bash
-cd pwa
-npm run build
-```
-
----
-
-## 🌍 Deploy para o Firebase Hosting
-
-O deploy é unificado e atende aos dois domínios configurados:
-- **Landing Page:** `https://bragasaude.online`
-- **PWA Modo Cuidador:** `https://braga-saude.web.app` (e `https://bragasaude.online/app/`)
-
-Para realizar o deploy do hosting:
-```bash
-cd onboarding_site
-firebase deploy --only hosting
-```
-
----
-
-## 👨‍👩‍👧 Saúde do chat da família
-
-O chat da família faz um **polling leve de 15s** enquanto a aba está aberta.
-Defeitos antigos desse fluxo, já quitados (AUD-PW03):
-
-- ~~**`idToken` stale fazia o chat sumir silenciosamente após ~1h**~~ — o
-  token deixou de ser uma snapshot de estado e virou um **getter**
-  (`getIdToken?: () => Promise<string | undefined>`) resolvido no instante
-  de cada chamada (`App.tsx:76`, consumido por `FamilyChatScreen`,
-  `VoiceAssistant` e `FamilyConnectModal`).
-- ~~**401 tratado como lista vazia**~~ — `FamilyChatScreen` trata a falha e
-  mostra "Não foi possível atualizar o grupo…" na UI.
-- **Ciclo de vida respeitado:** o `setInterval` é limpo no `useEffect`
-  teardown — a aba fechada não faz mais polling.
-
-> O lado Android do polling ganhou resiliência equivalente (gate de tela,
-> backoff exponencial e skip de ciclo idêntico) na branch
-> `fix/ponte-familiar-polling` do app.
+O site oficial está em https://bragasaude.online. O domínio https://braga-saude.web.app e os acessos a `/app/` encaminham à página de download do aplicativo Android.

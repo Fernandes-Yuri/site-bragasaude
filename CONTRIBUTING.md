@@ -1,4 +1,4 @@
-# Guia de Contribuição — Braga Saúde — Portal Cuidador & Landing Page
+# Guia de Contribuição — Braga Saúde — Site oficial
 
 Obrigado pelo interesse em contribuir com o **Braga Saúde**! Este guia define o fluxo de trabalho, padrões de código, governança de branches e boas práticas de segurança para este repositório.
 
@@ -55,10 +55,10 @@ Antes de abrir um Pull Request, execute os comandos de verificação local para 
 
 ```bash
 # Executar testes unitários:
-npm test (se configurado)
+find onboarding_site/public/js -name "*.js" -exec node --check {} \;
 
 # Executar build / lint:
-npm run build && npm run lint
+python3 -m json.tool onboarding_site/firebase.json
 ```
 
 ---

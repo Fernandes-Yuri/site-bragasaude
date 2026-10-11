@@ -6,17 +6,9 @@ out/
 .env.local
 .DS_Store
 npm-debug.log*
-pwa/node_modules/
-pwa/dist/
 .firebase/
 onboarding_site/.firebase/
 
-# AUD-PW04: build do PWA versionado por engano. O vite.config (pwa/vite.config.ts:9-11)
-# aponta o outDir para onboarding_site/public/app — Firebase Hosting publica essa
-# pasta, mas ela é REGENERADA a cada build e nunca deve ser commitada: o artefato
-# versionado pode divergir do fonte e servir um PWA desatualizado. Publicar é com
-# `firebase deploy --only hosting` (na pasta onboarding_site/), não com git.
-onboarding_site/public/app/
 
 
 # APKs são distribuídos pelo gateway e GitHub Actions/Releases

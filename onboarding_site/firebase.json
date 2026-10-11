@@ -9,7 +9,7 @@
     "rewrites": [
       {
         "source": "/app/**",
-        "destination": "/app/index.html"
+        "destination": "/app-download.html"
       },
       {
         "source": "/privacidade",
@@ -43,64 +43,6 @@
           {
             "key": "Content-Disposition",
             "value": "attachment"
-          }
-        ]
-      },
-      {
-        "source": "/app/sw.js",
-        "headers": [
-          {
-            "key": "Cache-Control",
-            "value": "no-cache, no-store, must-revalidate"
-          }
-        ]
-      },
-      {
-        "source": "/app/index.html",
-        "headers": [
-          {
-            "key": "Cache-Control",
-            "value": "no-cache, no-store, must-revalidate"
-          }
-        ]
-      },
-      {
-        "source": "/app",
-        "headers": [
-          {
-            "key": "Cache-Control",
-            "value": "no-cache, no-store, must-revalidate"
-          }
-        ]
-      },
-      {
-        "source": "/app/",
-        "headers": [
-          {
-            "key": "Cache-Control",
-            "value": "no-cache, no-store, must-revalidate"
-          }
-        ]
-      },
-      {
-        "source": "/app/assets/**",
-        "headers": [
-          {
-            "key": "Cache-Control",
-            "value": "public, max-age=31536000, immutable"
-          }
-        ]
-      },
-      {
-        "source": "/app/manifest.webmanifest",
-        "headers": [
-          {
-            "key": "Content-Type",
-            "value": "application/manifest+json"
-          },
-          {
-            "key": "Cache-Control",
-            "value": "no-cache"
           }
         ]
       },
@@ -139,8 +81,25 @@
             "value": "no-cache, must-revalidate"
           }
         ]
+      },
+      {
+        "source": "/app/sw.js",
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "no-store"
+          }
+        ]
       }
-    ]
+    ],
+    "redirects": [
+      {
+        "source": "/app",
+        "destination": "/app-download.html",
+        "type": 302
+      }
+    ],
+    "site": "braga-saude"
   },
   "firestore": {
     "rules": "firestore.rules"
