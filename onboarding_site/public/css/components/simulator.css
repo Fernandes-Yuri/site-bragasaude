@@ -144,15 +144,31 @@
   height: 100%;
   background: #FAFCFB;
   border-radius: calc(var(--phone-width) * 36 / 320);
-  /* 300 unidades de desenho: toda a interface acompanha a largura do vidro. */
-  container-type: inline-size;
-  --sim-unit: calc(100cqw / 300);
+  /* 300 unidades de desenho: toda a interface acompanha a largura do vidro.
+     FALLBACK UNIVERSAL: a largura do vidro derivada de --phone-width, usando
+     só calc/min/px — computável em qualquer navegador, inclusive Safari 15
+     (iOS 15 / iPhone 6s) e Chrome ≤ 104, que não têm container queries.
+     0,9375 = 1 − 2×(10/320) do padding do frame; −4px = 2px de borda do
+     frame + 2px da tela (box-sizing: border-box do reset.css). */
+  --sim-unit: calc((var(--phone-width) * 0.9375 - 4px) / 300);
   overflow: hidden;
   position: relative;
   border: 1px solid #050a07;
   box-shadow: 0 0 0 2px #050a07, inset 0 0 0 1px rgba(255, 255, 255, 0.4);
   /* O recorte mantém o brilho dentro do vidro, sem cobrir os controles. */
   isolation: isolate;
+}
+
+/* Container queries só onde elas existem. O @supports é OBRIGATÓRIO aqui:
+   a custom property aceita qualquer token no parse, então sem este gate o
+   Safari 15 guarda "100cqw" como texto e os 311 usos de var(--sim-unit)
+   ficam inválidos no cálculo (fontes viram herdadas, paddings viram 0,
+   widths viram auto) — quebrando todo o simulador em iOS 15. */
+@supports (width: 1cqw) {
+  .phone-screen {
+    container-type: inline-size;
+    --sim-unit: calc(100cqw / 300);
+  }
 }
 
 .phone-glass {
