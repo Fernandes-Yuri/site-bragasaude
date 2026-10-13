@@ -12,3 +12,6 @@ jobs:
           node-version: '22'
       - run: find onboarding_site/public/js -name '*.js' -exec node --check {} \;
       - run: python3 -m json.tool onboarding_site/firebase.json > /dev/null
+      # CSS precisa ter fallback para navegadores legados (iOS 15 / Safari 15).
+      # Bug do iPhone 6s: cqw fora de @supports quebrava o simulador inteiro.
+      - run: python3 scripts/check-legacy-css.py
