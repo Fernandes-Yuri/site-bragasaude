@@ -28,6 +28,18 @@
         "destination": "/termos.html"
       },
       {
+        "source": "/exclusao-de-dados",
+        "destination": "/exclusao-de-dados.html"
+      },
+      {
+        "source": "/excluir-conta",
+        "destination": "/exclusao-de-dados.html"
+      },
+      {
+        "source": "/data-deletion",
+        "destination": "/exclusao-de-dados.html"
+      },
+      {
         "source": "**",
         "destination": "/index.html"
       }
@@ -88,6 +100,19 @@
           {
             "key": "Cache-Control",
             "value": "no-store"
+          }
+        ]
+      },
+      {
+        "source": "/exclusao-de-dados{,/**,.html}",
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "no-cache, must-revalidate"
+          },
+          {
+            "key": "Referrer-Policy",
+            "value": "no-referrer"
           }
         ]
       }
