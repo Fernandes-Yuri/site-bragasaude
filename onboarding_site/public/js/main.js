@@ -647,17 +647,7 @@
       });
     });
 
-    const waBtns = document.querySelectorAll('a[href*="wa.me"], .btn-whatsapp');
-    waBtns.forEach(btn => {
-      btn.addEventListener('click', () => {
-        if (typeof gtag === 'function') {
-          gtag('event', 'whatsapp_lead', {
-            event_category: 'engagement',
-            event_label: 'Conversa WhatsApp'
-          });
-        }
-      });
-    });
+
   }
 
   // ── 8. Aviso Institucional de Privacidade & LGPD (Padrão da Indústria) ──

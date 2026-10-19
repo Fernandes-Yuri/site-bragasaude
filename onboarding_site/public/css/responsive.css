@@ -129,7 +129,7 @@
 /* ── Celular padrão (≤ 600px), onde antes o arquivo original já cuidava
    do essencial. Mantemos essas regras e completamos o que faltava. ── */
 @media (max-width: 600px) {
-  .nav-cta-group .btn-whatsapp {
+  .nav-cta-group .btn-primary {
     display: none;
   }
 
