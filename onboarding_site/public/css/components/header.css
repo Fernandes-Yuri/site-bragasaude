@@ -113,18 +113,13 @@ header {
   flex-shrink: 0;
 }
 
-.nav-cta-group .btn-whatsapp {
+.nav-cta-group .btn-primary {
   padding: 7px 14px;
   font-size: 0.80rem;
   font-weight: 600;
   gap: 6px;
   border-radius: 999px;
   box-shadow: 0 3px 10px rgba(37, 211, 102, 0.25);
-}
-
-.nav-cta-group .btn-whatsapp svg {
-  width: 15px;
-  height: 15px;
 }
 
 /* ── Hamburger (Mobile) ── */
