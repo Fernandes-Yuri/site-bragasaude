@@ -40,3 +40,15 @@ Para recriar a imagem, instale Pillow no seu ambiente Python e as fontes DejaVu 
 A página inicial inclui um chat acessível pelo botão “Tire suas dúvidas” ou pela seção de perguntas frequentes. Sugestões e perguntas digitadas usam respostas prontas em `public/assets/faq.js`, sem provedor de IA, backend, armazenamento ou envio das mensagens. A conversa fica apenas na memória da página e pode ser reiniciada pelo visitante.
 
 As respostas reutilizam as informações do site, deixam valores e vagas sujeitos à confirmação com a instituição e mantêm o contato externo pelo WhatsApp. O FAQ estático continua disponível sem JavaScript. Para editar assuntos, altere `topics` e valide com `node --test scripts/tests/test-clinicas-faq.cjs`; a folha de estilo do widget fica em `public/assets/faq.css`. Ao alterar arquivos do widget, atualize o parâmetro de versão de suas referências no HTML.
+
+## Logotipos e links dos convênios
+
+Os cards de Unimed, SulAmérica e Bradesco Saúde usam arquivos das páginas oficiais, sem redesenho, recorte ou alteração de cor, com links para os próprios sites em nova aba. Cópias locais evitam dependência de imagens externas durante a visita. A aceitação permanece sujeita ao hospital, ao plano e à rede credenciada.
+
+Fontes consultadas em 20/10/2026:
+
+- Unimed: https://www.unimed.coop.br/site/ — imagem oficial https://www.unimed.coop.br/site/image/layout_set_logo?img_id=70667720
+- SulAmérica: https://portal.sulamericaseguros.com.br/home.htm — imagem oficial https://portal.sulamericaseguros.com.br/assets/logo-sula130.png
+- Bradesco Saúde: https://www3.bradescoseguros.com.br/clientes/produtos/plano-saude — marca do portal oficial do beneficiário https://wwws.bradescosaude.com.br/wps/wcm/connect/beneficiariosaude/9f119208-9763-479f-b472-066beaa450ec/assets%252Fimages%252Flogo.svg?MOD=AJPERES
+
+Os arquivos em `public/assets/convenios/` são marcas dos respectivos titulares e aparecem apenas para identificar as operadoras citadas.
