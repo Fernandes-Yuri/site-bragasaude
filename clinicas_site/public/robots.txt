@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://clinicas.bragasaude.online/sitemap.xml
+Sitemap: https://api.bragasaude.online/api/editorial/sitemap.xml

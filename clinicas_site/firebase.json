@@ -27,7 +27,7 @@
           },
           {
             "key": "Content-Security-Policy",
-            "value": "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' https:; connect-src 'self'; base-uri 'self'; frame-ancestors 'none'; form-action 'none'"
+            "value": "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' https:; connect-src 'self' https://api.bragasaude.online; base-uri 'self'; frame-ancestors 'none'; form-action 'none'"
           }
         ]
       },
@@ -61,33 +61,25 @@
     ],
     "rewrites": [
       {
-        "source": "/noticias",
-        "function": {
-          "functionId": "clinicasEditorial",
-          "region": "us-central1"
-        }
-      },
-      {
-        "source": "/noticias/**",
-        "function": {
-          "functionId": "clinicasEditorial",
-          "region": "us-central1"
-        }
-      },
+        "regex": "^/noticias/[a-z0-9]+(-[a-z0-9]+)*$",
+        "destination": "/editorial-artigo.html"
+      }
+    ],
+    "redirects": [
       {
         "source": "/sitemap.xml",
-        "function": {
-          "functionId": "clinicasEditorial",
-          "region": "us-central1"
-        }
+        "destination": "https://api.bragasaude.online/api/editorial/sitemap.xml",
+        "type": 302
       }
     ]
   },
-  "functions": [
-    {
-      "source": "functions",
-      "codebase": "clinicas-editorial",
-      "runtime": "nodejs22"
+  "emulators": {
+    "hosting": {
+      "host": "127.0.0.1",
+      "port": 8795
+    },
+    "ui": {
+      "enabled": false
     }
-  ]
+  }
 }

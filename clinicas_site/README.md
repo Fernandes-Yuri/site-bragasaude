@@ -75,21 +75,26 @@ Antes de exibir uma pergunta digitada, o navegador verifica sequências numéric
 
 ## Notícias, artigos e SEO
 
-A home apresenta a seção de notícias e os ícones de Instagram/TikTok como “em breve”, sem contas ou links presumidos. Quando os perfis oficiais forem informados, substituir os itens de apresentação por links acessíveis e incluir os destinos confirmados em `sameAs` da organização.
+A home apresenta notícias e ícones de Instagram/TikTok como “em breve”, sem perfis presumidos. Os perfis confirmados poderão ser acrescentados aos links e ao `sameAs` da organização.
 
-`/noticias` e `/noticias/{slug}` usam HTML produzido pela camada de apresentação em `functions/`, consumindo **somente a API pública da gateway**. Não há senha, token de serviço, permissão de escrita ou acesso ao banco nessa função. Cadastros, autorização, revisão e publicação pertencem ao backend; o painel fica em `https://admin.bragasaude.online/dashboard/editorial`. Editar/publicar no painel dispensa alteração de código e deploy por artigo. A API mantém rascunho e versão publicada separados.
+O **Firebase serve somente arquivos estáticos**. `/noticias` usa `noticias.html`; artigos em `/noticias/{slug}` usam o template estático `editorial-artigo.html`. O script `assets/editorial.js` busca a API pública `https://api.bragasaude.online/api/editorial/articles`, sem cookies ou credenciais. Permissões, escrita, revisão e publicação pertencem à gateway, consumida pelo painel `https://admin.bragasaude.online/dashboard/editorial`. Publicar um artigo não exige editar a codebase nem fazer deploy do site.
 
-O renderer oferece título, descrição, canonical, Open Graph, Article/NewsArticle em JSON-LD, conteúdo completo no HTML, autor/bio, fontes, datas e política editorial. `robots.txt` aponta para o sitemap gerado do feed publicado. Erro de origem retorna 503/noindex; conteúdo ausente retorna 404/noindex; cache público de até 60s. O sitemap inicial suporta até 50 mil conteúdos (dividir em índices antes de atingir esse volume).
+`assets/editorial-render.js` produz a apresentação a partir dos dados publicados. O conteúdo é escapado; HTML de artigos não é executado. Título, descrição, canonical único, Open Graph, autoria, datas e Article/NewsArticle são atualizados no navegador. A página de política editorial já é HTML estático completo. O cadastro do painel mantém TOTP mestre obrigatório no backend; não há chave de serviço no frontend.
 
-### Infraestrutura e rollout
+### SEO e limites da entrega estática
 
-A função `clinicasEditorial` usa Node 22, região `us-central1`, máximo de 3 instâncias, sem instância mínima. Os rewrites do Hosting são declarados em `firebase.json`. **O projeto deve estar no plano Blaze para habilitar Cloud Functions/Cloud Build.** Não publicar os rewrites enquanto a função não estiver implantada e validada. Em 20/10/2026, o deploy foi bloqueado pelo plano gratuito; aguarda ativação do Blaze pelo responsável. Essa ativação é uma decisão de faturamento separada, não realizada pelo código.
+Google pode renderizar o JavaScript para ler artigos e metadados; outros robôs podem não executar JavaScript. Para esses robôs, as prévias de compartilhamento usam os metadados genéricos do template. Esta entrega não é SSR e não promete HTML inicial por artigo. Verificar o primeiro artigo real na inspeção de URL do Search Console e no Rich Results Test. O template de artigo não tem canonical conflitante ou `noindex` inicial.
 
-1. Gateway: aplicar migration 067 e publicar API editorial (CI/deploy existente).
-2. Portal: disponibilizar `/dashboard/editorial` com sessão existente e TOTP mestre obrigatório no cadastro.
-3. Instalar dependências com `npm ci --prefix clinicas_site/functions`.
-4. Publicar função com `firebase deploy --only functions:clinicas-editorial --project braga-saude --config clinicas_site/firebase.json`.
-5. Conferir que o WAF da gateway permite GET público de `/api/editorial/*` a partir do runtime Firebase; não adicionar credenciais administrativas ao renderer.
-6. Publicar somente o Hosting das clínicas com `firebase deploy --only hosting --project braga-saude --config clinicas_site/firebase.json`.
+O sitemap dinâmico fica **na gateway**: `https://api.bragasaude.online/api/editorial/sitemap.xml`. O `robots.txt` aponta diretamente para ele, e `/sitemap.xml` do frontend redireciona com 302. O backend inclui somente publicações no ar, com datas da última publicação, e divide automaticamente o sitemap em páginas. Não há sitemap gerado no Firebase.
 
-Validação: `node --test clinicas_site/functions/render.test.cjs`, sintaxe do handler, teste de navegação/teclado e layout desktop/390/320 px. Não publicar artigo fictício para testar SEO no domínio real.
+Artigo ausente: a API retorna 404, e o frontend redireciona para uma URL inexistente, que recebe o `404.html` personalizado com status 404 do Hosting. Falha temporária da API: tela de erro com nova tentativa; o status do documento inicial continua sendo 200, pois o Hosting é estático. A API mantém seus status reais. Sem JavaScript, as páginas dinâmicas mostram orientação; a home e os documentos institucionais continuam disponíveis.
+
+### Build, publicação e testes
+
+1. Publicar a gateway com leitura pública/CORS de `/api/editorial/*` e sitemap.
+2. Gerar templates locais: `node scripts/build-clinicas-editorial.cjs`.
+3. Publicar somente Hosting: `firebase deploy --only hosting --project braga-saude --config clinicas_site/firebase.json`.
+
+Não há dependência de Cloud Functions, Cloud Run ou plano Blaze. O rewrite aponta para um arquivo HTML local; a CSP permite conexão somente ao próprio site e à API oficial. `node scripts/build-clinicas-editorial.cjs` gera apenas templates e a política editorial, sem consultar artigos ou segredos.
+
+Validação: `node --test scripts/tests/test-clinicas-editorial.cjs`, sintaxe JS, teste de navegador com respostas públicas simuladas (artigo, lista, erro/retry, 404, metadados, XSS e mobile) e leitura da API real sem autenticação. Não publicar artigo fictício para testar o site real.

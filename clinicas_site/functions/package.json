@@ -1,1 +1,0 @@
-{"name":"braga-clinicas-editorial","private":true,"main":"index.js","engines":{"node":"22"},"dependencies":{"firebase-functions":"7.4.0"},"scripts":{"test":"node --test render.test.cjs"}}

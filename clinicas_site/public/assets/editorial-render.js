@@ -1,3 +1,4 @@
+(function(){
 'use strict';
 const BASE = 'https://clinicas.bragasaude.online';
 const esc = value => String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -28,9 +29,8 @@ function policy() {
  return page({title:'Política editorial',description:'Autoria, fontes, revisão e correções dos conteúdos de saúde mental da Braga Saúde.',path:'/noticias/politica-editorial',content:'<article class="editorial-article"><p class="eyebrow">COMPROMISSO COM A INFORMAÇÃO</p><h1>Política editorial</h1><p>Publicamos notícias e artigos informativos sobre saúde mental, apoio à família e caminhos de cuidado.</p><h2>Autoria e fontes</h2><p>Cada publicação identifica quem escreveu, apresenta fontes e informa datas de publicação e atualização. Credenciais profissionais e revisão técnica só são indicadas quando efetivamente fornecidas e verificadas pela equipe responsável.</p><h2>Revisão antes da publicação</h2><p>Os textos passam por confirmação editorial antes de ir ao ar. Alegações de saúde devem ser verificadas em fontes confiáveis. O conteúdo não deve prometer resultados, diagnosticar pessoas ou substituir atendimento profissional.</p><h2>Correções e transparência</h2><p>Para apontar uma informação incorreta, entre em contato com a equipe pelos canais publicados neste site, informando o endereço do artigo e o trecho a corrigir. Atualizações publicadas recebem nova data de modificação.</p><h2>Privacidade</h2><p>Não publique dados identificáveis de pacientes, documentos ou relatos pessoais sem a autorização e os cuidados necessários. Este espaço não recebe comentários ou relatos de saúde dos visitantes.</p><p><a href="/noticias">Ver notícias e artigos</a></p></article>'});
 }
 function errorPage(status) {return page({status,title:status===404?'Página não encontrada':'Conteúdo temporariamente indisponível',description:'Volte à página inicial ou consulte os artigos da Braga Saúde.',path:'/noticias',content:`<h1>${status===404?'Página não encontrada':'Não foi possível carregar o conteúdo agora.'}</h1><p><a href="/noticias">Notícias e artigos</a> · <a href="/">Voltar ao início</a></p>`});}
-function sitemap(items) {
- const urls=['','/sobre','/privacidade','/termos','/cookies','/noticias','/noticias/politica-editorial'].map(path=>`<url><loc>${BASE}${path}</loc></url>`);
- for(const a of items)urls.push(`<url><loc>${BASE}/noticias/${esc(a.slug)}</loc><lastmod>${esc(a.modified_at)}</lastmod></url>`);
- return `<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${urls.join('')}</urlset>`;
-}
-module.exports={article,listing,policy,errorPage,sitemap,bodyHTML,esc};
+const api={article,listing,policy,errorPage,bodyHTML,esc,page};
+if(typeof module !== 'undefined' && module.exports)module.exports=api;
+if(typeof window !== 'undefined')window.BragaEditorial=api;
+
+}());
