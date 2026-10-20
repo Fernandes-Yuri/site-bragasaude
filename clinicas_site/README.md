@@ -43,7 +43,7 @@ As respostas reutilizam as informações do site, deixam valores e vagas sujeito
 
 ## Logotipos e links dos convênios
 
-Os cards de Unimed, SulAmérica e Bradesco Saúde usam arquivos das páginas oficiais, sem redesenho, recorte ou alteração de cor, com links para os próprios sites em nova aba. Cópias locais evitam dependência de imagens externas durante a visita. A aceitação permanece sujeita ao hospital, ao plano e à rede credenciada.
+Os cards de Unimed, SulAmérica e Bradesco Saúde usam arquivos das páginas oficiais, sem redesenho, recorte ou alteração de cor, com links opcionais para os próprios sites em nova aba, dentro de “Consultar sites oficiais das operadoras”, recolhido por padrão. Os logos não são clicáveis; o contato com a equipe permanece em destaque. Cópias locais evitam dependência de imagens externas durante a visita. A aceitação permanece sujeita ao hospital, ao plano e à rede credenciada.
 
 Fontes consultadas em 20/10/2026:
 
