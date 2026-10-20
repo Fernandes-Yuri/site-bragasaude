@@ -16,6 +16,8 @@ jobs:
       # Bug do iPhone 6s: cqw fora de @supports quebrava o simulador inteiro.
       - run: python3 scripts/check-legacy-css.py
       - run: node --check clinicas_site/public/assets/site.js
+      - run: node --check clinicas_site/public/assets/faq.js
+      - run: node --test scripts/tests/test-clinicas-faq.cjs
       - run: python3 scripts/build-clinicas.py
       - run: git diff --exit-code -- clinicas_site/public/data/hospitais.json
       - run: python3 -m unittest discover -s scripts/tests -p 'test_clinicas.py'
