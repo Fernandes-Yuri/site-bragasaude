@@ -9,3 +9,5 @@
 @media(max-width:800px){.insurance-list li,.insurance-brand,.insurance-others>a{min-height:112px}.insurance-brand,.insurance-others>a{padding:13px 11px;gap:10px}.insurance-brand img{height:48px;width:140px}.insurance-others strong{font-size:12px}.insurance-others>a>span{font-size:10px}}
 
 .insurance-official{margin:0 0 16px;color:var(--muted);font-size:12px;line-height:1.6}.insurance-official summary{cursor:pointer;width:fit-content;padding:8px 0;text-underline-offset:3px}.insurance-official summary:hover{text-decoration:underline}.insurance-official>p{font-size:11px;margin:4px 0 8px}.insurance-official ul{display:flex;flex-wrap:wrap;gap:8px 20px;list-style:none;padding:0;margin:0}.insurance-official a{display:inline-flex;align-items:center;gap:6px;padding:8px 0;text-underline-offset:3px}
+
+.support-links a[href="tel:192"] strong span{color:#c62828}.support-links a[href="tel:188"] strong span{color:#9a7000}
