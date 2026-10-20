@@ -15,12 +15,21 @@
     { id: 'start', title: 'Como funciona o primeiro passo?', keys: ['oi', 'ola', 'bom dia', 'boa tarde', 'boa noite', 'como funciona', 'primeiro passo', 'comecar', 'inicio', 'ajuda', 'ajudar', 'atendimento', 'agendar', 'consulta'], answer: 'Você pode começar pedindo informações para você ou para quem você ama. Conte apenas o que se sentir à vontade, conheça as possibilidades e converse com um profissional de saúde para definir os próximos passos. Iniciar uma conversa não significa decidir por um tratamento.', links: [['Conversar pelo WhatsApp', 'contact'], ['Ver como funciona', '#como-funciona']] }
   ];
   const normalize = text => String(text).normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
+  // Detecção local e preventiva, sem validar documentos ou enviar o texto.
+  function containsPersonalData(question) {
+    const raw = String(question);
+    const value = normalize(raw);
+    return /[\w.+-]+@[\w.-]+\.[a-z]{2,}/i.test(raw)
+      || /(?:\d[\s.()\/+-]*){7,}/.test(raw)
+      || /\b(?:cpf|cnpj|rg|cnh|cns|carteirinha|matricula|documento|senha|token|cartao)\b.{0,35}\b[a-z]*\d[a-z0-9]*\b/.test(value)
+      || /\b(?:meu nome e|me chamo|meu endereco e|moro na|moro em|minha senha e)\s+\S+/.test(value);
+  }
   function findTopic(question) {
     const value = ` ${normalize(question)} `;
     // A ordem dá prioridade a ajuda imediata e perguntas específicas.
     return topics.find(topic => topic.keys.some(key => value.includes(` ${key} `))) || null;
   }
-  if (typeof module !== 'undefined' && module.exports) module.exports = { topics, findTopic };
+  if (typeof module !== 'undefined' && module.exports) module.exports = { topics, findTopic, containsPersonalData };
   if (typeof document === 'undefined') return;
   const panel = document.querySelector('#faq-chat');
   const launcher = document.querySelector('#faq-launcher');
@@ -122,6 +131,14 @@
   function answer(question, topic) {
     if (panel.hidden) return;
     showSuggestions(false);
+    if (containsPersonalData(question)) {
+      input.value = '';
+      const warning = addMessage('Para proteger sua privacidade, essa mensagem foi bloqueada e não foi adicionada à conversa. Não coloque CPF, carteirinha de convênio, telefone, e-mail ou outros dados pessoais aqui. Para tratar informações pessoais com a equipe, continue pelo WhatsApp oficial da Braga Saúde, nosso único canal de atendimento para esse fim. Confira o contato pelo botão abaixo e compartilhe somente o necessário, quando solicitado pela equipe.', 'bot', [['Continuar no WhatsApp oficial', 'contact']]);
+      react('responding');
+      const urgent = topic && topic.id === 'urgent' ? addMessage(topic.answer, 'bot', topic.links) : null;
+      revealMessage(urgent || warning);
+      return;
+    }
     addMessage(question, 'user');
     const reply = addMessage(topic ? topic.answer : 'Não encontrei uma resposta pronta para essa dúvida. Você pode escolher uma pergunta sugerida ou conversar com a equipe.', 'bot', topic ? topic.links : [['Conversar com a equipe', 'contact']]);
     react('responding');
@@ -129,7 +146,7 @@
   }
   function restart() {
     log.replaceChildren(); input.value = '';
-    addMessage('Olá! Escolha uma pergunta ou digite sua dúvida. As respostas são automáticas.', 'bot');
+    addMessage('Olá! Escolha uma pergunta ou digite uma dúvida geral, sem CPF, carteirinha ou outros dados pessoais. As respostas são automáticas.', 'bot');
     showSuggestions(true);
     react('greeting');
   }
