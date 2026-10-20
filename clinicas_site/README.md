@@ -72,3 +72,29 @@ Os WebP publicados ficam em `public/assets/avatar/`; os PNG originais e os promp
 ## Bloqueio preventivo de dados no FAQ
 
 Antes de exibir uma pergunta digitada, o navegador verifica sequências numéricas, e-mails e padrões de identificação pessoal. Ao detectar esses padrões, limpa o campo sem inserir o texto no histórico, mostra uma orientação e oferece o link oficial já configurado, sem incluir o conteúdo bloqueado na URL. O FAQ continua sem envio ou armazenamento das mensagens. A detecção é preventiva e não garante reconhecer toda informação pessoal em texto livre. Perguntas gerais sobre documentos continuam permitidas.
+
+## Notícias, artigos e SEO
+
+A home apresenta notícias e ícones de Instagram/TikTok como “em breve”, sem perfis presumidos. Os perfis confirmados poderão ser acrescentados aos links e ao `sameAs` da organização.
+
+O **Firebase serve somente arquivos estáticos**. `/noticias` usa `noticias.html`; artigos em `/noticias/{slug}` usam o template estático `editorial-artigo.html`. O script `assets/editorial.js` busca a API pública `https://api.bragasaude.online/api/editorial/articles`, sem cookies ou credenciais. Permissões, escrita, revisão e publicação pertencem à gateway, consumida pelo painel `https://admin.bragasaude.online/dashboard/editorial`. Publicar um artigo não exige editar a codebase nem fazer deploy do site.
+
+`assets/editorial-render.js` produz a apresentação a partir dos dados publicados. O conteúdo é escapado; HTML de artigos não é executado. Título, descrição, canonical único, Open Graph, autoria, datas e Article/NewsArticle são atualizados no navegador. A página de política editorial já é HTML estático completo. O cadastro do painel mantém TOTP mestre obrigatório no backend; não há chave de serviço no frontend.
+
+### SEO e limites da entrega estática
+
+Google pode renderizar o JavaScript para ler artigos e metadados; outros robôs podem não executar JavaScript. Para esses robôs, as prévias de compartilhamento usam os metadados genéricos do template. Esta entrega não é SSR e não promete HTML inicial por artigo. Verificar o primeiro artigo real na inspeção de URL do Search Console e no Rich Results Test. O template de artigo não tem canonical conflitante ou `noindex` inicial.
+
+O sitemap dinâmico fica **na gateway**: `https://api.bragasaude.online/api/editorial/sitemap.xml`. O `robots.txt` aponta diretamente para ele, e `/sitemap.xml` do frontend redireciona com 302. O backend inclui somente publicações no ar, com datas da última publicação, e divide automaticamente o sitemap em páginas. Não há sitemap gerado no Firebase.
+
+Artigo ausente: a API retorna 404, e o frontend redireciona para uma URL inexistente, que recebe o `404.html` personalizado com status 404 do Hosting. Falha temporária da API: tela de erro com nova tentativa; o status do documento inicial continua sendo 200, pois o Hosting é estático. A API mantém seus status reais. Sem JavaScript, as páginas dinâmicas mostram orientação; a home e os documentos institucionais continuam disponíveis.
+
+### Build, publicação e testes
+
+1. Publicar a gateway com leitura pública/CORS de `/api/editorial/*` e sitemap.
+2. Gerar templates locais: `node scripts/build-clinicas-editorial.cjs`.
+3. Publicar somente Hosting: `firebase deploy --only hosting --project braga-saude --config clinicas_site/firebase.json`.
+
+Não há dependência de Cloud Functions, Cloud Run ou plano Blaze. O rewrite aponta para um arquivo HTML local; a CSP permite conexão somente ao próprio site e à API oficial. `node scripts/build-clinicas-editorial.cjs` gera apenas templates e a política editorial, sem consultar artigos ou segredos.
+
+Validação: `node --test scripts/tests/test-clinicas-editorial.cjs`, sintaxe JS, teste de navegador com respostas públicas simuladas (artigo, lista, erro/retry, 404, metadados, XSS e mobile) e leitura da API real sem autenticação. Não publicar artigo fictício para testar o site real.
