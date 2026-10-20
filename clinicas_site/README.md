@@ -62,3 +62,9 @@ A chave `braga_clinicas_privacy_choice` usa localStorage, com validade de 180 di
 Ao alterar o conteúdo dos documentos, atualize `VERSION` em `consent.js`, a versão/data nas três políticas e o parâmetro de versão dos assets em todas as páginas. Uma escolha com versão antiga ou vencida não suprime o aviso. Os documentos e os contatos de urgência permanecem acessíveis.
 
 Validação: `node --test scripts/tests/test-clinicas-consent.cjs`. Referência de implementação consultada: [Guia de Cookies da ANPD](https://www.gov.br/anpd/pt-br/centrais-de-conteudo/materiais-educativos-e-publicacoes/guia_orientativo_cookies_e_protecao_de_dados_pessoais), com escolha expressa, transparência sobre o armazenamento e revisão facilitada.
+
+## Avatar do FAQ
+
+O avatar feminino de corpo inteiro usa duas poses com visual 3D, camiseta branca e marca Braga Saúde. As imagens só são carregadas na primeira abertura; fechar o chat oculta o avatar e cancela suas reações. Clicar nele abre as sugestões. As animações respeitam movimento reduzido e pausam quando a página fica oculta. Mensagens e sugestões compartilham uma única rolagem, e as sugestões recolhem após a resposta.
+
+Os WebP publicados ficam em `public/assets/avatar/`; os PNG originais e os prompts usados na ferramenta integrada de geração de imagens estão em [design/avatar/PROMPTS.md](design/avatar/PROMPTS.md). São imagens renderizadas com aparência 3D, sem motor 3D ou processamento de mensagens por IA.

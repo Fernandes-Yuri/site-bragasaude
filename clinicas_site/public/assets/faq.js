@@ -24,21 +24,39 @@
   if (typeof document === 'undefined') return;
   const panel = document.querySelector('#faq-chat');
   const launcher = document.querySelector('#faq-launcher');
-  if (!panel || !launcher) return;
+  const avatar = document.querySelector('#faq-avatar');
+  if (!panel || !launcher || !avatar) return;
   const log = panel.querySelector('[data-faq-log]');
+  const scroller = panel.querySelector('.faq-chat-scroll');
   const suggestions = panel.querySelector('[data-faq-suggestions]');
+  const toggle = panel.querySelector('[data-faq-toggle]');
   const form = panel.querySelector('form');
   const input = panel.querySelector('input');
   const close = panel.querySelector('[data-faq-close]');
   const contact = document.querySelector('[data-contact]');
   const contactURL = contact ? contact.href : '#contato';
+  const caption = avatar.querySelector('.faq-avatar-caption');
+  const welcomeImage = avatar.querySelector('[data-avatar-welcome]');
+  const pointImage = avatar.querySelector('[data-avatar-point]');
+  const preferredTopics = ['start', 'family', 'admission', 'cost'];
   let returnFocus = launcher;
   let initialized = false;
+  let avatarTimer = null;
+  pointImage.addEventListener('load', () => { avatar.dataset.poseReady = 'true'; });
   function node(tag, text, className) {
     const el = document.createElement(tag);
     if (text) el.textContent = text;
     if (className) el.className = className;
     return el;
+  }
+  function react(state) {
+    if (panel.hidden || document.hidden) return;
+    clearTimeout(avatarTimer);
+    avatar.dataset.state = state;
+    caption.textContent = state === 'responding' ? 'Vamos por partes.' : state === 'suggesting' ? 'Pode escolher aqui.' : 'Escolha uma pergunta.';
+    if (state === 'greeting' || state === 'responding') avatarTimer = setTimeout(() => {
+      if (!panel.hidden) { avatar.dataset.state = 'idle'; caption.textContent = 'Escolha uma pergunta.'; }
+    }, 1600);
   }
   function addMessage(text, from, links) {
     const message = node('div', '', `faq-message faq-message-${from}`);
@@ -60,48 +78,101 @@
     }
     log.append(message);
     while (log.children.length > 41) log.firstElementChild.remove();
-    log.scrollTop = log.scrollHeight;
+    return message;
+  }
+  function revealMessage(message) {
+    requestAnimationFrame(() => {
+      if (panel.hidden) return;
+      const top = message.getBoundingClientRect().top - scroller.getBoundingClientRect().top + scroller.scrollTop;
+      scroller.scrollTop = message.offsetHeight > scroller.clientHeight - 32 ? Math.max(0, top - 12) : scroller.scrollHeight;
+    });
+  }
+  function showSuggestions(open, focus = false) {
+    suggestions.hidden = !open;
+    toggle.setAttribute('aria-expanded', String(open));
+    toggle.querySelector('span').textContent = open ? '⌃' : '⌄';
+    if (open) {
+      renderSuggestions(false);
+      react('suggesting');
+      requestAnimationFrame(() => {
+        if (panel.hidden) return;
+        scroller.scrollTop = scroller.scrollHeight;
+        if (focus) suggestions.querySelector('button').focus({ preventScroll: true });
+      });
+    }
+  }
+  function renderSuggestions(all) {
+    suggestions.replaceChildren();
+    const ids = all ? ['start', 'family', 'admission', 'cost', 'sus', 'hospitals', 'care', 'diagnosis', 'app', 'urgent'] : preferredTopics;
+    for (const id of ids) {
+      const topic = topics.find(item => item.id === id);
+      const button = node('button', topic.title);
+      button.type = 'button';
+      button.addEventListener('pointerenter', () => react('suggesting'));
+      button.addEventListener('focus', () => react('suggesting'));
+      button.addEventListener('click', () => { answer(topic.title, topic); input.focus({ preventScroll: true }); });
+      suggestions.append(button);
+    }
+    if (!all) {
+      const more = node('button', 'Ver todos os assuntos', 'faq-more-topics'); more.type = 'button';
+      more.addEventListener('click', () => { renderSuggestions(true); suggestions.querySelector('button').focus({ preventScroll: true }); react('suggesting'); });
+      suggestions.append(more);
+    }
   }
   function answer(question, topic) {
+    if (panel.hidden) return;
+    showSuggestions(false);
     addMessage(question, 'user');
-    addMessage(topic ? topic.answer : 'Não encontrei uma resposta pronta para essa dúvida. Você pode escolher um dos assuntos abaixo ou conversar com a equipe pelo WhatsApp.', 'bot', topic ? topic.links : [['Conversar com a equipe', 'contact']]);
+    const reply = addMessage(topic ? topic.answer : 'Não encontrei uma resposta pronta para essa dúvida. Você pode escolher uma pergunta sugerida ou conversar com a equipe.', 'bot', topic ? topic.links : [['Conversar com a equipe', 'contact']]);
+    react('responding');
+    revealMessage(reply);
   }
   function restart() {
-    log.replaceChildren();
-    input.value = '';
-    addMessage('Olá! Posso ajudar com dúvidas frequentes sobre este espaço. Escolha um assunto abaixo ou digite sua pergunta.', 'bot');
+    log.replaceChildren(); input.value = '';
+    addMessage('Olá! Escolha uma pergunta ou digite sua dúvida. As respostas são automáticas.', 'bot');
+    showSuggestions(true);
+    react('greeting');
   }
   function setOpen(open, restoreFocus = true) {
+    if (open) returnFocus = document.activeElement;
     panel.hidden = !open;
+    avatar.hidden = !open;
+    launcher.hidden = open;
     launcher.setAttribute('aria-expanded', String(open));
+    clearTimeout(avatarTimer); avatarTimer = null;
     if (open) {
-      returnFocus = document.activeElement;
-      if (!initialized) { restart(); initialized = true; }
-      close.focus();
-      log.scrollTop = log.scrollHeight;
-    } else if (restoreFocus) returnFocus.focus();
+      if (!welcomeImage.getAttribute('src')) {
+        welcomeImage.src = '/assets/avatar/boas-vindas.webp';
+        pointImage.src = '/assets/avatar/sugestoes.webp';
+      }
+      if (!initialized) { restart(); initialized = true; } else react('greeting');
+      close.focus({ preventScroll: true });
+      const last = log.lastElementChild; if (last && suggestions.hidden) revealMessage(last);
+    } else {
+      avatar.dataset.state = 'closed';
+      if (restoreFocus && returnFocus && returnFocus.isConnected) returnFocus.focus({ preventScroll: true });
+    }
   }
-  for (const id of ['start', 'family', 'admission', 'cost', 'sus', 'hospitals', 'care', 'diagnosis', 'app', 'urgent']) {
-    const topic = topics.find(item => item.id === id);
-    const button = node('button', topic.title);
-    button.type = 'button';
-    button.addEventListener('click', () => answer(topic.title, topic));
-    suggestions.append(button);
-  }
-  launcher.addEventListener('click', () => setOpen(panel.hidden));
+  toggle.addEventListener('click', () => showSuggestions(suggestions.hidden, suggestions.hidden));
+  avatar.addEventListener('click', () => { if (!panel.hidden) showSuggestions(true, true); });
+  suggestions.addEventListener('pointerleave', () => { if (avatar.dataset.state === 'suggesting') react('idle'); });
+  launcher.addEventListener('click', () => setOpen(true));
   close.addEventListener('click', () => setOpen(false));
   panel.querySelector('[data-faq-restart]').addEventListener('click', restart);
   document.addEventListener('keydown', event => { if (event.key === 'Escape' && !panel.hidden) { setOpen(false); event.preventDefault(); } });
+  document.addEventListener('visibilitychange', () => {
+    avatar.classList.toggle('is-suspended', document.hidden);
+    if (document.hidden) { clearTimeout(avatarTimer); avatarTimer = null; avatar.dataset.state = panel.hidden ? 'closed' : 'idle'; }
+  });
+  new MutationObserver(() => { if (document.body.classList.contains('consent-visible') && !panel.hidden) setOpen(false, false); }).observe(document.body, { attributes: true, attributeFilter: ['class'] });
   form.addEventListener('submit', event => {
     event.preventDefault();
     const question = input.value.trim().slice(0, 240);
     if (!question) { input.focus(); return; }
-    answer(question, findTopic(question));
-    input.value = '';
+    answer(question, findTopic(question)); input.value = '';
   });
   for (const button of document.querySelectorAll('[data-faq-open]')) {
-    button.hidden = false;
-    button.addEventListener('click', () => setOpen(true));
+    button.hidden = false; button.addEventListener('click', () => setOpen(true));
   }
   launcher.hidden = false;
 }());
