@@ -17,7 +17,8 @@ jobs:
       - run: python3 scripts/check-legacy-css.py
       - run: node --check clinicas_site/public/assets/site.js
       - run: node --check clinicas_site/public/assets/faq.js
-      - run: node --test scripts/tests/test-clinicas-faq.cjs
+      - run: node --test scripts/tests/test-clinicas-faq.cjs scripts/tests/test-clinicas-consent.cjs
+      - run: node --check clinicas_site/public/assets/consent.js
       - run: python3 scripts/build-clinicas.py
       - run: git diff --exit-code -- clinicas_site/public/data/hospitais.json
       - run: python3 -m unittest discover -s scripts/tests -p 'test_clinicas.py'

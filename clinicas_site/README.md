@@ -52,3 +52,13 @@ Fontes consultadas em 20/10/2026:
 - Bradesco Saúde: https://www3.bradescoseguros.com.br/clientes/produtos/plano-saude — marca do portal oficial do beneficiário https://wwws.bradescosaude.com.br/wps/wcm/connect/beneficiariosaude/9f119208-9763-479f-b472-066beaa450ec/assets%252Fimages%252Flogo.svg?MOD=AJPERES
 
 Os arquivos em `public/assets/convenios/` são marcas dos respectivos titulares e aparecem apenas para identificar as operadoras citadas.
+
+## Documentos e preferência local
+
+As cinco páginas públicas carregam `assets/consent.js` e `assets/consent.css`. O aviso exige marcação expressa dos Termos de Uso e ciência das Políticas de Privacidade e de Cookies antes de registrar `accepted`. A escolha `rejected` mantém essas confirmações falsas. A navegação informativa continua disponível sem aceite. Não existem categorias opcionais nem rastreadores ativados pelo aviso.
+
+A chave `braga_clinicas_privacy_choice` usa localStorage, com validade de 180 dias, data da escolha, versão dos documentos e estado de aceite. O registro não contém identificação, não é enviado ao servidor e não é comprovante de consentimento auditado no backend. Em armazenamento bloqueado, a escolha funciona somente na página atual e o visitante recebe essa informação. Reabrir preferências, retirar o aceite e sincronizar alterações entre abas usam somente essa chave.
+
+Ao alterar o conteúdo dos documentos, atualize `VERSION` em `consent.js`, a versão/data nas três políticas e o parâmetro de versão dos assets em todas as páginas. Uma escolha com versão antiga ou vencida não suprime o aviso. Os documentos e os contatos de urgência permanecem acessíveis.
+
+Validação: `node --test scripts/tests/test-clinicas-consent.cjs`. Referência de implementação consultada: [Guia de Cookies da ANPD](https://www.gov.br/anpd/pt-br/centrais-de-conteudo/materiais-educativos-e-publicacoes/guia_orientativo_cookies_e_protecao_de_dados_pessoais), com escolha expressa, transparência sobre o armazenamento e revisão facilitada.
