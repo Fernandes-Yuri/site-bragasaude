@@ -28,3 +28,9 @@ firebase deploy --only hosting --project braga-saude
 O domínio personalizado deve ser associado ao site **braga-saude-clinicas** no Firebase Hosting e ter os registros DNS indicados pelo próprio Firebase. Não alterar os registros do domínio raiz nem migrar o aplicativo para outro subdomínio.
 
 O WhatsApp abre uma solicitação genérica de informações no número já utilizado pela marca. Não há formulário clínico, automação de mensagens, analytics ou integração com o antigo assistente de saúde. A disponibilidade de instituições e vagas precisa ser confirmada diretamente.
+
+## Miniatura de compartilhamento
+
+A capa Open Graph/Twitter usa `public/assets/compartilhar-cuidado-v1.jpg` (1200 × 630), com mensagem de acolhimento e a ilustração botânica do site. O domínio personalizado já está associado e a imagem está publicada.
+
+Para recriar a imagem, instale Pillow no seu ambiente Python e as fontes DejaVu do sistema e execute `python3 scripts/build-clinicas-share.py` na raiz do repositório. A geração é manual; o deploy publica o JPEG versionado sem exigir Pillow no CI. Ao substituir a arte, use um novo nome de arquivo e atualize os metadados para evitar reutilização da imagem anterior em cache.
