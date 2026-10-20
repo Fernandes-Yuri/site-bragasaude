@@ -72,3 +72,24 @@ Os WebP publicados ficam em `public/assets/avatar/`; os PNG originais e os promp
 ## Bloqueio preventivo de dados no FAQ
 
 Antes de exibir uma pergunta digitada, o navegador verifica sequências numéricas, e-mails e padrões de identificação pessoal. Ao detectar esses padrões, limpa o campo sem inserir o texto no histórico, mostra uma orientação e oferece o link oficial já configurado, sem incluir o conteúdo bloqueado na URL. O FAQ continua sem envio ou armazenamento das mensagens. A detecção é preventiva e não garante reconhecer toda informação pessoal em texto livre. Perguntas gerais sobre documentos continuam permitidas.
+
+## Notícias, artigos e SEO
+
+A home apresenta a seção de notícias e os ícones de Instagram/TikTok como “em breve”, sem contas ou links presumidos. Quando os perfis oficiais forem informados, substituir os itens de apresentação por links acessíveis e incluir os destinos confirmados em `sameAs` da organização.
+
+`/noticias` e `/noticias/{slug}` usam HTML produzido pela camada de apresentação em `functions/`, consumindo **somente a API pública da gateway**. Não há senha, token de serviço, permissão de escrita ou acesso ao banco nessa função. Cadastros, autorização, revisão e publicação pertencem ao backend; o painel fica em `https://admin.bragasaude.online/dashboard/editorial`. Editar/publicar no painel dispensa alteração de código e deploy por artigo. A API mantém rascunho e versão publicada separados.
+
+O renderer oferece título, descrição, canonical, Open Graph, Article/NewsArticle em JSON-LD, conteúdo completo no HTML, autor/bio, fontes, datas e política editorial. `robots.txt` aponta para o sitemap gerado do feed publicado. Erro de origem retorna 503/noindex; conteúdo ausente retorna 404/noindex; cache público de até 60s. O sitemap inicial suporta até 50 mil conteúdos (dividir em índices antes de atingir esse volume).
+
+### Infraestrutura e rollout
+
+A função `clinicasEditorial` usa Node 22, região `us-central1`, máximo de 3 instâncias, sem instância mínima. Os rewrites do Hosting são declarados em `firebase.json`. **O projeto deve estar no plano Blaze para habilitar Cloud Functions/Cloud Build.** Não publicar os rewrites enquanto a função não estiver implantada e validada. Em 20/10/2026, o deploy foi bloqueado pelo plano gratuito; aguarda ativação do Blaze pelo responsável. Essa ativação é uma decisão de faturamento separada, não realizada pelo código.
+
+1. Gateway: aplicar migration 067 e publicar API editorial (CI/deploy existente).
+2. Portal: disponibilizar `/dashboard/editorial` com sessão existente e TOTP mestre obrigatório no cadastro.
+3. Instalar dependências com `npm ci --prefix clinicas_site/functions`.
+4. Publicar função com `firebase deploy --only functions:clinicas-editorial --project braga-saude --config clinicas_site/firebase.json`.
+5. Conferir que o WAF da gateway permite GET público de `/api/editorial/*` a partir do runtime Firebase; não adicionar credenciais administrativas ao renderer.
+6. Publicar somente o Hosting das clínicas com `firebase deploy --only hosting --project braga-saude --config clinicas_site/firebase.json`.
+
+Validação: `node --test clinicas_site/functions/render.test.cjs`, sintaxe do handler, teste de navegação/teclado e layout desktop/390/320 px. Não publicar artigo fictício para testar SEO no domínio real.

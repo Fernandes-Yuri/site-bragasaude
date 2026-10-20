@@ -23,3 +23,5 @@ jobs:
       - run: git diff --exit-code -- clinicas_site/public/data/hospitais.json
       - run: python3 -m unittest discover -s scripts/tests -p 'test_clinicas.py'
       - run: python3 -m json.tool clinicas_site/firebase.json > /dev/null
+      - run: node --check clinicas_site/functions/index.js
+      - run: node --test clinicas_site/functions/render.test.cjs

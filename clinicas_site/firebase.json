@@ -58,6 +58,36 @@
           }
         ]
       }
+    ],
+    "rewrites": [
+      {
+        "source": "/noticias",
+        "function": {
+          "functionId": "clinicasEditorial",
+          "region": "us-central1"
+        }
+      },
+      {
+        "source": "/noticias/**",
+        "function": {
+          "functionId": "clinicasEditorial",
+          "region": "us-central1"
+        }
+      },
+      {
+        "source": "/sitemap.xml",
+        "function": {
+          "functionId": "clinicasEditorial",
+          "region": "us-central1"
+        }
+      }
     ]
-  }
+  },
+  "functions": [
+    {
+      "source": "functions",
+      "codebase": "clinicas-editorial",
+      "runtime": "nodejs22"
+    }
+  ]
 }
