@@ -484,97 +484,6 @@
     });
   }
 
-  // ── 7. Detecção de Dispositivo e Download ──
-  function setupDeviceDetection() {
-    const userAgent = navigator.userAgent || navigator.vendor || window.opera;
-    const isIOS = /iPad|iPhone|iPod/.test(userAgent) && !window.MSStream;
-    
-    const btnDownloadAPK = document.getElementById('btn-download-apk');
-
-    
-    if (!btnDownloadAPK) return;
-
-    // Esconde o botão Android se estiver no iOS
-    if (isIOS && btnDownloadAPK) {
-      btnDownloadAPK.style.display = 'none';
-    }
-    
-    // Modal de confirmação e integridade SHA-256 no ato do download
-    const securityModal = document.getElementById('download-security-modal');
-    const btnCloseModal = document.getElementById('btn-close-download-modal');
-    const btnConfirmModal = document.getElementById('btn-confirm-download-modal');
-
-    function openSecurityModal() {
-      if (securityModal) {
-        document.dispatchEvent(new Event('braga:refresh-release'));
-        securityModal.classList.add('active');
-        document.body.style.overflow = 'hidden';
-      }
-    }
-
-    function closeSecurityModal() {
-      if (securityModal) {
-        securityModal.classList.remove('active');
-        document.body.style.overflow = '';
-      }
-    }
-
-    if (btnCloseModal) btnCloseModal.addEventListener('click', closeSecurityModal);
-    if (btnConfirmModal) btnConfirmModal.addEventListener('click', closeSecurityModal);
-    if (securityModal) {
-      securityModal.addEventListener('click', (e) => {
-        if (e.target === securityModal) closeSecurityModal();
-      });
-      document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape' && securityModal.classList.contains('active')) {
-          closeSecurityModal();
-        }
-      });
-    }
-
-    // Função de cópia do Hash SHA-256 com feedback
-    function setupCopyButton(btnId, codeId, labelId) {
-      const btn = document.getElementById(btnId);
-      const code = document.getElementById(codeId);
-      const label = document.getElementById(labelId);
-      if (!btn || !code) return;
-      btn.addEventListener('click', (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        const hashText = code.textContent.trim();
-        if (!/^[a-f0-9]{64}$/i.test(hashText)) return;
-        navigator.clipboard.writeText(hashText).then(() => {
-          const original = label ? label.textContent : '';
-          if (label) label.textContent = 'Copiado!';
-          btn.style.background = '#00695C';
-          setTimeout(() => {
-            if (label) label.textContent = original;
-            btn.style.background = '';
-          }, 2000);
-        }).catch(() => {
-          const range = document.createRange();
-          range.selectNodeContents(code);
-          const sel = window.getSelection();
-          sel.removeAllRanges();
-          sel.addRange(range);
-        });
-      });
-    }
-
-    setupCopyButton('btn-copy-hash', 'apk-sha256-hash', 'copy-hash-label');
-    setupCopyButton('modal-btn-copy-hash', 'modal-apk-sha256', 'modal-copy-hash-label');
-
-    // Botão de download APK — dispara download e exibe o modal com a hash oficial
-    if (btnDownloadAPK) {
-      btnDownloadAPK.addEventListener('click', () => {
-        console.log('[Braga Saúde] Download do APK iniciado via /api/app/download');
-        openSecurityModal();
-      });
-    }
-    
-
-  }
-
   // ── 8. Animações de scroll (IntersectionObserver) ──
   function setupScrollReveal() {
     const selectors = [
@@ -604,50 +513,13 @@
   }
 
 
-  // ── Guia Interativo de Instalação do APK ──
-  function selectInstallStep(stepNumber) {
-    const stepItems = document.querySelectorAll('.install-step-item');
-    const screenViews = document.querySelectorAll('.install-screen-view');
-
-    stepItems.forEach(item => {
-      const step = item.getAttribute('data-step');
-      item.classList.toggle('active', step === String(stepNumber));
-    });
-
-    screenViews.forEach(view => {
-      view.classList.toggle('active', view.id === 'install-screen-' + stepNumber);
-    });
-  }
-  window.selectInstallStep = selectInstallStep;
-
-  function setupInstallGuide() {
-    const stepItems = document.querySelectorAll('.install-step-item');
-    stepItems.forEach(item => {
-      item.addEventListener('click', () => {
-        const step = item.getAttribute('data-step');
-        if (step) selectInstallStep(parseInt(step, 10));
-      });
-    });
-  }
-
   // ── Rastreamento de Conversões (Google Analytics 4) ──
   function setupAnalyticsTracking() {
-    const downloadBtns = document.querySelectorAll('a[href*="/api/app/download"]');
-    downloadBtns.forEach(btn => {
-      btn.addEventListener('click', () => {
-        if (typeof gtag === 'function') {
-          gtag('event', 'download_apk', {
-            event_category: 'conversion',
-            // AUD-PW(B): versao hardcoded — manter em sincronia com o
-            // versionName em app/build.gradle.kts a cada release.
-            event_label: 'BragaSaude.apk (v1.2.9)',
-            value: 1
-          });
-        }
-      });
-    });
-
-
+    // Nenhum download no site: o app será distribuído exclusivamente pela
+    // Google Play Store após aprovação. Eventos de conversão de APK foram
+    // aposentados junto com o download direto.
+    // Pendência: reintroduzir evento 'download_play_store' quando o app
+    // for publicado e o link da loja for adicionado nesta página.
   }
 
   // ── 8. Aviso Institucional de Privacidade & LGPD (Padrão da Indústria) ──
@@ -811,10 +683,8 @@
     setupVaultToggle();
     setupOrb();
     setupLegalNavigation();
-    setupDeviceDetection();
     setupHamburgerMenu();
     setupScrollReveal();
-    setupInstallGuide();
     setupAnalyticsTracking();
     setupCookieConsent();
     checkInitialRoute();
