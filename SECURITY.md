@@ -21,7 +21,7 @@ Se você acredita ter identificado uma falha de segurança, problema de integrid
 
 ### Canal de Contato Confidencial
 Envie um e-mail detalhado para:
-📧 **contatobragasaude@gmail.com** com cópia para **workfjsyuri@gmail.com**
+📧 **contato@bragasaude.online** com cópia para **workfjsyuri@gmail.com**
 
 ### O que incluir no seu relatório:
 1. **Descrição detalhada:** Resumo claro da falha identificada;

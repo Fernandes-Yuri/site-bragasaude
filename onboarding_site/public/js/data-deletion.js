@@ -7,7 +7,7 @@
   var review = document.getElementById('request-review');
   var message = document.getElementById('request-message');
   var status = document.getElementById('request-status');
-  var recipient = 'contatobragasaude@gmail.com';
+  var recipient = 'contato@bragasaude.online';
   var subject = 'Solicitação de exclusão de dados - Braga Saúde';
   function invalidate() {
     review.hidden = true;
