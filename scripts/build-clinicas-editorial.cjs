@@ -6,7 +6,7 @@ function shell(title,description,mode){
  const content='<div data-editorial-content aria-busy="true"><h1>'+r.esc(title)+'</h1><p role="status">Carregando conteúdo publicado…</p><noscript><p>Ative o JavaScript para consultar os artigos publicados. Você também pode <a href="/#contato">conversar com a equipe</a>.</p></noscript></div>';
  return r.page({title,description,path:'/noticias',content}).html
   .replace(/<link rel="canonical"[^>]*>/,'')
-  .replace('</head>','<script src="/assets/editorial-render.js?v=2" defer></script><script src="/assets/editorial.js?v=2" defer></script></head>')
+  .replace('</head>','<script src="/assets/editorial-render.js?v=3" defer></script><script src="/assets/editorial.js?v=2" defer></script></head>')
   .replace('<main id="conteudo"','<main data-editorial-mode="'+mode+'" id="conteudo"');
 }
 const listing=shell('Notícias e artigos','Informação sobre saúde mental, cuidado e apoio à família, com autoria e fontes.','list');
