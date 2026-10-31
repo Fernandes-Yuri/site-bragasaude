@@ -30,7 +30,6 @@
     }
     var labels = {
       account: 'Excluir minha conta e os dados pessoais associados',
-      meta: 'Excluir os dados vinculados ao acesso pelo Facebook / Meta',
       specific: 'Excluir apenas dados específicos e manter a conta'
     };
     var body = [
