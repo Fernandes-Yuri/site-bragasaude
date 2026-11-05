@@ -106,6 +106,10 @@ header {
   font-weight: 700 !important;
 }
 
+.nav-mobile-only {
+  display: none;
+}
+
 .nav-cta-group {
   display: flex;
   align-items: center;

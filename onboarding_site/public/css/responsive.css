@@ -84,6 +84,10 @@
     border-bottom: 1px solid var(--border-subtle);
   }
 
+  .nav-mobile-only {
+    display: block;
+  }
+
   .nav-links a {
     display: block;
     padding: 14px 24px;
