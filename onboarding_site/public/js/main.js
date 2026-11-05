@@ -342,100 +342,13 @@
     }
   };
 
-  // ── 2. Navegação entre Landing Page e Documentos Legais ──
-  function showLandingView() {
-    const landingView = document.getElementById('landing-view');
-    const legalView = document.getElementById('legal-view');
-
-    if (landingView && legalView) {
-      landingView.style.display = 'block';
-      legalView.classList.remove('active');
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
-  }
-
-  function showLegalView(tabName) {
-    const landingView = document.getElementById('landing-view');
-    const legalView = document.getElementById('legal-view');
-
-    if (landingView && legalView) {
-      landingView.style.display = 'none';
-      legalView.classList.add('active');
-      switchLegalDoc(tabName || 'termos');
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
-  }
-
-  function switchLegalDoc(docName) {
-    const docTermos = document.getElementById('doc-termos');
-    const docPrivacidade = document.getElementById('doc-privacidade');
-    const btnTermos = document.getElementById('legal-btn-termos');
-    const btnPrivacidade = document.getElementById('legal-btn-privacidade');
-
-    const isTermos = docName === 'termos';
-
-    if (docTermos && docPrivacidade) {
-      docTermos.style.display = isTermos ? 'block' : 'none';
-      docPrivacidade.style.display = isTermos ? 'none' : 'block';
-    }
-
-    if (btnTermos && btnPrivacidade) {
-      btnTermos.classList.toggle('active', isTermos);
-      btnPrivacidade.classList.toggle('active', !isTermos);
-    }
-
-    if (history.pushState) {
-      history.pushState(null, '', '#' + (isTermos ? 'termos' : 'privacidade'));
-    } else {
-      window.location.hash = isTermos ? 'termos' : 'privacidade';
-    }
-  }
-
-  function setupLegalNavigation() {
-    const btnTermos = document.getElementById('legal-btn-termos');
-    const btnPrivacidade = document.getElementById('legal-btn-privacidade');
-    const backBtn = document.getElementById('legal-back-btn');
-
-    if (btnTermos) {
-      btnTermos.addEventListener('click', () => switchLegalDoc('termos'));
-    }
-
-    if (btnPrivacidade) {
-      btnPrivacidade.addEventListener('click', () => switchLegalDoc('privacidade'));
-    }
-
-    if (backBtn) {
-      backBtn.addEventListener('click', (e) => {
-        e.preventDefault();
-        showLandingView();
-      });
-    }
-
-    // Links de navegação e rodapé com data-view="legal"
-    document.querySelectorAll('[data-legal]').forEach(link => {
-      link.addEventListener('click', (e) => {
-        e.preventDefault();
-        const target = link.getAttribute('data-legal');
-        showLegalView(target);
-      });
-    });
-
-    document.querySelectorAll('[data-nav="landing"]').forEach(link => {
-      link.addEventListener('click', () => {
-        showLandingView();
-      });
-    });
-  }
-
-  // ── 5. Roteamento por Hash / URL ao Iniciar ──
+  // ── 2. Redirecionamento de rotas legadas por Hash para páginas canônicas ──
   function checkInitialRoute() {
     const hash = window.location.hash.toLowerCase();
-    const path = window.location.pathname.toLowerCase();
-
-    if (hash === '#termos' || path.includes('termos') || path.includes('terms')) {
-      showLegalView('termos');
-    } else if (hash === '#privacidade' || path.includes('privacidade') || path.includes('privacy')) {
-      showLegalView('privacidade');
+    if (hash === '#termos' || hash.startsWith('#termos')) {
+      window.location.replace('/termos');
+    } else if (hash === '#privacidade' || hash.startsWith('#privacidade')) {
+      window.location.replace('/privacidade');
     }
   }
 
@@ -682,7 +595,6 @@
     setupDemoIdentity();
     setupVaultToggle();
     setupOrb();
-    setupLegalNavigation();
     setupHamburgerMenu();
     setupScrollReveal();
     setupAnalyticsTracking();
@@ -691,12 +603,10 @@
 
     window.addEventListener('hashchange', () => {
       const hash = window.location.hash.toLowerCase();
-      if (hash === '#termos') {
-        showLegalView('termos');
-      } else if (hash === '#privacidade') {
-        showLegalView('privacidade');
-      } else if (hash === '#inicio' || hash === '' || hash === '#demonstracao' || hash === '#recursos' || hash === '#como-instalar') {
-        showLandingView();
+      if (hash === '#termos' || hash.startsWith('#termos')) {
+        window.location.replace('/termos');
+      } else if (hash === '#privacidade' || hash.startsWith('#privacidade')) {
+        window.location.replace('/privacidade');
       }
     });
   });
