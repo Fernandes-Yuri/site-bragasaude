@@ -563,30 +563,10 @@
     setInterval(aplicarIdentidadeDemo, 30000);
   }
 
-  // ── Cofre de exames: nuvem opcional vs. somente no aparelho ──
+  // ── Organizador de exames: processamento local no aparelho ──
   function setupVaultToggle() {
     const botoes = document.querySelectorAll('[data-vault]');
     if (!botoes.length) return;
-    const status = document.querySelector('[data-vault-status]');
-    const badge = document.querySelector('[data-vault-badge]');
-    const ICONEM_NUVEM = '<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/></svg>';
-    const ICONEM_APARELHO = '<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect width="14" height="20" x="5" y="2" rx="2"/><path d="M12 18h.01"/></svg>';
-    const TEXTOS = {
-      cloud: { status: 'Sincronizado com a nuvem criptografada', badge: 'Na nuvem' },
-      local: { status: 'Guardado apenas neste aparelho — sem nuvem', badge: 'No aparelho' }
-    };
-    botoes.forEach(btn => {
-      btn.addEventListener('click', () => {
-        const modo = btn.getAttribute('data-vault');
-        botoes.forEach(outro => {
-          const ativo = outro === btn;
-          outro.classList.toggle('active', ativo);
-          outro.setAttribute('aria-pressed', String(ativo));
-        });
-        if (status) status.textContent = TEXTOS[modo].status;
-        if (badge) badge.innerHTML = (modo === 'cloud' ? ICONEM_NUVEM : ICONEM_APARELHO) + ' ' + TEXTOS[modo].badge;
-      });
-    });
   }
 
   // ── Inicialização Geral ──
