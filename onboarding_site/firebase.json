@@ -46,6 +46,15 @@
     ],
     "headers": [
       {
+        "source": "/{privacidade,privacy}{,/**,.html}",
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "no-cache, must-revalidate"
+          }
+        ]
+      },
+      {
         "source": "/downloads/**/*.apk",
         "headers": [
           {

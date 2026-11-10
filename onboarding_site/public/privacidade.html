@@ -214,12 +214,16 @@
     
     <div class="legal-update-pill" style="margin-bottom: 24px; padding: 8px 16px; background: var(--primary-light); border-radius: 20px; font-size: 0.85rem; color: var(--primary-darker); display: inline-flex; align-items: center; gap: 8px;">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-      Documentação Jurídica Oficial · Atualizada em <strong>Setembro de 2026</strong> · Conforme LGPD (Lei 13.709/2018)
+      Documentação Jurídica Oficial · Atualizada em <strong>10 de novembro de 2026</strong> · Conforme LGPD (Lei 13.709/2018)
     </div>
 
     <h1 style="font-family: 'Plus Jakarta Sans', sans-serif; font-size: 2.2rem; font-weight: 800; color: var(--text-main); margin-bottom: 24px;">
       Política de Privacidade & Proteção de Dados
     </h1>
+
+    <nav aria-label="Seções de privacidade" style="margin-bottom: 24px; line-height: 1.8;">
+      <a href="#retencao">Retenção de dados</a> · <a href="#exclusao">Exclusão e seus direitos</a> · <a href="/exclusao-de-dados">Solicitar exclusão de conta e dados</a>
+    </nav>
 
     <div class="legal-card" style="background: var(--bg-card); border: 1px solid var(--border-light); border-radius: var(--radius-md); padding: 28px; margin-bottom: 24px; box-shadow: var(--shadow-sm);">
       <h2 style="font-family: 'Plus Jakarta Sans', sans-serif; font-size: 1.4rem; color: var(--primary-darker); margin-bottom: 8px;">1. Compromisso com a LGPD (Lei nº 13.709/2018)</h2>
@@ -237,8 +241,9 @@
         <li><strong>Identificação Básica:</strong> Nome, telefone de contato e e-mail para autenticação omnichannel via Firebase Auth e código OTP.</li>
         <li><strong>Sinais Vitais e Biometria de Rotina:</strong> Registros autorreportados de pressão arterial sistólica/diastólica, glicemia em jejum/pós-prandial, frequência cardíaca, peso e passos.</li>
         <li><strong>Medicamentos e Lembretes:</strong> Nomes dos fármacos de uso contínuo e horários cadastrados pelo usuário para acionamento de alarmes e checklists.</li>
-        <li><strong>Laudos de Exames:</strong> Arquivos em formato PDF ou imagens/fotos capturadas da câmera ou galeria (<code>.png</code>, <code>.jpg</code>, <code>.jpeg</code>, <code>.webp</code>) anexadas voluntariamente para armazenamento seguro e apoio em consultas presenciais.</li>
-        <li><strong>Mensagens Familiares Efêmeras:</strong> Recados trocados na Ponte Familiar com ciclo de retenção temporário de 24 horas, após o qual são automaticamente expurgados.</li>
+        <li><strong>Organizador de Exames:</strong> PDFs e fotos importados voluntariamente são processados no dispositivo, em uma sessão temporária de 24 horas, para organização e compartilhamento escolhido pelo usuário. Os documentos desse organizador não são enviados ao servidor.</li>
+        <li><strong>Mensagens Familiares:</strong> Recados trocados na Ponte Familiar ficam disponíveis no chat por 24 horas após o envio. Os critérios de conservação e limpeza estão descritos na <a href="#retencao">seção de retenção</a>.</li>
+        <li><strong>Health Connect e Apoio para Parar de Fumar:</strong> Quando autorizados, dados do Health Connect apoiam o acompanhamento de atividade e saúde. O plano, diário e registros de vontade de fumar do apoio ao tabagismo ficam apenas no dispositivo.</li>
         <li><strong>Comunicação e Suporte:</strong> Solicitações de suporte enviadas voluntariamente pelo usuário.</li>
       </ul>
     </div>
@@ -251,13 +256,29 @@
         <li><strong>Banco de Dados PostgreSQL Dedicado (AWS RDS):</strong> Hospedado em nuvem corporativa de alta disponibilidade na Amazon Web Services (AWS), com criptografia em repouso e isolamento estrito multi-tenant (Zero-Trust) para que nenhum usuário acesse dados de terceiros.</li>
         <li><strong>Criptografia em Trânsito (TLS 1.3 / HTTPS):</strong> Toda a comunicação entre os aplicativos (Android), servidores e canais de mensageria é blindada com certificados criptográficos modernos.</li>
         <li><strong>Borda e Defesa Perimetral (Cloudflare Zero Trust):</strong> Camada de proteção com firewall de aplicações web (WAF), mitigação contra ataques de negação de serviço (DDoS) e limitação de taxa (rate limiting).</li>
-        <li><strong>Armazenamento Privado de Exames:</strong> Arquivos de exames ficam em diretório autenticado exclusivo na nuvem, inacessíveis à web pública.</li>
+        <li><strong>Armazenamento no Dispositivo:</strong> O aplicativo mantém registros em banco local criptografado. O organizador de exames utiliza cópias temporárias locais; arquivos exportados ou compartilhados por você passam a seguir as regras do destino escolhido.</li>
         <li><strong>Backups Automatizados Criptografados:</strong> Rotinas diárias de backup protegidas e isoladas para garantia de resiliência e recuperação.</li>
       </ul>
     </div>
 
+    <section id="retencao" class="legal-card" aria-labelledby="retencao-titulo" style="background: var(--bg-card); border: 1px solid var(--border-light); border-radius: var(--radius-md); padding: 28px; margin-bottom: 24px; box-shadow: var(--shadow-sm);">
+      <h2 id="retencao-titulo" style="font-family: 'Plus Jakarta Sans', sans-serif; font-size: 1.4rem; color: var(--primary-darker); margin-bottom: 8px;">4. Retenção e Exclusão de Dados</h2>
+      <p style="line-height: 1.6; color: var(--text-muted);">O Braga Saúde armazena dados pessoais e de saúde para oferecer os recursos utilizados por você. O prazo de conservação depende da categoria e do local de armazenamento:</p>
+      <ul style="line-height: 1.7; color: var(--text-muted); padding-left: 20px;">
+        <li><strong>Cadastro e histórico no servidor:</strong> Dados de perfil, registros de saúde, medicamentos, registros de cuidado e vínculos familiares permanecem associados à conta enquanto ela existir, até a exclusão da conta ou dos dados solicitados. Não há exclusão automática desse histórico apenas por inatividade. Sair do aplicativo, pausar a conta ou desinstalar o app não solicita a exclusão dos dados no servidor.</li>
+        <li><strong>Sinais vitais, biometria e métricas no aparelho:</strong> As rotinas de sincronização limpam registros locais com mais de 30 dias. Registros com pendências de sincronização ou de desfazer uma operação podem permanecer por mais tempo para evitar perda de informações. Essa limpeza local não apaga, por si só, o histórico no servidor e depende da execução das rotinas no aparelho.</li>
+        <li><strong>Mensagens familiares:</strong> Expiram para consulta no chat 24 horas após o envio. As cópias locais são removidas pelas rotinas de limpeza do aplicativo. A expiração de acesso não significa que todas as cópias já foram apagadas: registros persistidos no servidor seguem o procedimento de exclusão da conta e dos dados associados.</li>
+        <li><strong>Organizador de exames:</strong> A sessão local expira 24 horas após sua criação e também pode ser encerrada antes desse prazo. O aplicativo agenda a remoção das cópias temporárias e verifica a expiração ao acessar a sessão; a execução da limpeza em segundo plano depende do funcionamento do aparelho. Os documentos desse organizador não são enviados ao servidor. Cópias que você salvar ou compartilhar fora do aplicativo não são removidas pela limpeza da sessão.</li>
+        <li><strong>Apoio para parar de fumar:</strong> O plano, o diário e os registros de vontade de fumar permanecem apenas no dispositivo enquanto você os mantiver. Desativar o apoio preserva o histórico; a opção de apagar os dados remove os registros desse recurso. Sair da conta também limpa o banco local.</li>
+        <li><strong>Telemetria de requisições de segurança:</strong> Os eventos técnicos de requisições possuem uma rotina periódica de limpeza de registros com mais de 7 dias. Essa regra se aplica à telemetria de requisições, não a todos os comprovantes e registros de auditoria.</li>
+        <li><strong>Atendimento e comprovantes:</strong> Mensagens enviadas ao e-mail de suporte e registros mínimos de comprovação da exclusão não são apagados automaticamente pela desinstalação ou pela exclusão da conta no aplicativo. Os comprovantes podem incluir identificador da conta, data, endereço IP e responsável pelo procedimento. Essas informações permanecem no atendimento e na auditoria até exclusão administrativa, sem prazo automático de expiração. Você pode solicitar sua eliminação pelo canal de privacidade.</li>
+        <li><strong>Backups:</strong> O banco possui backups automáticos criptografados com ciclo de retenção configurado de 1 dia. Cópias manuais de manutenção não têm expiração automática e permanecem até exclusão administrativa. Essas cópias podem conter informações anteriores à exclusão da conta; o prazo do backup automático não representa eliminação de todas as cópias em 24 horas. Você pode solicitar a análise e eliminação de dados dessas cópias pelo canal de privacidade.</li>
+      </ul>
+      <p style="line-height: 1.6; color: var(--text-muted);">Para excluir sua conta ou dados específicos, use a opção de exclusão no aplicativo, a <a href="/exclusao-de-dados">página pública de solicitação</a> ou escreva para <a href="mailto:contato@bragasaude.online">contato@bragasaude.online</a>. Pedidos recebidos pelo atendimento passam por verificação de titularidade. Se alguma informação precisar ser conservada por obrigação legal ou apuração de segurança, a equipe informará quais dados, o motivo e o prazo ou critério aplicável. O prazo de até 5 dias úteis para a primeira resposta não é uma confirmação de que a exclusão já terminou.</p>
+    </section>
+
     <div class="legal-card" style="background: var(--bg-card); border: 1px solid var(--border-light); border-radius: var(--radius-md); padding: 28px; margin-bottom: 24px; box-shadow: var(--shadow-sm);">
-      <h2 style="font-family: 'Plus Jakarta Sans', sans-serif; font-size: 1.4rem; color: var(--primary-darker); margin-bottom: 8px;">4. Política de Cookies & Consentimento Granular</h2>
+      <h2 style="font-family: 'Plus Jakarta Sans', sans-serif; font-size: 1.4rem; color: var(--primary-darker); margin-bottom: 8px;">5. Política de Cookies & Consentimento Granular</h2>
       <h3 style="font-size: 1.05rem; color: var(--text-muted); margin-bottom: 12px;">Google Consent Mode v2</h3>
       <p style="line-height: 1.6; color: var(--text-muted);">O site institucional e a aplicação web utilizam cookies de forma transparente e modular:</p>
       <ul style="line-height: 1.7; color: var(--text-muted); padding-left: 20px;">
@@ -267,8 +288,8 @@
       </ul>
     </div>
 
-    <div class="legal-card" style="background: var(--bg-card); border: 1px solid var(--border-light); border-radius: var(--radius-md); padding: 28px; margin-bottom: 24px; box-shadow: var(--shadow-sm);">
-      <h2 style="font-family: 'Plus Jakarta Sans', sans-serif; font-size: 1.4rem; color: var(--primary-darker); margin-bottom: 8px;">5. Direitos do Titular (Artigo 18 da LGPD)</h2>
+    <div id="exclusao" class="legal-card" style="background: var(--bg-card); border: 1px solid var(--border-light); border-radius: var(--radius-md); padding: 28px; margin-bottom: 24px; box-shadow: var(--shadow-sm);">
+      <h2 style="font-family: 'Plus Jakarta Sans', sans-serif; font-size: 1.4rem; color: var(--primary-darker); margin-bottom: 8px;">6. Direitos do Titular (Artigo 18 da LGPD)</h2>
       <h3 style="font-size: 1.05rem; color: var(--text-muted); margin-bottom: 12px;">Você Tem o Controle Total</h3>
       <p style="line-height: 1.6; color: var(--text-muted);">Você pode exercer diretamente no aplicativo ou mediante contato com o nosso DPO:</p>
       <ul style="line-height: 1.7; color: var(--text-muted); padding-left: 20px;">
@@ -276,13 +297,13 @@
         <li><strong>Correção e Atualização:</strong> Retificar dados incompletos ou inexatos a qualquer momento no perfil.</li>
         <li><strong>Portabilidade de Dados:</strong> Exportar seu histórico de sinais vitais em formato legível (PDF / relatório).</li>
         <li><strong>Exclusão de conta e dados:</strong> Você também pode <a href="/exclusao-de-dados">preparar uma solicitação de exclusão pela página pública</a>, sem acessar o aplicativo.</li>
-        <li><strong>Apagamento Atômico (Direito ao Esquecimento):</strong> Solicitar ou executar a exclusão integral da sua conta no app (Menu ➔ Configurações ➔ Excluir Conta). Essa ação dispara a exclusão em cascata de biometrias, exames, registros de medicamentos e vínculos familiares tanto localmente quanto nos servidores em nuvem.</li>
+        <li><strong>Exclusão da Conta:</strong> Solicitar a exclusão pelo app (Perfil ➔ Configurações ➔ Excluir Conta) ou pelo atendimento. O procedimento remove o perfil e os dados associados das bases de uso do serviço e limpa os dados locais no aplicativo que executa a exclusão. Arquivos que precisem de nova tentativa de remoção seguem em uma fila de limpeza. As regras sobre cópias de segurança, atendimento e comprovantes estão na <a href="#retencao">seção de retenção</a>.</li>
         <li><strong>Revogação de Vínculos:</strong> Desconectar qualquer filho ou cuidador imediatamente com um toque na tela.</li>
       </ul>
     </div>
 
     <div class="legal-card" style="background: var(--bg-card); border: 1px solid var(--border-light); border-radius: var(--radius-md); padding: 28px; margin-bottom: 24px; box-shadow: var(--shadow-sm);">
-      <h2 style="font-family: 'Plus Jakarta Sans', sans-serif; font-size: 1.4rem; color: var(--primary-darker); margin-bottom: 8px;">6. Canal de Contato e Encarregado de Dados (DPO)</h2>
+      <h2 style="font-family: 'Plus Jakarta Sans', sans-serif; font-size: 1.4rem; color: var(--primary-darker); margin-bottom: 8px;">7. Canal de Contato e Encarregado de Dados (DPO)</h2>
       <h3 style="font-size: 1.05rem; color: var(--text-muted); margin-bottom: 12px;">Fale com a Segurança do Braga Saúde</h3>
       <p style="line-height: 1.6; color: var(--text-muted);">Para exercer seus direitos de privacidade ou esclarecer dúvidas regulatórias:</p>
       <ul style="line-height: 1.7; color: var(--text-muted); padding-left: 20px;">
@@ -290,7 +311,7 @@
         <li><strong>Empresa desenvolvedora:</strong> 68.988.543 YURI FERNANDES DOS SANTOS · CNPJ 68.988.543/0001-00</li>
         <li><strong>E-mail de Privacidade:</strong> <code>contato@bragasaude.online</code></li>
         <li><strong>Contato:</strong> <a href="mailto:contato@bragasaude.online">contato@bragasaude.online</a></li>
-        <li><strong>Prazo de Resposta:</strong> Nos comprometemos a responder requisições formais em até <strong>5 dias úteis</strong>.</li>
+        <li><strong>Prazo de Resposta:</strong> Nos comprometemos a dar a primeira resposta a requisições formais em até <strong>5 dias úteis</strong>. Esse prazo não representa confirmação de que a exclusão foi concluída.</li>
       </ul>
     </div>
 
