@@ -253,6 +253,19 @@
         <li><strong>Health Connect e Apoio para Parar de Fumar:</strong> Quando autorizados, dados do Health Connect apoiam o acompanhamento de atividade e saúde. O plano, diário e registros de vontade de fumar do apoio ao tabagismo ficam apenas no dispositivo.</li>
         <li><strong>Comunicação e Suporte:</strong> Solicitações de suporte enviadas voluntariamente pelo usuário.</li>
       </ul>
+
+      <!-- Bloco de Conformidade de Permissões Sensíveis e Hardware (Google Play User Data Policy) -->
+      <h3 style="font-size: 1.05rem; color: var(--primary-darker); margin-top: 24px; margin-bottom: 12px;">Permissões de Hardware e Dados Sensíveis do Aplicativo</h3>
+      <p style="line-height: 1.6; color: var(--text-muted); margin-bottom: 12px;">Em estrito cumprimento à Política de Dados do Usuário do Google Play e à LGPD, o aplicativo Android do Braga Saúde declara detalhadamente a finalidade e o tratamento de cada permissão sensível solicitada:</p>
+      <ul style="line-height: 1.7; color: var(--text-muted); padding-left: 20px;">
+        <li><strong>Câmera e Fotos (<code>CAMERA</code>):</strong> Solicitada estritamente para digitalização de receitas médicas através do Organizador de Exames/OCR local e para leitura do QR Code de pareamento familiar. As imagens capturadas são processadas 100% no próprio dispositivo (on-device) e <strong>nunca são enviadas a servidores, nem compartilhadas com terceiros</strong>.</li>
+        <li><strong>Microfone e Gravação de Áudio (<code>RECORD_AUDIO</code>):</strong> Solicitada para comandos de voz, acessibilidade e transcrição de recados com o assistente clínico on-device. O áudio é convertido em texto em tempo de execução e <strong>não é gravado continuamente, nem armazenado para escuta posterior, nem compartilhado para treinamento de modelos de terceiros ou publicidade</strong>.</li>
+        <li><strong>Localização (<code>ACCESS_FINE_LOCATION</code>, <code>ACCESS_COARSE_LOCATION</code> e <code>FOREGROUND_SERVICE_LOCATION</code>):</strong> Solicitada exclusivamente durante sessões ativas de caminhada ou corrida iniciadas pelo próprio usuário para calcular distância percorrida, ritmo e métricas de atividade física com serviço em primeiro plano. O aplicativo <strong>não coleta localização em segundo plano (background) fora da sessão de exercício ativo, não monitora deslocamentos contínuos e nunca vende, cede ou compartilha coordenadas geográficas</strong>.</li>
+        <li><strong>Bluetooth e Dispositivos Próximos (<code>BLUETOOTH_CONNECT</code>, <code>BLUETOOTH_SCAN</code>):</strong> Solicitada para descoberta e conexão direta com sensores corporais de saúde compatíveis (ex.: oxímetros e monitores de pressão arterial via Bluetooth Low Energy). O aplicativo utiliza a declaração <code>neverForLocation</code>, <strong>não utiliza sinais de Bluetooth para inferir localização física e não compartilha dados de pareamento</strong>.</li>
+        <li><strong>Reconhecimento de Atividade Física (<code>ACTIVITY_RECOGNITION</code>):</strong> Utilizada para contagem de passos e estimativa de gasto calórico diário através dos sensores de hardware do aparelho, com processamento no dispositivo.</li>
+        <li><strong>Dados do Google Health Connect (<code>READ_STEPS</code>, <code>READ_HEART_RATE</code>, <code>READ_OXYGEN_SATURATION</code>):</strong> Mediante consentimento expresso, o aplicativo lê dados de passos, frequência cardíaca e saturação de oxigênio para unificar o prontuário preventivo do paciente. Em conformidade com a Política de Permissões de Saúde do Google Play, <strong>esses dados nunca são transferidos, vendidos ou disponibilizados para anunciantes, corretores de dados ou seguradoras</strong>.</li>
+        <li><strong>Notificações e Alarmes Exatos (<code>POST_NOTIFICATIONS</code>, <code>SCHEDULE_EXACT_ALARM</code>):</strong> Utilizados unicamente para alertar o paciente ou cuidador no horário exato dos medicamentos cadastrados e lembretes de hidratação.</li>
+      </ul>
     </div>
 
     <div id="seguranca" class="legal-card" style="background: var(--bg-card); border: 1px solid var(--border-light); border-radius: var(--radius-md); padding: 28px; margin-bottom: 24px; box-shadow: var(--shadow-sm);">
@@ -281,7 +294,7 @@
         <li><strong>Atendimento e comprovantes:</strong> Mensagens enviadas ao e-mail de suporte e registros mínimos de comprovação da exclusão não são apagados automaticamente pela desinstalação ou pela exclusão da conta no aplicativo. Os comprovantes podem incluir identificador da conta, data, endereço IP e responsável pelo procedimento. Essas informações permanecem no atendimento e na auditoria até exclusão administrativa, sem prazo automático de expiração. Você pode solicitar sua eliminação pelo canal de privacidade.</li>
         <li><strong>Backups:</strong> O banco possui backups automáticos criptografados com ciclo de retenção configurado de 1 dia. Cópias manuais de manutenção não têm expiração automática e permanecem até exclusão administrativa. Essas cópias podem conter informações anteriores à exclusão da conta; o prazo do backup automático não representa eliminação de todas as cópias em 24 horas. Você pode solicitar a análise e eliminação de dados dessas cópias pelo canal de privacidade.</li>
       </ul>
-      <p style="line-height: 1.6; color: var(--text-muted);">Para excluir sua conta ou dados específicos, use a opção de exclusão no aplicativo, a <a href="/exclusao-de-dados">página pública de solicitação</a> ou escreva para <a href="mailto:contato@bragasaude.online">contato@bragasaude.online</a>. Pedidos recebidos pelo atendimento passam por verificação de titularidade. Se alguma informação precisar ser conservada por obrigação legal ou apuração de segurança, a equipe informará quais dados, o motivo e o prazo ou critério aplicável. O prazo de até 5 dias úteis para a primeira resposta não é uma confirmação de que a exclusão já terminou.</p>
+      <p style="line-height: 1.6; color: var(--text-muted);">Para excluir sua conta ou dados específicos, use a opção de exclusão no aplicativo, a <a href="/exclusao-de-dados">página pública de solicitação</a> ou escreva para <!--email_off--><a href="mailto:contato@bragasaude.online">contato@bragasaude.online</a><!--/email_off-->. Pedidos recebidos pelo atendimento passam por verificação de titularidade. Se alguma informação precisar ser conservada por obrigação legal ou apuração de segurança, a equipe informará quais dados, o motivo e o prazo ou critério aplicável. O prazo de até 5 dias úteis para a primeira resposta não é uma confirmação de que a exclusão já terminou.</p>
     </section>
 
     <div class="legal-card" style="background: var(--bg-card); border: 1px solid var(--border-light); border-radius: var(--radius-md); padding: 28px; margin-bottom: 24px; box-shadow: var(--shadow-sm);">
@@ -316,8 +329,8 @@
       <ul style="line-height: 1.7; color: var(--text-muted); padding-left: 20px;">
         <li><strong>Produto:</strong> Braga Saúde</li>
         <li><strong>Empresa desenvolvedora:</strong> 68.988.543 YURI FERNANDES DOS SANTOS · CNPJ 68.988.543/0001-00</li>
-        <li><strong>E-mail de Privacidade:</strong> <code>contato@bragasaude.online</code></li>
-        <li><strong>Contato:</strong> <a href="mailto:contato@bragasaude.online">contato@bragasaude.online</a></li>
+        <li><strong>E-mail de Privacidade:</strong> <!--email_off--><code>contato@bragasaude.online</code><!--/email_off--></li>
+        <li><strong>Contato:</strong> <!--email_off--><a href="mailto:contato@bragasaude.online">contato@bragasaude.online</a><!--/email_off--></li>
         <li><strong>Prazo de Resposta:</strong> Nos comprometemos a dar a primeira resposta a requisições formais em até <strong>5 dias úteis</strong>. Esse prazo não representa confirmação de que a exclusão foi concluída.</li>
       </ul>
     </div>
