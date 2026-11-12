@@ -82,11 +82,14 @@ footer {
 
 .footer-badge-wrapper {
   display: flex;
+  flex-wrap: wrap;
   justify-content: center;
   align-items: center;
-  margin: 22px 0 20px;
+  gap: 14px;
+  margin: 24px 0 20px;
 }
 
+.trust-badge-link,
 .google-safe-badge-link {
   display: inline-block;
   transition: transform 0.2s ease, filter 0.2s ease, opacity 0.2s ease;
@@ -95,14 +98,24 @@ footer {
   text-decoration: none;
 }
 
+.trust-badge-link:hover,
 .google-safe-badge-link:hover {
   transform: translateY(-2px);
   filter: brightness(1.02) drop-shadow(0 4px 14px rgba(16, 185, 129, 0.25));
 }
 
+.trust-badge-link:focus-visible,
 .google-safe-badge-link:focus-visible {
   outline: 2px solid #00A884;
   outline-offset: 4px;
+}
+
+.trust-badge-link img,
+.google-safe-badge-link img {
+  display: block;
+  width: 215px;
+  height: 62px;
+  max-width: 100%;
 }
 
 .footer-bottom {
