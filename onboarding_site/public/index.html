@@ -874,45 +874,169 @@
                     <button type="button" class="sim-back-btn" data-sim-go="home" aria-controls="sim-home">Voltar ao início</button>
                     <div class="sim-emerald-header sim-emerald-header-small">
                       <div class="sim-emerald-header-content">
-                        <div class="sim-greeting">Meus exames</div>
-                        <div class="sim-header-status">Organizador local de exames</div>
+                        <div class="sim-greeting">Organizador de Exames</div>
+                        <div class="sim-header-status">100% no celular · Sem nuvem</div>
                       </div>
                     </div>
-                    <p class="sim-demo-note">Demonstração com dados fictícios.</p>
+                    <p class="sim-demo-note">Demonstração interativa do aplicativo.</p>
 
-                    <!-- Organizador: 100% no aparelho (Harness local sem nuvem) -->
+                    <!-- Card explicativo amigável -->
                     <div class="sim-demo-card sim-vault-card">
                       <div class="sim-vault-head">
                         <div class="sim-vault-icon" aria-hidden="true">
-                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#00897B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg>
+                          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#00897B" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg>
                         </div>
                         <div class="sim-vault-body">
-                          <h3>100% no celular · Sem nuvem</h3>
-                          <p>O app atua como um organizador local (harness) que processa seus laudos no próprio aparelho, sem enviar exames sensíveis para a nuvem.</p>
+                          <h3>Seus exames no seu bolso</h3>
+                          <p>Junte fotos de exames físicos e laudos em PDF em um documento único para levar à sua consulta médica.</p>
                         </div>
                       </div>
                       <div class="sim-vault-status-badge">
                         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect width="14" height="20" x="5" y="2" rx="2"/><path d="M12 18h.01"/></svg>
-                        Processamento on-device e privacidade preservada
+                        Processado no seu aparelho · Nada sobe para a internet
                       </div>
                     </div>
 
-                    <div class="sim-demo-card">
-                      <div class="sim-exam-head">
-                        <div>
-                          <h3>Hemograma</h3>
-                          <p>Laudo de exemplo · PDF</p>
-                        </div>
-                        <span class="sim-exam-badge"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect width="14" height="20" x="5" y="2" rx="2"/><path d="M12 18h.01"/></svg> No aparelho</span>
+                    <!-- Botões de Ação de Importação -->
+                    <div class="sim-exam-import-actions">
+                      <button type="button" class="sim-import-btn" id="sim-btn-add-photo">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+                        <span>Tirar foto do exame</span>
+                      </button>
+                      <button type="button" class="sim-import-btn" id="sim-btn-add-pdf">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><path d="M12 18v-6"/><path d="m9 15 3-3 3 3"/></svg>
+                        <span>Importar PDF</span>
+                      </button>
+                    </div>
+
+                    <!-- Lista de Exames Organizados -->
+                    <div class="sim-demo-card sim-exam-list-card">
+                      <div class="sim-card-header-row">
+                        <h4>Exames na sessão (2)</h4>
+                        <span class="sim-exam-tag-counter">Prontos</span>
                       </div>
-                      <button type="button" id="sim-exam-open" class="sim-demo-button" aria-expanded="false" aria-controls="sim-exam-detail">Ver resultado de exemplo</button>
-                      <div id="sim-exam-detail" hidden>
-                        <dl class="sim-exam-values">
-                          <div><dt>Hemoglobina</dt><dd>14,0 g/dL</dd></div>
-                          <div><dt>Leucócitos</dt><dd>6.500 /µL</dd></div>
-                          <div><dt>Plaquetas</dt><dd>250.000 /µL</dd></div>
-                        </dl>
-                        <p>Leve seus resultados ao profissional que acompanha você.</p>
+
+                      <div class="sim-exam-item">
+                        <div class="sim-exam-item-icon blood">
+                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#DC2626" stroke-width="2"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg>
+                        </div>
+                        <div class="sim-exam-item-info">
+                          <div class="sim-exam-item-title">Hemograma Completo</div>
+                          <div class="sim-exam-item-meta">15/Out · Sangue · 2 páginas (PDF)</div>
+                        </div>
+                        <span class="sim-exam-check-badge">✓ Conferido</span>
+                      </div>
+
+                      <div class="sim-exam-item">
+                        <div class="sim-exam-item-icon imaging">
+                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg>
+                        </div>
+                        <div class="sim-exam-item-info">
+                          <div class="sim-exam-item-title">Raio-X de Tórax</div>
+                          <div class="sim-exam-item-meta">02/Nov · Imagem · 1 página (Foto)</div>
+                        </div>
+                        <span class="sim-exam-check-badge">✓ Conferido</span>
+                      </div>
+                    </div>
+
+                    <!-- Personalização da Capa e do PDF (Fiel ao App) -->
+                    <div class="sim-demo-card sim-personalize-card">
+                      <div class="sim-card-header-row">
+                        <div class="sim-personalize-title">
+                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#00897B" stroke-width="2.2"><circle cx="12" cy="12" r="10"/><path d="m4.93 4.93 4.24 4.24"/><path d="m14.83 9.17 4.24-4.24"/><path d="m14.83 14.83 4.24 4.24"/><path d="m9.17 14.83-4.24 4.24"/></svg>
+                          <span>Personalizar meu PDF</span>
+                        </div>
+                        <span class="sim-personalize-sub">Para o médico</span>
+                      </div>
+
+                      <!-- Nome na Capa -->
+                      <div class="sim-form-group">
+                        <label for="sim-cover-name" class="sim-form-label">Seu nome na capa (opcional):</label>
+                        <input type="text" id="sim-cover-name" class="sim-form-input" value="Maria da Silva" placeholder="Ex: Seu nome completo ou deixe em branco" maxlength="40">
+                        <span class="sim-form-hint">Dica: substitui o título da capa pelo seu nome.</span>
+                      </div>
+
+                      <!-- Cor do PDF -->
+                      <div class="sim-form-group">
+                        <span class="sim-form-label">Cor do documento e cabeçalhos:</span>
+                        <div class="sim-color-picker" role="radiogroup" aria-label="Selecione a cor do PDF">
+                          <button type="button" class="sim-color-btn active" data-color="braga" data-color-name="Braga (Esmeralda)" data-hex="#00897B" data-accent-hex="#00A884" style="--c:#00897B;" aria-label="Verde Braga" title="Braga (Esmeralda)"></button>
+                          <button type="button" class="sim-color-btn" data-color="petroleo" data-color-name="Petróleo" data-hex="#0E7490" data-accent-hex="#169DC9" style="--c:#0E7490;" aria-label="Azul Petróleo" title="Petróleo"></button>
+                          <button type="button" class="sim-color-btn" data-color="violeta" data-color-name="Violeta" data-hex="#6D28D9" data-accent-hex="#8B5CF6" style="--c:#6D28D9;" aria-label="Violeta" title="Violeta"></button>
+                          <button type="button" class="sim-color-btn" data-color="vinho" data-color-name="Vinho" data-hex="#9D174D" data-accent-hex="#BE185D" style="--c:#9D174D;" aria-label="Vinho" title="Vinho"></button>
+                          <button type="button" class="sim-color-btn" data-color="grafite" data-color-name="Grafite" data-hex="#475569" data-accent-hex="#64748B" style="--c:#475569;" aria-label="Grafite" title="Grafite"></button>
+                          <button type="button" class="sim-color-btn" data-color="ambar" data-color-name="Âmbar" data-hex="#B45309" data-accent-hex="#D97706" style="--c:#B45309;" aria-label="Âmbar" title="Âmbar"></button>
+                        </div>
+                        <span class="sim-color-current-label">Cor selecionada: <strong id="sim-color-name-text">Braga (Esmeralda)</strong></span>
+                      </div>
+
+                      <!-- Botão Gerar PDF -->
+                      <button type="button" id="sim-generate-pdf-btn" class="sim-action-primary-btn">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><path d="M12 18v-6"/><path d="m9 15 3-3 3 3"/></svg>
+                        <span>Gerar PDF com índice</span>
+                      </button>
+                    </div>
+
+                    <!-- Prévia Realista da Capa e Sumário Gerados -->
+                    <div id="sim-pdf-preview" class="sim-pdf-preview-container">
+                      <div class="sim-pdf-preview-header">
+                        <div class="sim-pdf-preview-tag">
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#00A884" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                          <span>PDF Gerado com Sucesso</span>
+                        </div>
+                        <button type="button" id="sim-pdf-preview-toggle" class="sim-pdf-toggle-btn" aria-label="Alternar visualização">Ver folha A4</button>
+                      </div>
+
+                      <div class="sim-pdf-sheet" id="sim-pdf-sheet">
+                        <!-- Banda da Capa com Cor Dinâmica -->
+                        <div class="sim-pdf-band" id="sim-pdf-band" style="background-color: #00897B;">
+                          <div class="sim-pdf-band-accent" id="sim-pdf-band-accent" style="background-color: #00A884;"></div>
+                          <div class="sim-pdf-title-display" id="sim-pdf-title-display">MARIA DA SILVA</div>
+                          <div class="sim-pdf-subtitle-display" id="sim-pdf-subtitle-display">Documento consolidado de exames para consulta</div>
+                        </div>
+
+                        <div class="sim-pdf-body">
+                          <!-- Box Institucional -->
+                          <div class="sim-pdf-statement-box" id="sim-pdf-statement-box" style="border-left-color: #00897B;">
+                            <strong>Organização Pessoal de Exames</strong>
+                            <p>Documento pessoal reunindo laudos fornecidos pelo usuário para facilitar a leitura do médico na consulta.</p>
+                          </div>
+
+                          <!-- Sumário / Índice -->
+                          <div class="sim-pdf-index-box">
+                            <div class="sim-pdf-index-title">Índice Automático (4 páginas):</div>
+                            <div class="sim-pdf-index-row">
+                              <span class="sim-pdf-doc-name">1. Capa &amp; Sumário Geral</span>
+                              <span class="sim-pdf-doc-page">pág. 1</span>
+                            </div>
+                            <div class="sim-pdf-index-row">
+                              <span class="sim-pdf-doc-name">2. Hemograma Completo (Sangue)</span>
+                              <span class="sim-pdf-doc-page">pág. 2</span>
+                            </div>
+                            <div class="sim-pdf-index-row">
+                              <span class="sim-pdf-doc-name">3. Raio-X de Tórax (Imagem)</span>
+                              <span class="sim-pdf-doc-page">pág. 4</span>
+                            </div>
+                          </div>
+
+                          <!-- Rodapé da folha -->
+                          <div class="sim-pdf-footer">
+                            <span>Braga Saúde · Autocuidado</span>
+                            <span>Página 1 de 4</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      <!-- Ações de Compartilhamento -->
+                      <div class="sim-pdf-actions">
+                        <button type="button" class="sim-pdf-share-btn" id="sim-pdf-share-btn">
+                          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+                          <span>Enviar ao Médico</span>
+                        </button>
+                        <button type="button" class="sim-pdf-save-btn" id="sim-pdf-save-btn">
+                          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+                          <span>Salvar no Celular</span>
+                        </button>
                       </div>
                     </div>
                   </div>
@@ -1030,9 +1154,9 @@
             <div class="feature-icon-box">
               <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>
             </div>
-            <h3 class="feature-title">Organizador de Laudos On-Device</h3>
+            <h3 class="feature-title">Organizador de Exames (Fotos e PDF)</h3>
             <p class="feature-desc">
-              Organize seus laudos em PDF e fotos direto no celular. O aplicativo atua como um organizador local (harness), estruturando os dados no próprio aparelho sem nunca enviar documentos sensíveis de exames para servidores ou nuvem.
+              Organize seus laudos em PDF e fotos de exames físicos direto no celular. O app junta tudo em um único documento consolidado com capa personalizada, índice automático e a cor que você escolher para levar à consulta médica — 100% no seu aparelho, sem enviar exames para a nuvem.
             </p>
           </div>
 
@@ -1129,7 +1253,7 @@
           <details class="faq-item">
             <summary>Onde ficam armazenados os meus exames e laudos médicos?</summary>
             <div class="faq-answer">
-              <p><strong>Eles ficam exclusivamente no seu celular.</strong> Nós não armazenamos arquivos de exames na nuvem. O aplicativo opera como um organizador local (harness) que estrutura laudos laboratoriais em PDF ou fotos diretamente no seu aparelho. Dessa forma, você mantém seu histórico organizado para levar às consultas médicas sem expor documentos confidenciais à internet.</p>
+              <p><strong>Eles ficam exclusivamente no seu celular.</strong> Nós não armazenamos nem enviamos seus exames para a nuvem. Você pode fotografar laudos em papel ou importar PDFs de laboratórios, personalizar o documento escolhendo colocar seu nome na capa e a cor de sua preferência, e gerar um PDF único com índice automático para levar ao seu médico. Seus exames permanecem 100% confidenciais no seu aparelho.</p>
             </div>
           </details>
 
