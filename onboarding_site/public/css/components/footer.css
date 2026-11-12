@@ -80,6 +80,31 @@ footer {
   line-height: 1.6;
 }
 
+.footer-badge-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 22px 0 20px;
+}
+
+.google-safe-badge-link {
+  display: inline-block;
+  transition: transform 0.2s ease, filter 0.2s ease, opacity 0.2s ease;
+  border-radius: 8px;
+  line-height: 0;
+  text-decoration: none;
+}
+
+.google-safe-badge-link:hover {
+  transform: translateY(-2px);
+  filter: brightness(1.02) drop-shadow(0 4px 14px rgba(16, 185, 129, 0.25));
+}
+
+.google-safe-badge-link:focus-visible {
+  outline: 2px solid #00A884;
+  outline-offset: 4px;
+}
+
 .footer-bottom {
   padding-top: 28px;
   border-top: 1px solid #183327;
