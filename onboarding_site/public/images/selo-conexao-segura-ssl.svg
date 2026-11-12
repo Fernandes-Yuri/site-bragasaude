@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 215 62" width="215" height="62" role="img" aria-label="Conexão Segura Criptografada SSL TLS">
+  <defs>
+    <linearGradient id="sslGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#2563EB"/>
+      <stop offset="100%" stop-color="#1D4ED8"/>
+    </linearGradient>
+    <filter id="cardShadowSsl" x="-5%" y="-10%" width="110%" height="125%">
+      <feDropShadow dx="0" dy="2" stdDeviation="2" flood-color="#000000" flood-opacity="0.08"/>
+    </filter>
+  </defs>
+
+  <rect x="2" y="2" width="211" height="58" rx="8" fill="#FFFFFF" stroke="#E5E7EB" stroke-width="1.2" filter="url(#cardShadowSsl)"/>
+
+  <!-- Lock Icon -->
+  <g transform="translate(13, 11)">
+    <rect x="3" y="14" width="32" height="24" rx="4" fill="url(#sslGrad)"/>
+    <path d="M11 14V9C11 5.13 14.13 2 18 2C21.87 2 25 5.13 25 9V14" fill="none" stroke="#1D4ED8" stroke-width="3.2" stroke-linecap="round"/>
+    <circle cx="19" cy="24" r="2.8" fill="#FFFFFF"/>
+    <path d="M19 26.5V31" stroke="#FFFFFF" stroke-width="2.2" stroke-linecap="round"/>
+  </g>
+
+  <text x="58" y="18" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="9" font-weight="800" fill="#374151" letter-spacing="0.8">CONEXÃO SEGURA</text>
+  <text x="58" y="36" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="14.5" font-weight="800" fill="#1D4ED8" letter-spacing="-0.2">Criptografia SSL</text>
+  <text x="58" y="51" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="7.5" font-weight="700" fill="#6B7280" letter-spacing="0.5">CERTIFICADO 256-BIT</text>
+</svg>
