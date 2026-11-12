@@ -9,7 +9,7 @@
   'use strict';
 
   // ── 1. Estado da Simulação do Celular ──
-  const simScreens = ['home', 'vitals', 'hydration', 'family'];
+  const simScreens = ['home', 'vitals', 'exams', 'hydration', 'family'];
   let currentSimIndex = 0;
   let simAutoplayTimer = null;
   let isAutoplayPaused = false;
@@ -87,15 +87,7 @@
       });
     });
 
-    const examButton = document.getElementById('sim-exam-open');
-    const examDetail = document.getElementById('sim-exam-detail');
-    if (examButton && examDetail) {
-      examButton.addEventListener('click', () => {
-        examDetail.hidden = !examDetail.hidden;
-        examButton.setAttribute('aria-expanded', String(!examDetail.hidden));
-        examButton.textContent = examDetail.hidden ? 'Ver resultado de exemplo' : 'Fechar resultado';
-      });
-    }
+    setupExamOrganizer();
 
     const phoneFrame = document.querySelector('.phone-frame');
     if (phoneFrame) {
@@ -150,6 +142,114 @@
     stage.addEventListener('pointerleave', resetPerspective);
     desktopPointer.addEventListener('change', resetPerspective);
     reducedMotion.addEventListener('change', resetPerspective);
+  }
+
+  // ── 1a. Organizador de Exames (Fotos e PDF On-Device) ──
+  function setupExamOrganizer() {
+    const coverNameInput = document.getElementById('sim-cover-name');
+    const pdfTitleDisplay = document.getElementById('sim-pdf-title-display');
+    const pdfSubtitleDisplay = document.getElementById('sim-pdf-subtitle-display');
+    const colorButtons = document.querySelectorAll('.sim-color-btn');
+    const colorNameText = document.getElementById('sim-color-name-text');
+    const pdfBand = document.getElementById('sim-pdf-band');
+    const pdfBandAccent = document.getElementById('sim-pdf-band-accent');
+    const pdfStatementBox = document.getElementById('sim-pdf-statement-box');
+    const generateBtn = document.getElementById('sim-generate-pdf-btn');
+    const previewContainer = document.getElementById('sim-pdf-preview');
+    const previewToggle = document.getElementById('sim-pdf-preview-toggle');
+    const sheet = document.getElementById('sim-pdf-sheet');
+    const btnAddPhoto = document.getElementById('sim-btn-add-photo');
+    const btnAddPdf = document.getElementById('sim-btn-add-pdf');
+    const btnShare = document.getElementById('sim-pdf-share-btn');
+    const btnSave = document.getElementById('sim-pdf-save-btn');
+
+    // 1. Atualização do Nome na Capa (fiel a OrganizerPersonalization.kt)
+    if (coverNameInput && pdfTitleDisplay) {
+      coverNameInput.addEventListener('input', () => {
+        const value = coverNameInput.value.trim();
+        if (value) {
+          pdfTitleDisplay.textContent = value.toUpperCase();
+          if (pdfSubtitleDisplay) {
+            pdfSubtitleDisplay.textContent = 'Documento consolidado de exames para consulta';
+          }
+        } else {
+          pdfTitleDisplay.textContent = 'BRAGA SAÚDE';
+          if (pdfSubtitleDisplay) {
+            pdfSubtitleDisplay.textContent = 'Plataforma de Autocuidado • Organização Pessoal de Exames';
+          }
+        }
+      });
+    }
+
+    // 2. Seletor de Cores da Capa e Cabeçalhos
+    colorButtons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        colorButtons.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+
+        const colorName = btn.getAttribute('data-color-name') || 'Braga';
+        const hex = btn.getAttribute('data-hex') || '#00897B';
+        const accentHex = btn.getAttribute('data-accent-hex') || '#00A884';
+
+        if (colorNameText) colorNameText.textContent = colorName;
+        if (pdfBand) pdfBand.style.backgroundColor = hex;
+        if (pdfBandAccent) pdfBandAccent.style.backgroundColor = accentHex;
+        if (pdfStatementBox) pdfStatementBox.style.borderLeftColor = hex;
+        if (generateBtn) generateBtn.style.backgroundColor = hex;
+      });
+    });
+
+    // 3. Botão Gerar PDF
+    if (generateBtn && previewContainer) {
+      generateBtn.addEventListener('click', () => {
+        const originalText = generateBtn.innerHTML;
+        generateBtn.innerHTML = '<span>Organizando páginas no celular...</span>';
+        generateBtn.disabled = true;
+
+        setTimeout(() => {
+          generateBtn.innerHTML = originalText;
+          generateBtn.disabled = false;
+          previewContainer.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }, 350);
+      });
+    }
+
+    // 4. Toggle da visualização da folha A4
+    if (previewToggle && sheet) {
+      previewToggle.addEventListener('click', () => {
+        const isHidden = sheet.style.display === 'none';
+        sheet.style.display = isHidden ? 'block' : 'none';
+        previewToggle.textContent = isHidden ? 'Ocultar folha' : 'Ver folha A4';
+      });
+    }
+
+    // 5. Botões de feedback amigável
+    if (btnAddPhoto) {
+      btnAddPhoto.addEventListener('click', () => {
+        btnAddPhoto.style.transform = 'scale(0.96)';
+        setTimeout(() => { btnAddPhoto.style.transform = ''; }, 150);
+      });
+    }
+    if (btnAddPdf) {
+      btnAddPdf.addEventListener('click', () => {
+        btnAddPdf.style.transform = 'scale(0.96)';
+        setTimeout(() => { btnAddPdf.style.transform = ''; }, 150);
+      });
+    }
+    if (btnShare) {
+      btnShare.addEventListener('click', () => {
+        const originalText = btnShare.innerHTML;
+        btnShare.innerHTML = '<span>Link gerado!</span>';
+        setTimeout(() => { btnShare.innerHTML = originalText; }, 1800);
+      });
+    }
+    if (btnSave) {
+      btnSave.addEventListener('click', () => {
+        const originalText = btnSave.innerHTML;
+        btnSave.innerHTML = '<span>Salvo em Downloads!</span>';
+        setTimeout(() => { btnSave.innerHTML = originalText; }, 1800);
+      });
+    }
   }
 
   // ── 1b. Orb Assistente — Tutorial Interativo ──
