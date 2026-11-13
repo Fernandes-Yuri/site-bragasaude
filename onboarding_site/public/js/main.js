@@ -528,11 +528,16 @@
 
   // ── Rastreamento de Conversões (Google Analytics 4) ──
   function setupAnalyticsTracking() {
-    // Nenhum download no site: o app será distribuído exclusivamente pela
-    // Google Play Store após aprovação. Eventos de conversão de APK foram
-    // aposentados junto com o download direto.
-    // Pendência: reintroduzir evento 'download_play_store' quando o app
-    // for publicado e o link da loja for adicionado nesta página.
+    document.querySelectorAll('a[href*="play.google.com"]').forEach(link => {
+      link.addEventListener('click', () => {
+        if (typeof gtag === 'function') {
+          gtag('event', 'click_play_store', {
+            event_category: 'conversion',
+            event_label: 'Google Play Store Open Testing'
+          });
+        }
+      });
+    });
   }
 
   // ── 8. Aviso Institucional de Privacidade & LGPD (Padrão da Indústria) ──
