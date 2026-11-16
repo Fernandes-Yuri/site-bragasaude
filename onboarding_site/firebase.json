@@ -145,6 +145,56 @@
         "source": "/app",
         "destination": "/app-download.html",
         "type": 302
+      },
+      {
+        "source": "/baixar",
+        "destination": "https://play.google.com/store/search?q=braga%20sa%C3%BAde&c=apps",
+        "type": 302
+      },
+      {
+        "source": "/baixar/**",
+        "destination": "https://play.google.com/store/search?q=braga%20sa%C3%BAde&c=apps",
+        "type": 302
+      },
+      {
+        "source": "/play",
+        "destination": "https://play.google.com/store/search?q=braga%20sa%C3%BAde&c=apps",
+        "type": 302
+      },
+      {
+        "source": "/play/**",
+        "destination": "https://play.google.com/store/search?q=braga%20sa%C3%BAde&c=apps",
+        "type": 302
+      },
+      {
+        "source": "/googleplay",
+        "destination": "https://play.google.com/store/search?q=braga%20sa%C3%BAde&c=apps",
+        "type": 302
+      },
+      {
+        "source": "/googleplay/**",
+        "destination": "https://play.google.com/store/search?q=braga%20sa%C3%BAde&c=apps",
+        "type": 302
+      },
+      {
+        "source": "/android",
+        "destination": "https://play.google.com/store/search?q=braga%20sa%C3%BAde&c=apps",
+        "type": 302
+      },
+      {
+        "source": "/android/**",
+        "destination": "https://play.google.com/store/search?q=braga%20sa%C3%BAde&c=apps",
+        "type": 302
+      },
+      {
+        "source": "/bio",
+        "destination": "https://play.google.com/store/search?q=braga%20sa%C3%BAde&c=apps",
+        "type": 302
+      },
+      {
+        "source": "/bio/**",
+        "destination": "https://play.google.com/store/search?q=braga%20sa%C3%BAde&c=apps",
+        "type": 302
       }
     ],
     "site": "braga-saude"
