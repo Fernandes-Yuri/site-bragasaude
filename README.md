@@ -11,7 +11,7 @@ Site oficial e página de download do aplicativo Android.
 
 Na pasta `onboarding_site`, execute `firebase deploy --only hosting`.
 
-O site oficial está em https://bragasaude.online. O domínio https://braga-saude.web.app e os acessos a `/app/` encaminham à página de download do aplicativo Android.
+O site oficial está em https://bragasaude.online. O domínio https://braga-saude.web.app e os acessos a `/app/` encaminham à página de download do aplicativo Android. Os atalhos `/baixar`, `/play`, `/googleplay`, `/android` e `/bio` redirecionam diretamente (302) para a busca do aplicativo na Google Play Store.
 
 ## Exclusão de conta e dados
 
